@@ -1,7 +1,7 @@
-const Help_Feedback = require('../models/Help_Feedback.model');
+﻿const Help_Feedback = require('../models/Help_Feedback.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createHelpFeedback = asyncHandler(async (req, res) => {
   try {
@@ -10,10 +10,10 @@ const createHelpFeedback = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const feedback = await Help_Feedback.create(feedbackData);
-    logger.info('Help Feedback created successfully', { feedbackId: feedback._id, Help_Feedback_id: feedback.Help_Feedback_id });
+    console.info('Help Feedback created successfully', { feedbackId: feedback._id, Help_Feedback_id: feedback.Help_Feedback_id });
     sendSuccess(res, feedback, 'Help Feedback created successfully', 201);
   } catch (error) {
-    logger.error('Error creating help feedback', { error: error.message, stack: error.stack });
+    console.error('Error creating help feedback', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -40,10 +40,10 @@ const getAllHelpFeedbacks = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Help Feedbacks retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Help Feedbacks retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, feedbacks, pagination, 'Help Feedbacks retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving help feedbacks', { error: error.message, stack: error.stack });
+    console.error('Error retrieving help feedbacks', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -60,10 +60,10 @@ const getHelpFeedbackById = asyncHandler(async (req, res) => {
       feedback = await Help_Feedback.findOne({ Help_Feedback_id: feedbackId });
     }
     if (!feedback) return sendNotFound(res, 'Help Feedback not found');
-    logger.info('Help Feedback retrieved successfully', { feedbackId: feedback._id });
+    console.info('Help Feedback retrieved successfully', { feedbackId: feedback._id });
     sendSuccess(res, feedback, 'Help Feedback retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving help feedback', { error: error.message, feedbackId: req.params.id });
+    console.error('Error retrieving help feedback', { error: error.message, feedbackId: req.params.id });
     throw error;
   }
 });
@@ -81,10 +81,10 @@ const updateHelpFeedback = asyncHandler(async (req, res) => {
       feedback = await Help_Feedback.findOneAndUpdate({ Help_Feedback_id: feedbackId }, updateData, { new: true, runValidators: true });
     }
     if (!feedback) return sendNotFound(res, 'Help Feedback not found');
-    logger.info('Help Feedback updated successfully', { feedbackId: feedback._id });
+    console.info('Help Feedback updated successfully', { feedbackId: feedback._id });
     sendSuccess(res, feedback, 'Help Feedback updated successfully');
   } catch (error) {
-    logger.error('Error updating help feedback', { error: error.message, feedbackId: req.params.id });
+    console.error('Error updating help feedback', { error: error.message, feedbackId: req.params.id });
     throw error;
   }
 });
@@ -101,10 +101,10 @@ const deleteHelpFeedback = asyncHandler(async (req, res) => {
       feedback = await Help_Feedback.findOneAndUpdate({ Help_Feedback_id: feedbackId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!feedback) return sendNotFound(res, 'Help Feedback not found');
-    logger.info('Help Feedback deleted successfully', { feedbackId: feedback._id });
+    console.info('Help Feedback deleted successfully', { feedbackId: feedback._id });
     sendSuccess(res, feedback, 'Help Feedback deleted successfully');
   } catch (error) {
-    logger.error('Error deleting help feedback', { error: error.message, feedbackId: req.params.id });
+    console.error('Error deleting help feedback', { error: error.message, feedbackId: req.params.id });
     throw error;
   }
 });
@@ -125,10 +125,10 @@ const getHelpFeedbacksByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Help Feedbacks by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Help Feedbacks by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, feedbacks, pagination, 'Help Feedbacks retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving help feedbacks by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving help feedbacks by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });

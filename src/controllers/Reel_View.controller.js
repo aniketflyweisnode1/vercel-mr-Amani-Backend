@@ -1,7 +1,7 @@
-const Reel_View = require('../models/Reel_View.model');
+﻿const Reel_View = require('../models/Reel_View.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new reel view
@@ -18,11 +18,11 @@ const createReelView = asyncHandler(async (req, res) => {
 
     const view = await Reel_View.create(viewData);
 
-    logger.info('Reel View created successfully', { viewId: view._id, Real_Post_View_id: view.Real_Post_View_id });
+    console.info('Reel View created successfully', { viewId: view._id, Real_Post_View_id: view.Real_Post_View_id });
 
     sendSuccess(res, view, 'Reel View created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel view', { error: error.message, stack: error.stack });
+    console.error('Error creating reel view', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -74,7 +74,7 @@ const getAllReelViews = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reel Views retrieved successfully', { 
+    console.info('Reel Views retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -82,7 +82,7 @@ const getAllReelViews = asyncHandler(async (req, res) => {
 
     sendPaginated(res, views, pagination, 'Reel Views retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel views', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reel views', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -114,11 +114,11 @@ const getReelViewById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel View not found');
     }
 
-    logger.info('Reel View retrieved successfully', { viewId: view._id });
+    console.info('Reel View retrieved successfully', { viewId: view._id });
 
     sendSuccess(res, view, 'Reel View retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel view', { error: error.message, viewId: req.params.id });
+    console.error('Error retrieving reel view', { error: error.message, viewId: req.params.id });
     throw error;
   }
 });
@@ -170,11 +170,11 @@ const updateReelView = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel View not found');
     }
 
-    logger.info('Reel View updated successfully', { viewId: view._id });
+    console.info('Reel View updated successfully', { viewId: view._id });
 
     sendSuccess(res, view, 'Reel View updated successfully');
   } catch (error) {
-    logger.error('Error updating reel view', { error: error.message, viewId: req.params.id });
+    console.error('Error updating reel view', { error: error.message, viewId: req.params.id });
     throw error;
   }
 });
@@ -222,11 +222,11 @@ const deleteReelView = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel View not found');
     }
 
-    logger.info('Reel View deleted successfully', { viewId: view._id });
+    console.info('Reel View deleted successfully', { viewId: view._id });
 
     sendSuccess(res, view, 'Reel View deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel view', { error: error.message, viewId: req.params.id });
+    console.error('Error deleting reel view', { error: error.message, viewId: req.params.id });
     throw error;
   }
 });
@@ -280,7 +280,7 @@ const getReelViewsByAuth = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reel Views by authenticated user retrieved successfully', { 
+    console.info('Reel Views by authenticated user retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit),
@@ -289,7 +289,7 @@ const getReelViewsByAuth = asyncHandler(async (req, res) => {
 
     sendPaginated(res, views, pagination, 'Reel Views retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel views by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reel views by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -349,7 +349,7 @@ const getReelViewsByReelId = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reel Views by Reel ID retrieved successfully', { 
+    console.info('Reel Views by Reel ID retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit),
@@ -358,7 +358,7 @@ const getReelViewsByReelId = asyncHandler(async (req, res) => {
 
     sendPaginated(res, views, pagination, 'Reel Views retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel views by Reel ID', { error: error.message, reelId: req.params.reelId });
+    console.error('Error retrieving reel views by Reel ID', { error: error.message, reelId: req.params.reelId });
     throw error;
   }
 });

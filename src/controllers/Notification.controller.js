@@ -1,8 +1,8 @@
-const Notification = require('../models/Notification.model');
+﻿const Notification = require('../models/Notification.model');
 const NotificationType = require('../models/Notification_type.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const ensureNotificationTypeExists = async (Notification_type_id) => {
   const type = await NotificationType.findOne({ Notification_type_id });
@@ -22,10 +22,10 @@ const createNotification = asyncHandler(async (req, res) => {
     }
 
     const notification = await Notification.create(payload);
-    logger.info('Notification created successfully', { id: notification._id, Notification_id: notification.Notification_id });
+    console.info('Notification created successfully', { id: notification._id, Notification_id: notification.Notification_id });
     sendSuccess(res, notification, 'Notification created successfully', 201);
   } catch (error) {
-    logger.error('Error creating notification', { error: error.message, stack: error.stack });
+    console.error('Error creating notification', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -112,10 +112,10 @@ const getAllNotifications = asyncHandler(async (req, res) => {
       hasPrevPage: parseInt(page, 10) > 1
     };
 
-    logger.info('Notifications retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
+    console.info('Notifications retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
     sendPaginated(res, notifications, pagination, 'Notifications retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving notifications', { error: error.message, stack: error.stack });
+    console.error('Error retrieving notifications', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -139,10 +139,10 @@ const getNotificationById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Notification not found');
     }
 
-    logger.info('Notification retrieved successfully', { id: notification._id });
+    console.info('Notification retrieved successfully', { id: notification._id });
     sendSuccess(res, notification, 'Notification retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving notification', { error: error.message, notificationId: req.params.id });
+    console.error('Error retrieving notification', { error: error.message, notificationId: req.params.id });
     throw error;
   }
 });
@@ -178,10 +178,10 @@ const updateNotification = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Notification not found');
     }
 
-    logger.info('Notification updated successfully', { id: notification._id });
+    console.info('Notification updated successfully', { id: notification._id });
     sendSuccess(res, notification, 'Notification updated successfully');
   } catch (error) {
-    logger.error('Error updating notification', { error: error.message, notificationId: req.params.id });
+    console.error('Error updating notification', { error: error.message, notificationId: req.params.id });
     throw error;
   }
 });
@@ -210,10 +210,10 @@ const deleteNotification = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Notification not found');
     }
 
-    logger.info('Notification deleted successfully', { id: notification._id });
+    console.info('Notification deleted successfully', { id: notification._id });
     sendSuccess(res, notification, 'Notification deleted successfully');
   } catch (error) {
-    logger.error('Error deleting notification', { error: error.message, notificationId: req.params.id });
+    console.error('Error deleting notification', { error: error.message, notificationId: req.params.id });
     throw error;
   }
 });
@@ -260,10 +260,10 @@ const getNotificationsByAuth = asyncHandler(async (req, res) => {
       hasPrevPage: parseInt(page, 10) > 1
     };
 
-    logger.info('Notifications retrieved for authenticated user', { userId, total });
+    console.info('Notifications retrieved for authenticated user', { userId, total });
     sendPaginated(res, notifications, pagination, 'Notifications retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving notifications for authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving notifications for authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });

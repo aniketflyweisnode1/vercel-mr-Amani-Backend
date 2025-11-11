@@ -1,7 +1,7 @@
-const Language = require('../models/Language.model');
+﻿const Language = require('../models/Language.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createLanguage = asyncHandler(async (req, res) => {
   try {
@@ -10,10 +10,10 @@ const createLanguage = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const language = await Language.create(languageData);
-    logger.info('Language created successfully', { languageId: language._id, Language_id: language.Language_id });
+    console.info('Language created successfully', { languageId: language._id, Language_id: language.Language_id });
     sendSuccess(res, language, 'Language created successfully', 201);
   } catch (error) {
-    logger.error('Error creating language', { error: error.message, stack: error.stack });
+    console.error('Error creating language', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -39,10 +39,10 @@ const getAllLanguages = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Languages retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Languages retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, languages, pagination, 'Languages retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving languages', { error: error.message, stack: error.stack });
+    console.error('Error retrieving languages', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -59,10 +59,10 @@ const getLanguageById = asyncHandler(async (req, res) => {
       language = await Language.findOne({ Language_id: languageId });
     }
     if (!language) return sendNotFound(res, 'Language not found');
-    logger.info('Language retrieved successfully', { languageId: language._id });
+    console.info('Language retrieved successfully', { languageId: language._id });
     sendSuccess(res, language, 'Language retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving language', { error: error.message, languageId: req.params.id });
+    console.error('Error retrieving language', { error: error.message, languageId: req.params.id });
     throw error;
   }
 });
@@ -80,10 +80,10 @@ const updateLanguage = asyncHandler(async (req, res) => {
       language = await Language.findOneAndUpdate({ Language_id: languageId }, updateData, { new: true, runValidators: true });
     }
     if (!language) return sendNotFound(res, 'Language not found');
-    logger.info('Language updated successfully', { languageId: language._id });
+    console.info('Language updated successfully', { languageId: language._id });
     sendSuccess(res, language, 'Language updated successfully');
   } catch (error) {
-    logger.error('Error updating language', { error: error.message, languageId: req.params.id });
+    console.error('Error updating language', { error: error.message, languageId: req.params.id });
     throw error;
   }
 });
@@ -100,10 +100,10 @@ const deleteLanguage = asyncHandler(async (req, res) => {
       language = await Language.findOneAndUpdate({ Language_id: languageId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!language) return sendNotFound(res, 'Language not found');
-    logger.info('Language deleted successfully', { languageId: language._id });
+    console.info('Language deleted successfully', { languageId: language._id });
     sendSuccess(res, language, 'Language deleted successfully');
   } catch (error) {
-    logger.error('Error deleting language', { error: error.message, languageId: req.params.id });
+    console.error('Error deleting language', { error: error.message, languageId: req.params.id });
     throw error;
   }
 });

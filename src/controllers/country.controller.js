@@ -1,7 +1,7 @@
-const Country = require('../models/country.model');
+﻿const Country = require('../models/country.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new country
@@ -17,11 +17,11 @@ const createCountry = asyncHandler(async (req, res) => {
 
     const country = await Country.create(countryData);
 
-    logger.info('Country created successfully', { countryId: country._id, country_id: country.country_id });
+    console.info('Country created successfully', { countryId: country._id, country_id: country.country_id });
 
     sendSuccess(res, country, 'Country created successfully', 201);
   } catch (error) {
-    logger.error('Error creating country', { error: error.message, stack: error.stack });
+    console.error('Error creating country', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -83,7 +83,7 @@ const getAllCountries = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Countries retrieved successfully', { 
+    console.info('Countries retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -91,7 +91,7 @@ const getAllCountries = asyncHandler(async (req, res) => {
 
     sendPaginated(res, countries, pagination, 'Countries retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving countries', { error: error.message, stack: error.stack });
+    console.error('Error retrieving countries', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -111,11 +111,11 @@ const getCountryById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Country not found');
     }
 
-    logger.info('Country retrieved successfully', { countryId: country._id });
+    console.info('Country retrieved successfully', { countryId: country._id });
 
     sendSuccess(res, country, 'Country retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving country', { error: error.message, countryId: req.params.id });
+    console.error('Error retrieving country', { error: error.message, countryId: req.params.id });
     throw error;
   }
 });
@@ -148,11 +148,11 @@ const updateCountry = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Country not found');
     }
 
-    logger.info('Country updated successfully', { countryId: country._id });
+    console.info('Country updated successfully', { countryId: country._id });
 
     sendSuccess(res, country, 'Country updated successfully');
   } catch (error) {
-    logger.error('Error updating country', { error: error.message, countryId: req.params.id });
+    console.error('Error updating country', { error: error.message, countryId: req.params.id });
     throw error;
   }
 });
@@ -180,11 +180,11 @@ const deleteCountry = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Country not found');
     }
 
-    logger.info('Country deleted successfully', { countryId: country._id });
+    console.info('Country deleted successfully', { countryId: country._id });
 
     sendSuccess(res, country, 'Country deleted successfully');
   } catch (error) {
-    logger.error('Error deleting country', { error: error.message, countryId: req.params.id });
+    console.error('Error deleting country', { error: error.message, countryId: req.params.id });
     throw error;
   }
 });

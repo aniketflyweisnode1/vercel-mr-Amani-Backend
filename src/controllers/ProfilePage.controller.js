@@ -1,7 +1,7 @@
-const ProfilePage = require('../models/ProfilePage.model');
+﻿const ProfilePage = require('../models/ProfilePage.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createProfilePage = asyncHandler(async (req, res) => {
   try {
@@ -10,10 +10,10 @@ const createProfilePage = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const profilePage = await ProfilePage.create(profilePageData);
-    logger.info('Profile Page created successfully', { profilePageId: profilePage._id, ProfilePage_id: profilePage.ProfilePage_id });
+    console.info('Profile Page created successfully', { profilePageId: profilePage._id, ProfilePage_id: profilePage.ProfilePage_id });
     sendSuccess(res, profilePage, 'Profile Page created successfully', 201);
   } catch (error) {
-    logger.error('Error creating profile page', { error: error.message, stack: error.stack });
+    console.error('Error creating profile page', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -44,10 +44,10 @@ const getAllProfilePages = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Profile Pages retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Profile Pages retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, profilePages, pagination, 'Profile Pages retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving profile pages', { error: error.message, stack: error.stack });
+    console.error('Error retrieving profile pages', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -64,10 +64,10 @@ const getProfilePageById = asyncHandler(async (req, res) => {
       profilePage = await ProfilePage.findOne({ ProfilePage_id: profilePageId });
     }
     if (!profilePage) return sendNotFound(res, 'Profile Page not found');
-    logger.info('Profile Page retrieved successfully', { profilePageId: profilePage._id });
+    console.info('Profile Page retrieved successfully', { profilePageId: profilePage._id });
     sendSuccess(res, profilePage, 'Profile Page retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving profile page', { error: error.message, profilePageId: req.params.id });
+    console.error('Error retrieving profile page', { error: error.message, profilePageId: req.params.id });
     throw error;
   }
 });
@@ -85,10 +85,10 @@ const updateProfilePage = asyncHandler(async (req, res) => {
       profilePage = await ProfilePage.findOneAndUpdate({ ProfilePage_id: profilePageId }, updateData, { new: true, runValidators: true });
     }
     if (!profilePage) return sendNotFound(res, 'Profile Page not found');
-    logger.info('Profile Page updated successfully', { profilePageId: profilePage._id });
+    console.info('Profile Page updated successfully', { profilePageId: profilePage._id });
     sendSuccess(res, profilePage, 'Profile Page updated successfully');
   } catch (error) {
-    logger.error('Error updating profile page', { error: error.message, profilePageId: req.params.id });
+    console.error('Error updating profile page', { error: error.message, profilePageId: req.params.id });
     throw error;
   }
 });
@@ -105,10 +105,10 @@ const deleteProfilePage = asyncHandler(async (req, res) => {
       profilePage = await ProfilePage.findOneAndUpdate({ ProfilePage_id: profilePageId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!profilePage) return sendNotFound(res, 'Profile Page not found');
-    logger.info('Profile Page deleted successfully', { profilePageId: profilePage._id });
+    console.info('Profile Page deleted successfully', { profilePageId: profilePage._id });
     sendSuccess(res, profilePage, 'Profile Page deleted successfully');
   } catch (error) {
-    logger.error('Error deleting profile page', { error: error.message, profilePageId: req.params.id });
+    console.error('Error deleting profile page', { error: error.message, profilePageId: req.params.id });
     throw error;
   }
 });

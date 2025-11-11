@@ -1,7 +1,7 @@
-const Reel_Follow = require('../models/Reel_Follow.model');
+﻿const Reel_Follow = require('../models/Reel_Follow.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createReelFollow = asyncHandler(async (req, res) => {
   try {
@@ -11,10 +11,10 @@ const createReelFollow = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const follow = await Reel_Follow.create(followData);
-    logger.info('Reel Follow created successfully', { followId: follow._id, Real_Post_Follow_id: follow.Real_Post_Follow_id });
+    console.info('Reel Follow created successfully', { followId: follow._id, Real_Post_Follow_id: follow.Real_Post_Follow_id });
     sendSuccess(res, follow, 'Reel Follow created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel follow', { error: error.message, stack: error.stack });
+    console.error('Error creating reel follow', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -35,10 +35,10 @@ const getAllReelFollows = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Follows retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Reel Follows retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, follows, pagination, 'Reel Follows retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel follows', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reel follows', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -55,10 +55,10 @@ const getReelFollowById = asyncHandler(async (req, res) => {
       follow = await Reel_Follow.findOne({ Real_Post_Follow_id: followId });
     }
     if (!follow) return sendNotFound(res, 'Reel Follow not found');
-    logger.info('Reel Follow retrieved successfully', { followId: follow._id });
+    console.info('Reel Follow retrieved successfully', { followId: follow._id });
     sendSuccess(res, follow, 'Reel Follow retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel follow', { error: error.message, followId: req.params.id });
+    console.error('Error retrieving reel follow', { error: error.message, followId: req.params.id });
     throw error;
   }
 });
@@ -76,10 +76,10 @@ const updateReelFollow = asyncHandler(async (req, res) => {
       follow = await Reel_Follow.findOneAndUpdate({ Real_Post_Follow_id: followId }, updateData, { new: true, runValidators: true });
     }
     if (!follow) return sendNotFound(res, 'Reel Follow not found');
-    logger.info('Reel Follow updated successfully', { followId: follow._id });
+    console.info('Reel Follow updated successfully', { followId: follow._id });
     sendSuccess(res, follow, 'Reel Follow updated successfully');
   } catch (error) {
-    logger.error('Error updating reel follow', { error: error.message, followId: req.params.id });
+    console.error('Error updating reel follow', { error: error.message, followId: req.params.id });
     throw error;
   }
 });
@@ -96,10 +96,10 @@ const deleteReelFollow = asyncHandler(async (req, res) => {
       follow = await Reel_Follow.findOneAndUpdate({ Real_Post_Follow_id: followId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!follow) return sendNotFound(res, 'Reel Follow not found');
-    logger.info('Reel Follow deleted successfully', { followId: follow._id });
+    console.info('Reel Follow deleted successfully', { followId: follow._id });
     sendSuccess(res, follow, 'Reel Follow deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel follow', { error: error.message, followId: req.params.id });
+    console.error('Error deleting reel follow', { error: error.message, followId: req.params.id });
     throw error;
   }
 });
@@ -120,10 +120,10 @@ const getReelFollowsByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Follows by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Reel Follows by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, follows, pagination, 'Reel Follows retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel follows by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reel follows by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -147,10 +147,10 @@ const getReelFollowsByReelId = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Follows by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
+    console.info('Reel Follows by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
     sendPaginated(res, follows, pagination, 'Reel Follows retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel follows by Reel ID', { error: error.message, reelId: req.params.reelId });
+    console.error('Error retrieving reel follows by Reel ID', { error: error.message, reelId: req.params.reelId });
     throw error;
   }
 });

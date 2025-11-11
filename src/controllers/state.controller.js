@@ -1,7 +1,7 @@
-const State = require('../models/state.model');
+﻿const State = require('../models/state.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new state
@@ -17,11 +17,11 @@ const createState = asyncHandler(async (req, res) => {
 
     const state = await State.create(stateData);
 
-    logger.info('State created successfully', { stateId: state._id, state_id: state.state_id });
+    console.info('State created successfully', { stateId: state._id, state_id: state.state_id });
 
     sendSuccess(res, state, 'State created successfully', 201);
   } catch (error) {
-    logger.error('Error creating state', { error: error.message, stack: error.stack });
+    console.error('Error creating state', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -87,7 +87,7 @@ const getAllStates = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('States retrieved successfully', { 
+    console.info('States retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -95,7 +95,7 @@ const getAllStates = asyncHandler(async (req, res) => {
 
     sendPaginated(res, states, pagination, 'States retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving states', { error: error.message, stack: error.stack });
+    console.error('Error retrieving states', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -115,11 +115,11 @@ const getStateById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'State not found');
     }
 
-    logger.info('State retrieved successfully', { stateId: state._id });
+    console.info('State retrieved successfully', { stateId: state._id });
 
     sendSuccess(res, state, 'State retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving state', { error: error.message, stateId: req.params.id });
+    console.error('Error retrieving state', { error: error.message, stateId: req.params.id });
     throw error;
   }
 });
@@ -152,11 +152,11 @@ const updateState = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'State not found');
     }
 
-    logger.info('State updated successfully', { stateId: state._id });
+    console.info('State updated successfully', { stateId: state._id });
 
     sendSuccess(res, state, 'State updated successfully');
   } catch (error) {
-    logger.error('Error updating state', { error: error.message, stateId: req.params.id });
+    console.error('Error updating state', { error: error.message, stateId: req.params.id });
     throw error;
   }
 });
@@ -184,11 +184,11 @@ const deleteState = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'State not found');
     }
 
-    logger.info('State deleted successfully', { stateId: state._id });
+    console.info('State deleted successfully', { stateId: state._id });
 
     sendSuccess(res, state, 'State deleted successfully');
   } catch (error) {
-    logger.error('Error deleting state', { error: error.message, stateId: req.params.id });
+    console.error('Error deleting state', { error: error.message, stateId: req.params.id });
     throw error;
   }
 });

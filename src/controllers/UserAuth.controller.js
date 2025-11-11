@@ -1,9 +1,9 @@
-const User = require('../models/User.model');
+﻿const User = require('../models/User.model');
 const { generateOTPWithExpiry, verifyOTP } = require('../../utils/otp');
 const { generateToken } = require('../../utils/jwt');
 const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 const { ensureRoleMatch } = require('../utils/role');
 
 const normalizeRolesInput = (roleInput) => {
@@ -65,7 +65,7 @@ const userLogin = asyncHandler(async (req, res) => {
     user.otpExpiresAt = expiresAt;
     await user.save();
 
-    logger.info('OTP sent successfully', { userId: user._id, phoneNo: user.phoneNo });
+    console.info('OTP sent successfully', { userId: user._id, phoneNo: user.phoneNo });
 
     // In production, send OTP via SMS/Email
     // For now, we'll return it in response (remove in production)
@@ -75,7 +75,7 @@ const userLogin = asyncHandler(async (req, res) => {
       expiresAt: expiresAt
     }, 'OTP sent to your phone number');
   } catch (error) {
-    logger.error('Error in user login', { error: error.message, stack: error.stack });
+    console.error('Error in user login', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -125,7 +125,7 @@ const resendOTP = asyncHandler(async (req, res) => {
     user.otpExpiresAt = expiresAt;
     await user.save();
 
-    logger.info('OTP resent successfully', {
+    console.info('OTP resent successfully', {
       userId: user._id,
       phoneNo: user.phoneNo,
       email: user.Email
@@ -137,7 +137,7 @@ const resendOTP = asyncHandler(async (req, res) => {
       expiresAt
     }, 'OTP resent successfully');
   } catch (error) {
-    logger.error('Error resending OTP', { error: error.message, stack: error.stack });
+    console.error('Error resending OTP', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -219,14 +219,14 @@ const verifyOTPHandler = asyncHandler(async (req, res) => {
     delete userResponse.otp;
     delete userResponse.otpExpiresAt;
 
-    logger.info('OTP verified successfully', { userId: user._id, phoneNo: user.phoneNo });
+    console.info('OTP verified successfully', { userId: user._id, phoneNo: user.phoneNo });
 
     sendSuccess(res, {
       user: userResponse,
       ...tokens
     }, 'OTP verified successfully');
   } catch (error) {
-    logger.error('Error verifying OTP', { error: error.message, stack: error.stack });
+    console.error('Error verifying OTP', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -242,7 +242,7 @@ const userLogout = asyncHandler(async (req, res) => {
     // The token is valid, so we just return success
     // Client should discard the token on their end
     
-    logger.info('User logged out successfully', { 
+    console.info('User logged out successfully', { 
       userId: req.userId, 
       userIdNumber: req.userIdNumber,
       phoneNo: req.user?.phoneNo 
@@ -252,7 +252,7 @@ const userLogout = asyncHandler(async (req, res) => {
       message: 'Logged out successfully'
     }, 'Logged out successfully');
   } catch (error) {
-    logger.error('Error in user logout', { error: error.message, stack: error.stack });
+    console.error('Error in user logout', { error: error.message, stack: error.stack });
     throw error;
   }
 });

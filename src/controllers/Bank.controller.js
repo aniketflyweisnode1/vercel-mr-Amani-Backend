@@ -1,7 +1,7 @@
-const Bank = require('../models/Bank.model');
+﻿const Bank = require('../models/Bank.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createBank = asyncHandler(async (req, res) => {
   try {
@@ -16,10 +16,10 @@ const createBank = asyncHandler(async (req, res) => {
     }
 
     const bank = await Bank.create(bankData);
-    logger.info('Bank created successfully', { bankId: bank._id, Bank_id: bank.Bank_id });
+    console.info('Bank created successfully', { bankId: bank._id, Bank_id: bank.Bank_id });
     sendSuccess(res, bank, 'Bank created successfully', 201);
   } catch (error) {
-    logger.error('Error creating bank', { error: error.message, stack: error.stack });
+    console.error('Error creating bank', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -60,10 +60,10 @@ const getAllBanks = asyncHandler(async (req, res) => {
       hasPrevPage: parseInt(page, 10) > 1
     };
 
-    logger.info('Banks retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
+    console.info('Banks retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
     sendPaginated(res, banks, pagination, 'Banks retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving banks', { error: error.message, stack: error.stack });
+    console.error('Error retrieving banks', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -83,10 +83,10 @@ const getBankById = asyncHandler(async (req, res) => {
 
     if (!bank) return sendNotFound(res, 'Bank not found');
 
-    logger.info('Bank retrieved successfully', { bankId: bank._id });
+    console.info('Bank retrieved successfully', { bankId: bank._id });
     sendSuccess(res, bank, 'Bank retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving bank', { error: error.message, bankId: req.params.id });
+    console.error('Error retrieving bank', { error: error.message, bankId: req.params.id });
     throw error;
   }
 });
@@ -111,10 +111,10 @@ const updateBank = asyncHandler(async (req, res) => {
 
     if (!bank) return sendNotFound(res, 'Bank not found');
 
-    logger.info('Bank updated successfully', { bankId: bank._id });
+    console.info('Bank updated successfully', { bankId: bank._id });
     sendSuccess(res, bank, 'Bank updated successfully');
   } catch (error) {
-    logger.error('Error updating bank', { error: error.message, bankId: req.params.id });
+    console.error('Error updating bank', { error: error.message, bankId: req.params.id });
     throw error;
   }
 });
@@ -134,10 +134,10 @@ const deleteBank = asyncHandler(async (req, res) => {
 
     if (!bank) return sendNotFound(res, 'Bank not found');
 
-    logger.info('Bank deleted successfully', { bankId: bank._id });
+    console.info('Bank deleted successfully', { bankId: bank._id });
     sendSuccess(res, bank, 'Bank deleted successfully');
   } catch (error) {
-    logger.error('Error deleting bank', { error: error.message, bankId: req.params.id });
+    console.error('Error deleting bank', { error: error.message, bankId: req.params.id });
     throw error;
   }
 });

@@ -1,7 +1,7 @@
-const SubCategory = require('../models/subcategory.model');
+﻿const SubCategory = require('../models/subcategory.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new subcategory
@@ -17,11 +17,11 @@ const createSubCategory = asyncHandler(async (req, res) => {
 
     const subCategory = await SubCategory.create(subCategoryData);
 
-    logger.info('SubCategory created successfully', { subCategoryId: subCategory._id, subcategory_id: subCategory.subcategory_id });
+    console.info('SubCategory created successfully', { subCategoryId: subCategory._id, subcategory_id: subCategory.subcategory_id });
 
     sendSuccess(res, subCategory, 'SubCategory created successfully', 201);
   } catch (error) {
-    logger.error('Error creating subcategory', { error: error.message, stack: error.stack });
+    console.error('Error creating subcategory', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -86,7 +86,7 @@ const getAllSubCategories = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('SubCategories retrieved successfully', { 
+    console.info('SubCategories retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -94,7 +94,7 @@ const getAllSubCategories = asyncHandler(async (req, res) => {
 
     sendPaginated(res, subCategories, pagination, 'SubCategories retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving subcategories', { error: error.message, stack: error.stack });
+    console.error('Error retrieving subcategories', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -114,11 +114,11 @@ const getSubCategoryById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'SubCategory not found');
     }
 
-    logger.info('SubCategory retrieved successfully', { subCategoryId: subCategory._id });
+    console.info('SubCategory retrieved successfully', { subCategoryId: subCategory._id });
 
     sendSuccess(res, subCategory, 'SubCategory retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving subcategory', { error: error.message, subCategoryId: req.params.id });
+    console.error('Error retrieving subcategory', { error: error.message, subCategoryId: req.params.id });
     throw error;
   }
 });
@@ -151,11 +151,11 @@ const updateSubCategory = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'SubCategory not found');
     }
 
-    logger.info('SubCategory updated successfully', { subCategoryId: subCategory._id });
+    console.info('SubCategory updated successfully', { subCategoryId: subCategory._id });
 
     sendSuccess(res, subCategory, 'SubCategory updated successfully');
   } catch (error) {
-    logger.error('Error updating subcategory', { error: error.message, subCategoryId: req.params.id });
+    console.error('Error updating subcategory', { error: error.message, subCategoryId: req.params.id });
     throw error;
   }
 });
@@ -183,11 +183,11 @@ const deleteSubCategory = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'SubCategory not found');
     }
 
-    logger.info('SubCategory deleted successfully', { subCategoryId: subCategory._id });
+    console.info('SubCategory deleted successfully', { subCategoryId: subCategory._id });
 
     sendSuccess(res, subCategory, 'SubCategory deleted successfully');
   } catch (error) {
-    logger.error('Error deleting subcategory', { error: error.message, subCategoryId: req.params.id });
+    console.error('Error deleting subcategory', { error: error.message, subCategoryId: req.params.id });
     throw error;
   }
 });
@@ -251,7 +251,7 @@ const getSubCategoriesByCategoryId = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('SubCategories retrieved by category ID successfully', { 
+    console.info('SubCategories retrieved by category ID successfully', { 
       category_id,
       total, 
       page: parseInt(page), 
@@ -260,7 +260,7 @@ const getSubCategoriesByCategoryId = asyncHandler(async (req, res) => {
 
     sendPaginated(res, subCategories, pagination, 'SubCategories retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving subcategories by category ID', { error: error.message, category_id: req.params.category_id });
+    console.error('Error retrieving subcategories by category ID', { error: error.message, category_id: req.params.category_id });
     throw error;
   }
 });

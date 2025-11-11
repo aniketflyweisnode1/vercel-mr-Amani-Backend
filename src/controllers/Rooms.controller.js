@@ -1,7 +1,7 @@
-const Rooms = require('../models/Rooms.model');
+﻿const Rooms = require('../models/Rooms.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createRoom = asyncHandler(async (req, res) => {
   try {
@@ -10,10 +10,10 @@ const createRoom = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const room = await Rooms.create(roomData);
-    logger.info('Room created successfully', { roomId: room._id, Rooms_id: room.Rooms_id });
+    console.info('Room created successfully', { roomId: room._id, Rooms_id: room.Rooms_id });
     sendSuccess(res, room, 'Room created successfully', 201);
   } catch (error) {
-    logger.error('Error creating room', { error: error.message, stack: error.stack });
+    console.error('Error creating room', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -43,10 +43,10 @@ const getAllRooms = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Rooms retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Rooms retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, rooms, pagination, 'Rooms retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving rooms', { error: error.message, stack: error.stack });
+    console.error('Error retrieving rooms', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -63,10 +63,10 @@ const getRoomById = asyncHandler(async (req, res) => {
       room = await Rooms.findOne({ Rooms_id: roomId });
     }
     if (!room) return sendNotFound(res, 'Room not found');
-    logger.info('Room retrieved successfully', { roomId: room._id });
+    console.info('Room retrieved successfully', { roomId: room._id });
     sendSuccess(res, room, 'Room retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room', { error: error.message, roomId: req.params.id });
+    console.error('Error retrieving room', { error: error.message, roomId: req.params.id });
     throw error;
   }
 });
@@ -84,10 +84,10 @@ const updateRoom = asyncHandler(async (req, res) => {
       room = await Rooms.findOneAndUpdate({ Rooms_id: roomId }, updateData, { new: true, runValidators: true });
     }
     if (!room) return sendNotFound(res, 'Room not found');
-    logger.info('Room updated successfully', { roomId: room._id });
+    console.info('Room updated successfully', { roomId: room._id });
     sendSuccess(res, room, 'Room updated successfully');
   } catch (error) {
-    logger.error('Error updating room', { error: error.message, roomId: req.params.id });
+    console.error('Error updating room', { error: error.message, roomId: req.params.id });
     throw error;
   }
 });
@@ -104,10 +104,10 @@ const deleteRoom = asyncHandler(async (req, res) => {
       room = await Rooms.findOneAndUpdate({ Rooms_id: roomId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!room) return sendNotFound(res, 'Room not found');
-    logger.info('Room deleted successfully', { roomId: room._id });
+    console.info('Room deleted successfully', { roomId: room._id });
     sendSuccess(res, room, 'Room deleted successfully');
   } catch (error) {
-    logger.error('Error deleting room', { error: error.message, roomId: req.params.id });
+    console.error('Error deleting room', { error: error.message, roomId: req.params.id });
     throw error;
   }
 });
@@ -128,10 +128,10 @@ const getRoomsByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Rooms by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Rooms by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, rooms, pagination, 'Rooms retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving rooms by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving rooms by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -155,10 +155,10 @@ const getRoomsByRoomCategoryId = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Rooms by Room Category ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), roomCategoryId: categoryId });
+    console.info('Rooms by Room Category ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), roomCategoryId: categoryId });
     sendPaginated(res, rooms, pagination, 'Rooms retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving rooms by Room Category ID', { error: error.message, roomCategoryId: req.params.roomCategoryId });
+    console.error('Error retrieving rooms by Room Category ID', { error: error.message, roomCategoryId: req.params.roomCategoryId });
     throw error;
   }
 });

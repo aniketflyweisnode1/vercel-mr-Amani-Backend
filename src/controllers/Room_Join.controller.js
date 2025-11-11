@@ -1,7 +1,7 @@
-const Room_Join = require('../models/Room_Join.model');
+﻿const Room_Join = require('../models/Room_Join.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createRoomJoin = asyncHandler(async (req, res) => {
   try {
@@ -11,10 +11,10 @@ const createRoomJoin = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const join = await Room_Join.create(joinData);
-    logger.info('Room Join created successfully', { joinId: join._id, Room_Join_id: join.Room_Join_id });
+    console.info('Room Join created successfully', { joinId: join._id, Room_Join_id: join.Room_Join_id });
     sendSuccess(res, join, 'Room Join created successfully', 201);
   } catch (error) {
-    logger.error('Error creating room join', { error: error.message, stack: error.stack });
+    console.error('Error creating room join', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -35,10 +35,10 @@ const getAllRoomJoins = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Room Joins retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Room Joins retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, joins, pagination, 'Room Joins retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room joins', { error: error.message, stack: error.stack });
+    console.error('Error retrieving room joins', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -55,10 +55,10 @@ const getRoomJoinById = asyncHandler(async (req, res) => {
       join = await Room_Join.findOne({ Room_Join_id: joinId });
     }
     if (!join) return sendNotFound(res, 'Room Join not found');
-    logger.info('Room Join retrieved successfully', { joinId: join._id });
+    console.info('Room Join retrieved successfully', { joinId: join._id });
     sendSuccess(res, join, 'Room Join retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room join', { error: error.message, joinId: req.params.id });
+    console.error('Error retrieving room join', { error: error.message, joinId: req.params.id });
     throw error;
   }
 });
@@ -76,10 +76,10 @@ const updateRoomJoin = asyncHandler(async (req, res) => {
       join = await Room_Join.findOneAndUpdate({ Room_Join_id: joinId }, updateData, { new: true, runValidators: true });
     }
     if (!join) return sendNotFound(res, 'Room Join not found');
-    logger.info('Room Join updated successfully', { joinId: join._id });
+    console.info('Room Join updated successfully', { joinId: join._id });
     sendSuccess(res, join, 'Room Join updated successfully');
   } catch (error) {
-    logger.error('Error updating room join', { error: error.message, joinId: req.params.id });
+    console.error('Error updating room join', { error: error.message, joinId: req.params.id });
     throw error;
   }
 });
@@ -96,10 +96,10 @@ const deleteRoomJoin = asyncHandler(async (req, res) => {
       join = await Room_Join.findOneAndUpdate({ Room_Join_id: joinId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!join) return sendNotFound(res, 'Room Join not found');
-    logger.info('Room Join deleted successfully', { joinId: join._id });
+    console.info('Room Join deleted successfully', { joinId: join._id });
     sendSuccess(res, join, 'Room Join deleted successfully');
   } catch (error) {
-    logger.error('Error deleting room join', { error: error.message, joinId: req.params.id });
+    console.error('Error deleting room join', { error: error.message, joinId: req.params.id });
     throw error;
   }
 });
@@ -120,10 +120,10 @@ const getRoomJoinsByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Room Joins by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Room Joins by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, joins, pagination, 'Room Joins retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room joins by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving room joins by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -147,10 +147,10 @@ const getRoomJoinsByRoomId = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Room Joins by Room ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), roomId: roomIdNum });
+    console.info('Room Joins by Room ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), roomId: roomIdNum });
     sendPaginated(res, joins, pagination, 'Room Joins retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room joins by Room ID', { error: error.message, roomId: req.params.roomId });
+    console.error('Error retrieving room joins by Room ID', { error: error.message, roomId: req.params.roomId });
     throw error;
   }
 });

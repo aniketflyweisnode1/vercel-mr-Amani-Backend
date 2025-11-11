@@ -1,7 +1,7 @@
-const Reel_Add_User = require('../models/Reel_Add_User.model');
+﻿const Reel_Add_User = require('../models/Reel_Add_User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new reel add user
@@ -18,11 +18,11 @@ const createReelAddUser = asyncHandler(async (req, res) => {
 
     const addUser = await Reel_Add_User.create(addUserData);
 
-    logger.info('Reel Add User created successfully', { addUserId: addUser._id, Reel_Add_User_id: addUser.Reel_Add_User_id });
+    console.info('Reel Add User created successfully', { addUserId: addUser._id, Reel_Add_User_id: addUser.Reel_Add_User_id });
 
     sendSuccess(res, addUser, 'Reel Add User created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel add user', { error: error.message, stack: error.stack });
+    console.error('Error creating reel add user', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -74,7 +74,7 @@ const getAllReelAddUsers = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reel Add Users retrieved successfully', { 
+    console.info('Reel Add Users retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -82,7 +82,7 @@ const getAllReelAddUsers = asyncHandler(async (req, res) => {
 
     sendPaginated(res, addUsers, pagination, 'Reel Add Users retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel add users', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reel add users', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -114,11 +114,11 @@ const getReelAddUserById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel Add User not found');
     }
 
-    logger.info('Reel Add User retrieved successfully', { addUserId: addUser._id });
+    console.info('Reel Add User retrieved successfully', { addUserId: addUser._id });
 
     sendSuccess(res, addUser, 'Reel Add User retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel add user', { error: error.message, addUserId: req.params.id });
+    console.error('Error retrieving reel add user', { error: error.message, addUserId: req.params.id });
     throw error;
   }
 });
@@ -170,11 +170,11 @@ const updateReelAddUser = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel Add User not found');
     }
 
-    logger.info('Reel Add User updated successfully', { addUserId: addUser._id });
+    console.info('Reel Add User updated successfully', { addUserId: addUser._id });
 
     sendSuccess(res, addUser, 'Reel Add User updated successfully');
   } catch (error) {
-    logger.error('Error updating reel add user', { error: error.message, addUserId: req.params.id });
+    console.error('Error updating reel add user', { error: error.message, addUserId: req.params.id });
     throw error;
   }
 });
@@ -222,11 +222,11 @@ const deleteReelAddUser = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel Add User not found');
     }
 
-    logger.info('Reel Add User deleted successfully', { addUserId: addUser._id });
+    console.info('Reel Add User deleted successfully', { addUserId: addUser._id });
 
     sendSuccess(res, addUser, 'Reel Add User deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel add user', { error: error.message, addUserId: req.params.id });
+    console.error('Error deleting reel add user', { error: error.message, addUserId: req.params.id });
     throw error;
   }
 });
@@ -280,7 +280,7 @@ const getReelAddUsersByAuth = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reel Add Users by authenticated user retrieved successfully', { 
+    console.info('Reel Add Users by authenticated user retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit),
@@ -289,7 +289,7 @@ const getReelAddUsersByAuth = asyncHandler(async (req, res) => {
 
     sendPaginated(res, addUsers, pagination, 'Reel Add Users retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel add users by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reel add users by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });

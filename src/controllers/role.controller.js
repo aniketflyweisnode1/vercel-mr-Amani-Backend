@@ -1,7 +1,7 @@
-const Role = require('../models/role.model');
+﻿const Role = require('../models/role.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new role
@@ -17,11 +17,11 @@ const createRole = asyncHandler(async (req, res) => {
 
     const role = await Role.create(roleData);
 
-    logger.info('Role created successfully', { roleId: role._id, role_id: role.role_id });
+    console.info('Role created successfully', { roleId: role._id, role_id: role.role_id });
 
     sendSuccess(res, role, 'Role created successfully', 201);
   } catch (error) {
-    logger.error('Error creating role', { error: error.message, stack: error.stack });
+    console.error('Error creating role', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -80,7 +80,7 @@ const getAllRoles = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Roles retrieved successfully', { 
+    console.info('Roles retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -88,7 +88,7 @@ const getAllRoles = asyncHandler(async (req, res) => {
 
     sendPaginated(res, roles, pagination, 'Roles retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving roles', { error: error.message, stack: error.stack });
+    console.error('Error retrieving roles', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -108,11 +108,11 @@ const getRoleById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Role not found');
     }
 
-    logger.info('Role retrieved successfully', { roleId: role._id });
+    console.info('Role retrieved successfully', { roleId: role._id });
 
     sendSuccess(res, role, 'Role retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving role', { error: error.message, roleId: req.params.id });
+    console.error('Error retrieving role', { error: error.message, roleId: req.params.id });
     throw error;
   }
 });
@@ -145,11 +145,11 @@ const updateRole = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Role not found');
     }
 
-    logger.info('Role updated successfully', { roleId: role._id });
+    console.info('Role updated successfully', { roleId: role._id });
 
     sendSuccess(res, role, 'Role updated successfully');
   } catch (error) {
-    logger.error('Error updating role', { error: error.message, roleId: req.params.id });
+    console.error('Error updating role', { error: error.message, roleId: req.params.id });
     throw error;
   }
 });
@@ -177,11 +177,11 @@ const deleteRole = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Role not found');
     }
 
-    logger.info('Role deleted successfully', { roleId: role._id });
+    console.info('Role deleted successfully', { roleId: role._id });
 
     sendSuccess(res, role, 'Role deleted successfully');
   } catch (error) {
-    logger.error('Error deleting role', { error: error.message, roleId: req.params.id });
+    console.error('Error deleting role', { error: error.message, roleId: req.params.id });
     throw error;
   }
 });

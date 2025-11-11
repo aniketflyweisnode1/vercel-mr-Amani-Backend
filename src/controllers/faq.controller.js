@@ -1,7 +1,7 @@
-const faq = require('../models/faq.model');
+﻿const faq = require('../models/faq.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createFaq = asyncHandler(async (req, res) => {
   try {
@@ -10,10 +10,10 @@ const createFaq = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const faqItem = await faq.create(faqData);
-    logger.info('FAQ created successfully', { faqId: faqItem._id, faq_id: faqItem.faq_id });
+    console.info('FAQ created successfully', { faqId: faqItem._id, faq_id: faqItem.faq_id });
     sendSuccess(res, faqItem, 'FAQ created successfully', 201);
   } catch (error) {
-    logger.error('Error creating FAQ', { error: error.message, stack: error.stack });
+    console.error('Error creating FAQ', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -40,10 +40,10 @@ const getAllFaqs = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('FAQs retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('FAQs retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, faqs, pagination, 'FAQs retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving FAQs', { error: error.message, stack: error.stack });
+    console.error('Error retrieving FAQs', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -60,10 +60,10 @@ const getFaqById = asyncHandler(async (req, res) => {
       faqItem = await faq.findOne({ faq_id: faqId });
     }
     if (!faqItem) return sendNotFound(res, 'FAQ not found');
-    logger.info('FAQ retrieved successfully', { faqId: faqItem._id });
+    console.info('FAQ retrieved successfully', { faqId: faqItem._id });
     sendSuccess(res, faqItem, 'FAQ retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving FAQ', { error: error.message, faqId: req.params.id });
+    console.error('Error retrieving FAQ', { error: error.message, faqId: req.params.id });
     throw error;
   }
 });
@@ -81,10 +81,10 @@ const updateFaq = asyncHandler(async (req, res) => {
       faqItem = await faq.findOneAndUpdate({ faq_id: faqId }, updateData, { new: true, runValidators: true });
     }
     if (!faqItem) return sendNotFound(res, 'FAQ not found');
-    logger.info('FAQ updated successfully', { faqId: faqItem._id });
+    console.info('FAQ updated successfully', { faqId: faqItem._id });
     sendSuccess(res, faqItem, 'FAQ updated successfully');
   } catch (error) {
-    logger.error('Error updating FAQ', { error: error.message, faqId: req.params.id });
+    console.error('Error updating FAQ', { error: error.message, faqId: req.params.id });
     throw error;
   }
 });
@@ -101,10 +101,10 @@ const deleteFaq = asyncHandler(async (req, res) => {
       faqItem = await faq.findOneAndUpdate({ faq_id: faqId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!faqItem) return sendNotFound(res, 'FAQ not found');
-    logger.info('FAQ deleted successfully', { faqId: faqItem._id });
+    console.info('FAQ deleted successfully', { faqId: faqItem._id });
     sendSuccess(res, faqItem, 'FAQ deleted successfully');
   } catch (error) {
-    logger.error('Error deleting FAQ', { error: error.message, faqId: req.params.id });
+    console.error('Error deleting FAQ', { error: error.message, faqId: req.params.id });
     throw error;
   }
 });

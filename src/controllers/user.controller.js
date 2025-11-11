@@ -1,7 +1,7 @@
-const User = require('../models/User.model');
+﻿const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new user
@@ -30,17 +30,17 @@ const createUser = asyncHandler(async (req, res) => {
         Status: true,
         created_by: req.userIdNumber || null
       });
-      logger.info('Wallet auto-created for new user', { userId: user._id, user_id: user.user_id });
+      console.info('Wallet auto-created for new user', { userId: user._id, user_id: user.user_id });
     } catch (walletError) {
-      logger.error('Error auto-creating wallet for user', { error: walletError.message, userId: user._id });
+      console.error('Error auto-creating wallet for user', { error: walletError.message, userId: user._id });
       // Don't fail user creation if wallet creation fails
     }
     
-    logger.info('User created successfully', { userId: user._id, user_id: user.user_id });
+    console.info('User created successfully', { userId: user._id, user_id: user.user_id });
 
     sendSuccess(res, user, 'User created successfully', 201);
   } catch (error) {
-    logger.error('Error creating user', { error: error.message, stack: error.stack });
+    console.error('Error creating user', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -118,7 +118,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Users retrieved successfully', { 
+    console.info('Users retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -126,7 +126,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     sendPaginated(res, users, pagination, 'Users retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving users', { error: error.message, stack: error.stack });
+    console.error('Error retrieving users', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -158,11 +158,11 @@ const getUserById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    logger.info('User retrieved successfully', { userId: user._id });
+    console.info('User retrieved successfully', { userId: user._id });
 
     sendSuccess(res, user, 'User retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving user', { error: error.message, userId: req.params.id });
+    console.error('Error retrieving user', { error: error.message, userId: req.params.id });
     throw error;
   }
 });
@@ -217,11 +217,11 @@ console.log("---------------------------\n",req.body, req.userIdNumber);
       return sendNotFound(res, 'User not found');
     }
 
-    logger.info('User updated successfully', { userId: user._id });
+    console.info('User updated successfully', { userId: user._id });
 
     sendSuccess(res, user, 'User updated successfully');
   } catch (error) {
-    logger.error('Error updating user', { error: error.message, userId: req.params.id });
+    console.error('Error updating user', { error: error.message, userId: req.params.id });
     throw error;
   }
 });
@@ -249,11 +249,11 @@ const deleteUser = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    logger.info('User deleted successfully', { userId: user._id });
+    console.info('User deleted successfully', { userId: user._id });
 
     sendSuccess(res, user, 'User deleted successfully');
   } catch (error) {
-    logger.error('Error deleting user', { error: error.message, userId: req.params.id });
+    console.error('Error deleting user', { error: error.message, userId: req.params.id });
     throw error;
   }
 });
@@ -280,7 +280,7 @@ const getProfile = asyncHandler(async (req, res) => {
 
     sendSuccess(res, user, 'Profile retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving profile', { error: error.message, userId: req.userId });
+    console.error('Error retrieving profile', { error: error.message, userId: req.userId });
     throw error;
   }
 });
@@ -320,11 +320,11 @@ const updateProfile = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    logger.info('Profile updated successfully', { userId: user._id });
+    console.info('Profile updated successfully', { userId: user._id });
 
     sendSuccess(res, user, 'Profile updated successfully');
   } catch (error) {
-    logger.error('Error updating profile', { error: error.message, userId: req.userId });
+    console.error('Error updating profile', { error: error.message, userId: req.userId });
     throw error;
   }
 });
@@ -364,11 +364,11 @@ const updateUserByIdBody = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    logger.info('User updated successfully by ID in body', { userId: user._id, updatedBy: req.userIdNumber });
+    console.info('User updated successfully by ID in body', { userId: user._id, updatedBy: req.userIdNumber });
 
     sendSuccess(res, user, 'User updated successfully');
   } catch (error) {
-    logger.error('Error updating user by ID in body', { error: error.message, userId: req.body.id });
+    console.error('Error updating user by ID in body', { error: error.message, userId: req.body.id });
     throw error;
   }
 });
@@ -402,11 +402,11 @@ const changePassword = asyncHandler(async (req, res) => {
     user.updated_at = new Date();
     await user.save();
 
-    logger.info('Password changed successfully', { userId: user._id });
+    console.info('Password changed successfully', { userId: user._id });
 
     sendSuccess(res, null, 'Password changed successfully');
   } catch (error) {
-    logger.error('Error changing password', { error: error.message, userId: req.userIdNumber });
+    console.error('Error changing password', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -437,11 +437,11 @@ const activeDeviceLocation = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    logger.info('Device location permission activated', { userId: user._id, user_id: user.user_id });
+    console.info('Device location permission activated', { userId: user._id, user_id: user.user_id });
 
     sendSuccess(res, user, 'Device location permission activated successfully');
   } catch (error) {
-    logger.error('Error activating device location permission', { error: error.message, userId: req.userId });
+    console.error('Error activating device location permission', { error: error.message, userId: req.userId });
     throw error;
   }
 });

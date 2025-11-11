@@ -1,7 +1,7 @@
-const Room_Categories = require('../models/Room_Categories.model');
+﻿const Room_Categories = require('../models/Room_Categories.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createRoomCategory = asyncHandler(async (req, res) => {
   try {
@@ -10,10 +10,10 @@ const createRoomCategory = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const category = await Room_Categories.create(categoryData);
-    logger.info('Room Category created successfully', { categoryId: category._id, Room_Categories_id: category.Room_Categories_id });
+    console.info('Room Category created successfully', { categoryId: category._id, Room_Categories_id: category.Room_Categories_id });
     sendSuccess(res, category, 'Room Category created successfully', 201);
   } catch (error) {
-    logger.error('Error creating room category', { error: error.message, stack: error.stack });
+    console.error('Error creating room category', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -40,10 +40,10 @@ const getAllRoomCategories = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Room Categories retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Room Categories retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, categories, pagination, 'Room Categories retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room categories', { error: error.message, stack: error.stack });
+    console.error('Error retrieving room categories', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -60,10 +60,10 @@ const getRoomCategoryById = asyncHandler(async (req, res) => {
       category = await Room_Categories.findOne({ Room_Categories_id: categoryId });
     }
     if (!category) return sendNotFound(res, 'Room Category not found');
-    logger.info('Room Category retrieved successfully', { categoryId: category._id });
+    console.info('Room Category retrieved successfully', { categoryId: category._id });
     sendSuccess(res, category, 'Room Category retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room category', { error: error.message, categoryId: req.params.id });
+    console.error('Error retrieving room category', { error: error.message, categoryId: req.params.id });
     throw error;
   }
 });
@@ -81,10 +81,10 @@ const updateRoomCategory = asyncHandler(async (req, res) => {
       category = await Room_Categories.findOneAndUpdate({ Room_Categories_id: categoryId }, updateData, { new: true, runValidators: true });
     }
     if (!category) return sendNotFound(res, 'Room Category not found');
-    logger.info('Room Category updated successfully', { categoryId: category._id });
+    console.info('Room Category updated successfully', { categoryId: category._id });
     sendSuccess(res, category, 'Room Category updated successfully');
   } catch (error) {
-    logger.error('Error updating room category', { error: error.message, categoryId: req.params.id });
+    console.error('Error updating room category', { error: error.message, categoryId: req.params.id });
     throw error;
   }
 });
@@ -101,10 +101,10 @@ const deleteRoomCategory = asyncHandler(async (req, res) => {
       category = await Room_Categories.findOneAndUpdate({ Room_Categories_id: categoryId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!category) return sendNotFound(res, 'Room Category not found');
-    logger.info('Room Category deleted successfully', { categoryId: category._id });
+    console.info('Room Category deleted successfully', { categoryId: category._id });
     sendSuccess(res, category, 'Room Category deleted successfully');
   } catch (error) {
-    logger.error('Error deleting room category', { error: error.message, categoryId: req.params.id });
+    console.error('Error deleting room category', { error: error.message, categoryId: req.params.id });
     throw error;
   }
 });
@@ -125,10 +125,10 @@ const getRoomCategoriesByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Room Categories by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Room Categories by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, categories, pagination, 'Room Categories retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving room categories by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving room categories by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });

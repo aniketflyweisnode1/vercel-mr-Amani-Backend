@@ -1,9 +1,9 @@
-const User = require('../models/User.model');
+﻿const User = require('../models/User.model');
 const { generateToken } = require('../../utils/jwt');
 const { verifyOTP } = require('../../utils/otp');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 const { ensureRoleMatch } = require('../utils/role');
 
 const buildRoleBasedLoginHandler = (allowedRoleNames = [], successMessage = 'Login successful') => asyncHandler(async (req, res) => {
@@ -84,7 +84,7 @@ const buildRoleBasedLoginHandler = (allowedRoleNames = [], successMessage = 'Log
   delete userResponse.otp;
   delete userResponse.otpExpiresAt;
 
-  logger.info(`${successMessage}`, {
+  console.info(`${successMessage}`, {
     userId: user._id,
     user_id: user.user_id,
     role: roleValidation.role?.name

@@ -1,7 +1,7 @@
-const Reel = require('../models/Reel.model');
+﻿const Reel = require('../models/Reel.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const normalizeToArray = (value) => {
   if (value === undefined || value === null) return [];
@@ -30,11 +30,11 @@ const createReel = asyncHandler(async (req, res) => {
 
     const post = await Reel.create(postData);
 
-    logger.info('Reel created successfully', { postId: post._id, Real_Post_id: post.Real_Post_id });
+    console.info('Reel created successfully', { postId: post._id, Real_Post_id: post.Real_Post_id });
 
     sendSuccess(res, post, 'Reel created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel', { error: error.message, stack: error.stack });
+    console.error('Error creating reel', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -97,7 +97,7 @@ const getAllReels = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reels retrieved successfully', { 
+    console.info('Reels retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -105,7 +105,7 @@ const getAllReels = asyncHandler(async (req, res) => {
 
     sendPaginated(res, posts, pagination, 'Reels retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reels', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reels', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -137,11 +137,11 @@ const getReelById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel not found');
     }
 
-    logger.info('Reel retrieved successfully', { postId: post._id });
+    console.info('Reel retrieved successfully', { postId: post._id });
 
     sendSuccess(res, post, 'Reel retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel', { error: error.message, postId: req.params.id });
+    console.error('Error retrieving reel', { error: error.message, postId: req.params.id });
     throw error;
   }
 });
@@ -200,11 +200,11 @@ const updateReel = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel not found');
     }
 
-    logger.info('Reel updated successfully', { postId: post._id });
+    console.info('Reel updated successfully', { postId: post._id });
 
     sendSuccess(res, post, 'Reel updated successfully');
   } catch (error) {
-    logger.error('Error updating reel', { error: error.message, postId: req.params.id });
+    console.error('Error updating reel', { error: error.message, postId: req.params.id });
     throw error;
   }
 });
@@ -252,11 +252,11 @@ const deleteReel = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel not found');
     }
 
-    logger.info('Reel deleted successfully', { postId: post._id });
+    console.info('Reel deleted successfully', { postId: post._id });
 
     sendSuccess(res, post, 'Reel deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel', { error: error.message, postId: req.params.id });
+    console.error('Error deleting reel', { error: error.message, postId: req.params.id });
     throw error;
   }
 });
@@ -310,7 +310,7 @@ const getReelsByAuth = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Reels by authenticated user retrieved successfully', { 
+    console.info('Reels by authenticated user retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit),
@@ -319,7 +319,7 @@ const getReelsByAuth = asyncHandler(async (req, res) => {
 
     sendPaginated(res, posts, pagination, 'Reels retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reels by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reels by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });

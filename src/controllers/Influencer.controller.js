@@ -1,7 +1,7 @@
-const Influencer = require('../models/Influencer.model');
+﻿const Influencer = require('../models/Influencer.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createInfluencer = asyncHandler(async (req, res) => {
   try {
@@ -16,10 +16,10 @@ const createInfluencer = asyncHandler(async (req, res) => {
     }
 
     const influencer = await Influencer.create(influencerData);
-    logger.info('Influencer created successfully', { influencerId: influencer._id, Influencer_id: influencer.Influencer_id });
+    console.info('Influencer created successfully', { influencerId: influencer._id, Influencer_id: influencer.Influencer_id });
     sendSuccess(res, influencer, 'Influencer created successfully', 201);
   } catch (error) {
-    logger.error('Error creating influencer', { error: error.message, stack: error.stack });
+    console.error('Error creating influencer', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -58,10 +58,10 @@ const getAllInfluencers = asyncHandler(async (req, res) => {
       hasPrevPage: parseInt(page, 10) > 1
     };
 
-    logger.info('Influencers retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
+    console.info('Influencers retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
     sendPaginated(res, influencers, pagination, 'Influencers retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving influencers', { error: error.message, stack: error.stack });
+    console.error('Error retrieving influencers', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -81,10 +81,10 @@ const getInfluencerById = asyncHandler(async (req, res) => {
 
     if (!influencer) return sendNotFound(res, 'Influencer not found');
 
-    logger.info('Influencer retrieved successfully', { influencerId: influencer._id });
+    console.info('Influencer retrieved successfully', { influencerId: influencer._id });
     sendSuccess(res, influencer, 'Influencer retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving influencer', { error: error.message, influencerId: req.params.id });
+    console.error('Error retrieving influencer', { error: error.message, influencerId: req.params.id });
     throw error;
   }
 });
@@ -109,10 +109,10 @@ const updateInfluencer = asyncHandler(async (req, res) => {
 
     if (!influencer) return sendNotFound(res, 'Influencer not found');
 
-    logger.info('Influencer updated successfully', { influencerId: influencer._id });
+    console.info('Influencer updated successfully', { influencerId: influencer._id });
     sendSuccess(res, influencer, 'Influencer updated successfully');
   } catch (error) {
-    logger.error('Error updating influencer', { error: error.message, influencerId: req.params.id });
+    console.error('Error updating influencer', { error: error.message, influencerId: req.params.id });
     throw error;
   }
 });
@@ -137,10 +137,10 @@ const deleteInfluencer = asyncHandler(async (req, res) => {
 
     if (!influencer) return sendNotFound(res, 'Influencer not found');
 
-    logger.info('Influencer deleted successfully', { influencerId: influencer._id });
+    console.info('Influencer deleted successfully', { influencerId: influencer._id });
     sendSuccess(res, influencer, 'Influencer deleted successfully');
   } catch (error) {
-    logger.error('Error deleting influencer', { error: error.message, influencerId: req.params.id });
+    console.error('Error deleting influencer', { error: error.message, influencerId: req.params.id });
     throw error;
   }
 });
@@ -157,10 +157,10 @@ const getInfluencersByAuth = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'No influencer profiles found for the authenticated user');
     }
 
-    logger.info('Influencers retrieved by auth user successfully', { userId, count: influencers.length });
+    console.info('Influencers retrieved by auth user successfully', { userId, count: influencers.length });
     sendSuccess(res, influencers, 'Influencers retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving influencer by auth user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving influencer by auth user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });

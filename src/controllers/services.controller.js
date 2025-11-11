@@ -1,7 +1,7 @@
-const Services = require('../models/services.model');
+﻿const Services = require('../models/services.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new service
@@ -17,11 +17,11 @@ const createService = asyncHandler(async (req, res) => {
 
     const service = await Services.create(serviceData);
 
-    logger.info('Service created successfully', { serviceId: service._id, service_id: service.service_id });
+    console.info('Service created successfully', { serviceId: service._id, service_id: service.service_id });
 
     sendSuccess(res, service, 'Service created successfully', 201);
   } catch (error) {
-    logger.error('Error creating service', { error: error.message, stack: error.stack });
+    console.error('Error creating service', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -81,7 +81,7 @@ const getAllServices = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Services retrieved successfully', { 
+    console.info('Services retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -89,7 +89,7 @@ const getAllServices = asyncHandler(async (req, res) => {
 
     sendPaginated(res, services, pagination, 'Services retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving services', { error: error.message, stack: error.stack });
+    console.error('Error retrieving services', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -109,11 +109,11 @@ const getServiceById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Service not found');
     }
 
-    logger.info('Service retrieved successfully', { serviceId: service._id });
+    console.info('Service retrieved successfully', { serviceId: service._id });
 
     sendSuccess(res, service, 'Service retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving service', { error: error.message, serviceId: req.params.id });
+    console.error('Error retrieving service', { error: error.message, serviceId: req.params.id });
     throw error;
   }
 });
@@ -146,11 +146,11 @@ const updateService = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Service not found');
     }
 
-    logger.info('Service updated successfully', { serviceId: service._id });
+    console.info('Service updated successfully', { serviceId: service._id });
 
     sendSuccess(res, service, 'Service updated successfully');
   } catch (error) {
-    logger.error('Error updating service', { error: error.message, serviceId: req.params.id });
+    console.error('Error updating service', { error: error.message, serviceId: req.params.id });
     throw error;
   }
 });
@@ -178,11 +178,11 @@ const deleteService = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Service not found');
     }
 
-    logger.info('Service deleted successfully', { serviceId: service._id });
+    console.info('Service deleted successfully', { serviceId: service._id });
 
     sendSuccess(res, service, 'Service deleted successfully');
   } catch (error) {
-    logger.error('Error deleting service', { error: error.message, serviceId: req.params.id });
+    console.error('Error deleting service', { error: error.message, serviceId: req.params.id });
     throw error;
   }
 });

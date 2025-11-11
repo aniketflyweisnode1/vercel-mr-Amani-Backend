@@ -1,7 +1,7 @@
-const City = require('../models/city.model');
+﻿const City = require('../models/city.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 /**
  * Create a new city
@@ -17,11 +17,11 @@ const createCity = asyncHandler(async (req, res) => {
 
     const city = await City.create(cityData);
 
-    logger.info('City created successfully', { cityId: city._id, city_id: city.city_id });
+    console.info('City created successfully', { cityId: city._id, city_id: city.city_id });
 
     sendSuccess(res, city, 'City created successfully', 201);
   } catch (error) {
-    logger.error('Error creating city', { error: error.message, stack: error.stack });
+    console.error('Error creating city', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -87,7 +87,7 @@ const getAllCities = asyncHandler(async (req, res) => {
       hasPrevPage
     };
 
-    logger.info('Cities retrieved successfully', { 
+    console.info('Cities retrieved successfully', { 
       total, 
       page: parseInt(page), 
       limit: parseInt(limit) 
@@ -95,7 +95,7 @@ const getAllCities = asyncHandler(async (req, res) => {
 
     sendPaginated(res, cities, pagination, 'Cities retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving cities', { error: error.message, stack: error.stack });
+    console.error('Error retrieving cities', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -115,11 +115,11 @@ const getCityById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'City not found');
     }
 
-    logger.info('City retrieved successfully', { cityId: city._id });
+    console.info('City retrieved successfully', { cityId: city._id });
 
     sendSuccess(res, city, 'City retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving city', { error: error.message, cityId: req.params.id });
+    console.error('Error retrieving city', { error: error.message, cityId: req.params.id });
     throw error;
   }
 });
@@ -152,11 +152,11 @@ const updateCity = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'City not found');
     }
 
-    logger.info('City updated successfully', { cityId: city._id });
+    console.info('City updated successfully', { cityId: city._id });
 
     sendSuccess(res, city, 'City updated successfully');
   } catch (error) {
-    logger.error('Error updating city', { error: error.message, cityId: req.params.id });
+    console.error('Error updating city', { error: error.message, cityId: req.params.id });
     throw error;
   }
 });
@@ -184,11 +184,11 @@ const deleteCity = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'City not found');
     }
 
-    logger.info('City deleted successfully', { cityId: city._id });
+    console.info('City deleted successfully', { cityId: city._id });
 
     sendSuccess(res, city, 'City deleted successfully');
   } catch (error) {
-    logger.error('Error deleting city', { error: error.message, cityId: req.params.id });
+    console.error('Error deleting city', { error: error.message, cityId: req.params.id });
     throw error;
   }
 });

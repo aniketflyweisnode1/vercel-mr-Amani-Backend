@@ -1,7 +1,7 @@
-const Reel_Comment = require('../models/Reel_Comment.model');
+﻿const Reel_Comment = require('../models/Reel_Comment.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createReelComment = asyncHandler(async (req, res) => {
   try {
@@ -11,10 +11,10 @@ const createReelComment = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const comment = await Reel_Comment.create(commentData);
-    logger.info('Reel Comment created successfully', { commentId: comment._id, Real_Post_Comment_id: comment.Real_Post_Comment_id });
+    console.info('Reel Comment created successfully', { commentId: comment._id, Real_Post_Comment_id: comment.Real_Post_Comment_id });
     sendSuccess(res, comment, 'Reel Comment created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel comment', { error: error.message, stack: error.stack });
+    console.error('Error creating reel comment', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -35,10 +35,10 @@ const getAllReelComments = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Comments retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Reel Comments retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, comments, pagination, 'Reel Comments retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel comments', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reel comments', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -55,10 +55,10 @@ const getReelCommentById = asyncHandler(async (req, res) => {
       comment = await Reel_Comment.findOne({ Real_Post_Comment_id: commentId });
     }
     if (!comment) return sendNotFound(res, 'Reel Comment not found');
-    logger.info('Reel Comment retrieved successfully', { commentId: comment._id });
+    console.info('Reel Comment retrieved successfully', { commentId: comment._id });
     sendSuccess(res, comment, 'Reel Comment retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel comment', { error: error.message, commentId: req.params.id });
+    console.error('Error retrieving reel comment', { error: error.message, commentId: req.params.id });
     throw error;
   }
 });
@@ -76,10 +76,10 @@ const updateReelComment = asyncHandler(async (req, res) => {
       comment = await Reel_Comment.findOneAndUpdate({ Real_Post_Comment_id: commentId }, updateData, { new: true, runValidators: true });
     }
     if (!comment) return sendNotFound(res, 'Reel Comment not found');
-    logger.info('Reel Comment updated successfully', { commentId: comment._id });
+    console.info('Reel Comment updated successfully', { commentId: comment._id });
     sendSuccess(res, comment, 'Reel Comment updated successfully');
   } catch (error) {
-    logger.error('Error updating reel comment', { error: error.message, commentId: req.params.id });
+    console.error('Error updating reel comment', { error: error.message, commentId: req.params.id });
     throw error;
   }
 });
@@ -96,10 +96,10 @@ const deleteReelComment = asyncHandler(async (req, res) => {
       comment = await Reel_Comment.findOneAndUpdate({ Real_Post_Comment_id: commentId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!comment) return sendNotFound(res, 'Reel Comment not found');
-    logger.info('Reel Comment deleted successfully', { commentId: comment._id });
+    console.info('Reel Comment deleted successfully', { commentId: comment._id });
     sendSuccess(res, comment, 'Reel Comment deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel comment', { error: error.message, commentId: req.params.id });
+    console.error('Error deleting reel comment', { error: error.message, commentId: req.params.id });
     throw error;
   }
 });
@@ -120,10 +120,10 @@ const getReelCommentsByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Comments by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Reel Comments by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, comments, pagination, 'Reel Comments retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel comments by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reel comments by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -147,10 +147,10 @@ const getReelCommentsByReelId = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Comments by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
+    console.info('Reel Comments by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
     sendPaginated(res, comments, pagination, 'Reel Comments retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel comments by Reel ID', { error: error.message, reelId: req.params.reelId });
+    console.error('Error retrieving reel comments by Reel ID', { error: error.message, reelId: req.params.reelId });
     throw error;
   }
 });

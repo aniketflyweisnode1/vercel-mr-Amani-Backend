@@ -1,7 +1,7 @@
-const Reel_Like = require('../models/Reel_Like.model');
+﻿const Reel_Like = require('../models/Reel_Like.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createReelLike = asyncHandler(async (req, res) => {
   try {
@@ -11,10 +11,10 @@ const createReelLike = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const like = await Reel_Like.create(likeData);
-    logger.info('Reel Like created successfully', { likeId: like._id, Real_Post_Like_id: like.Real_Post_Like_id });
+    console.info('Reel Like created successfully', { likeId: like._id, Real_Post_Like_id: like.Real_Post_Like_id });
     sendSuccess(res, like, 'Reel Like created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel like', { error: error.message, stack: error.stack });
+    console.error('Error creating reel like', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -35,10 +35,10 @@ const getAllReelLikes = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Likes retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Reel Likes retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, likes, pagination, 'Reel Likes retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel likes', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reel likes', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -55,10 +55,10 @@ const getReelLikeById = asyncHandler(async (req, res) => {
       like = await Reel_Like.findOne({ Real_Post_Like_id: likeId });
     }
     if (!like) return sendNotFound(res, 'Reel Like not found');
-    logger.info('Reel Like retrieved successfully', { likeId: like._id });
+    console.info('Reel Like retrieved successfully', { likeId: like._id });
     sendSuccess(res, like, 'Reel Like retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel like', { error: error.message, likeId: req.params.id });
+    console.error('Error retrieving reel like', { error: error.message, likeId: req.params.id });
     throw error;
   }
 });
@@ -76,10 +76,10 @@ const updateReelLike = asyncHandler(async (req, res) => {
       like = await Reel_Like.findOneAndUpdate({ Real_Post_Like_id: likeId }, updateData, { new: true, runValidators: true });
     }
     if (!like) return sendNotFound(res, 'Reel Like not found');
-    logger.info('Reel Like updated successfully', { likeId: like._id });
+    console.info('Reel Like updated successfully', { likeId: like._id });
     sendSuccess(res, like, 'Reel Like updated successfully');
   } catch (error) {
-    logger.error('Error updating reel like', { error: error.message, likeId: req.params.id });
+    console.error('Error updating reel like', { error: error.message, likeId: req.params.id });
     throw error;
   }
 });
@@ -96,10 +96,10 @@ const deleteReelLike = asyncHandler(async (req, res) => {
       like = await Reel_Like.findOneAndUpdate({ Real_Post_Like_id: likeId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!like) return sendNotFound(res, 'Reel Like not found');
-    logger.info('Reel Like deleted successfully', { likeId: like._id });
+    console.info('Reel Like deleted successfully', { likeId: like._id });
     sendSuccess(res, like, 'Reel Like deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel like', { error: error.message, likeId: req.params.id });
+    console.error('Error deleting reel like', { error: error.message, likeId: req.params.id });
     throw error;
   }
 });
@@ -120,10 +120,10 @@ const getReelLikesByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Likes by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Reel Likes by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, likes, pagination, 'Reel Likes retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel likes by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reel likes by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -147,10 +147,10 @@ const getReelLikesByReelId = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Likes by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
+    console.info('Reel Likes by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
     sendPaginated(res, likes, pagination, 'Reel Likes retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel likes by Reel ID', { error: error.message, reelId: req.params.reelId });
+    console.error('Error retrieving reel likes by Reel ID', { error: error.message, reelId: req.params.reelId });
     throw error;
   }
 });

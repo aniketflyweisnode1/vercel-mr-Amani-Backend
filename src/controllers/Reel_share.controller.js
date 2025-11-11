@@ -1,7 +1,7 @@
-const Reel_share = require('../models/Reel_share.model');
+﻿const Reel_share = require('../models/Reel_share.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createReelShare = asyncHandler(async (req, res) => {
   try {
@@ -11,10 +11,10 @@ const createReelShare = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const share = await Reel_share.create(shareData);
-    logger.info('Reel Share created successfully', { shareId: share._id, Real_Post_share_id: share.Real_Post_share_id });
+    console.info('Reel Share created successfully', { shareId: share._id, Real_Post_share_id: share.Real_Post_share_id });
     sendSuccess(res, share, 'Reel Share created successfully', 201);
   } catch (error) {
-    logger.error('Error creating reel share', { error: error.message, stack: error.stack });
+    console.error('Error creating reel share', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -35,10 +35,10 @@ const getAllReelShares = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Shares retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    console.info('Reel Shares retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
     sendPaginated(res, shares, pagination, 'Reel Shares retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel shares', { error: error.message, stack: error.stack });
+    console.error('Error retrieving reel shares', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -55,10 +55,10 @@ const getReelShareById = asyncHandler(async (req, res) => {
       share = await Reel_share.findOne({ Real_Post_share_id: shareId });
     }
     if (!share) return sendNotFound(res, 'Reel Share not found');
-    logger.info('Reel Share retrieved successfully', { shareId: share._id });
+    console.info('Reel Share retrieved successfully', { shareId: share._id });
     sendSuccess(res, share, 'Reel Share retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel share', { error: error.message, shareId: req.params.id });
+    console.error('Error retrieving reel share', { error: error.message, shareId: req.params.id });
     throw error;
   }
 });
@@ -76,10 +76,10 @@ const updateReelShare = asyncHandler(async (req, res) => {
       share = await Reel_share.findOneAndUpdate({ Real_Post_share_id: shareId }, updateData, { new: true, runValidators: true });
     }
     if (!share) return sendNotFound(res, 'Reel Share not found');
-    logger.info('Reel Share updated successfully', { shareId: share._id });
+    console.info('Reel Share updated successfully', { shareId: share._id });
     sendSuccess(res, share, 'Reel Share updated successfully');
   } catch (error) {
-    logger.error('Error updating reel share', { error: error.message, shareId: req.params.id });
+    console.error('Error updating reel share', { error: error.message, shareId: req.params.id });
     throw error;
   }
 });
@@ -96,10 +96,10 @@ const deleteReelShare = asyncHandler(async (req, res) => {
       share = await Reel_share.findOneAndUpdate({ Real_Post_share_id: shareId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!share) return sendNotFound(res, 'Reel Share not found');
-    logger.info('Reel Share deleted successfully', { shareId: share._id });
+    console.info('Reel Share deleted successfully', { shareId: share._id });
     sendSuccess(res, share, 'Reel Share deleted successfully');
   } catch (error) {
-    logger.error('Error deleting reel share', { error: error.message, shareId: req.params.id });
+    console.error('Error deleting reel share', { error: error.message, shareId: req.params.id });
     throw error;
   }
 });
@@ -120,10 +120,10 @@ const getReelSharesByAuth = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Shares by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    console.info('Reel Shares by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
     sendPaginated(res, shares, pagination, 'Reel Shares retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel shares by authenticated user', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving reel shares by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
   }
 });
@@ -147,10 +147,10 @@ const getReelSharesByReelId = asyncHandler(async (req, res) => {
       currentPage: parseInt(page), totalPages, totalItems: total,
       itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
     };
-    logger.info('Reel Shares by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
+    console.info('Reel Shares by Reel ID retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), reelId: postId });
     sendPaginated(res, shares, pagination, 'Reel Shares retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving reel shares by Reel ID', { error: error.message, reelId: req.params.reelId });
+    console.error('Error retrieving reel shares by Reel ID', { error: error.message, reelId: req.params.reelId });
     throw error;
   }
 });

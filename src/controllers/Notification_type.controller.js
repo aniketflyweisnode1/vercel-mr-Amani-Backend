@@ -1,7 +1,7 @@
-const NotificationType = require('../models/Notification_type.model');
+﻿const NotificationType = require('../models/Notification_type.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const logger = require('../../utils/logger');
+
 
 const createNotificationType = asyncHandler(async (req, res) => {
   try {
@@ -16,10 +16,10 @@ const createNotificationType = asyncHandler(async (req, res) => {
     }
 
     const notificationType = await NotificationType.create(payload);
-    logger.info('Notification type created successfully', { id: notificationType._id, Notification_type_id: notificationType.Notification_type_id });
+    console.info('Notification type created successfully', { id: notificationType._id, Notification_type_id: notificationType.Notification_type_id });
     sendSuccess(res, notificationType, 'Notification type created successfully', 201);
   } catch (error) {
-    logger.error('Error creating notification type', { error: error.message, stack: error.stack });
+    console.error('Error creating notification type', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -71,10 +71,10 @@ const getAllNotificationTypes = asyncHandler(async (req, res) => {
       hasPrevPage: parseInt(page, 10) > 1
     };
 
-    logger.info('Notification types retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
+    console.info('Notification types retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
     sendPaginated(res, types, pagination, 'Notification types retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving notification types', { error: error.message, stack: error.stack });
+    console.error('Error retrieving notification types', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -98,10 +98,10 @@ const getNotificationTypeById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Notification type not found');
     }
 
-    logger.info('Notification type retrieved successfully', { id: notificationType._id });
+    console.info('Notification type retrieved successfully', { id: notificationType._id });
     sendSuccess(res, notificationType, 'Notification type retrieved successfully');
   } catch (error) {
-    logger.error('Error retrieving notification type', { error: error.message, notificationTypeId: req.params.id });
+    console.error('Error retrieving notification type', { error: error.message, notificationTypeId: req.params.id });
     throw error;
   }
 });
@@ -130,10 +130,10 @@ const updateNotificationType = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Notification type not found');
     }
 
-    logger.info('Notification type updated successfully', { id: notificationType._id });
+    console.info('Notification type updated successfully', { id: notificationType._id });
     sendSuccess(res, notificationType, 'Notification type updated successfully');
   } catch (error) {
-    logger.error('Error updating notification type', { error: error.message, notificationTypeId: req.params.id });
+    console.error('Error updating notification type', { error: error.message, notificationTypeId: req.params.id });
     throw error;
   }
 });
@@ -162,10 +162,10 @@ const deleteNotificationType = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Notification type not found');
     }
 
-    logger.info('Notification type deleted successfully', { id: notificationType._id });
+    console.info('Notification type deleted successfully', { id: notificationType._id });
     sendSuccess(res, notificationType, 'Notification type deleted successfully');
   } catch (error) {
-    logger.error('Error deleting notification type', { error: error.message, notificationTypeId: req.params.id });
+    console.error('Error deleting notification type', { error: error.message, notificationTypeId: req.params.id });
     throw error;
   }
 });
