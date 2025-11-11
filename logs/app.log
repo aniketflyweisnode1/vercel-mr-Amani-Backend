@@ -1,0 +1,1128 @@
+[2025-09-23T07:52:03.877Z] INFO: Server running in development mode on port 3000
+[2025-09-23T07:52:03.881Z] INFO: API Documentation: http://localhost:3000/api
+[2025-09-23T07:52:03.881Z] INFO: Health Check: http://localhost:3000/api/health
+[2025-09-23T07:52:16.594Z] INFO: Request received {"method":"GET","url":"/api","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"}
+[2025-09-23T07:52:17.291Z] INFO: Request received {"method":"GET","url":"/favicon.ico","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"}
+[2025-09-24T08:50:06.405Z] INFO: Server running in development mode on port 3000
+[2025-09-24T08:50:06.409Z] INFO: API Documentation: http://localhost:3000/api
+[2025-09-24T08:50:06.410Z] INFO: Health Check: http://localhost:3000/api/health
+[2025-09-24T08:50:14.267Z] INFO: SIGINT received. Shutting down gracefully...
+[2025-09-24T08:50:17.665Z] INFO: Server running in development mode on port 3000
+[2025-09-24T08:50:17.668Z] INFO: API Documentation: http://localhost:3000/api
+[2025-09-24T08:50:17.669Z] INFO: Health Check: http://localhost:3000/api/health
+[2025-09-24T10:08:43.064Z] INFO: Server running in development mode on port 3000
+[2025-09-24T10:08:43.071Z] INFO: API Documentation: http://localhost:3000/api
+[2025-09-24T10:08:43.071Z] INFO: Health Check: http://localhost:3000/api/health
+[2025-11-05T09:05:30.553Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:05:30.561Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:05:30.563Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:08:42.378Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:08:42.389Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:08:42.397Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:09:21.696Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:09:21.704Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:09:21.709Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:09:33.996Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:09:34.004Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:09:34.005Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:16:41.772Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:16:41.780Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:16:41.782Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:16:51.441Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:16:51.450Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:16:51.452Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:26:34.155Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:26:34.164Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:26:34.166Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:26:43.969Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:26:43.981Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:26:43.983Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:27:01.898Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:27:01.909Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:27:01.912Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:27:19.624Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:27:19.632Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:27:19.634Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:27:39.570Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:27:39.580Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:27:39.582Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:27:46.471Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:27:46.483Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:27:46.487Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:27:59.641Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:27:59.649Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:27:59.651Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:31:16.475Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:31:16.488Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:31:16.490Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:31:31.826Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:31:31.835Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:31:31.838Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:32:50.922Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:32:50.931Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:32:50.932Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:33:19.971Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:33:19.984Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:33:19.988Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:34:43.316Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:34:43.326Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:34:43.328Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:35:10.645Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:35:10.656Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:35:10.660Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:35:28.438Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:35:28.447Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:35:28.449Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T09:36:37.349Z] INFO: Server running in development mode on port 3030
+[2025-11-05T09:36:37.362Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T09:36:37.366Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:05:02.319Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:05:02.327Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:05:02.329Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:08:59.984Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:08:59.995Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:08:59.997Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:09:06.240Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:09:06.256Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:09:06.259Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:09:43.797Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:09:43.811Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:09:43.817Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:10:00.338Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:10:00.347Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:10:00.350Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:10:08.293Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:10:08.304Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:10:08.307Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:10:23.395Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:10:23.404Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:10:23.407Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:10:30.304Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:10:30.317Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:10:30.319Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:10:53.387Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:10:53.395Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:10:53.397Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:11:13.930Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:11:13.939Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:11:13.941Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:12:58.563Z] INFO: SIGINT received. Shutting down gracefully...
+[2025-11-05T10:17:15.601Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:17:15.609Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:17:15.611Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:23:53.887Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:23:53.905Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:23:53.918Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:24:24.308Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:24:24.323Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:24:24.331Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:24:35.656Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:24:35.673Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:24:35.677Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:24:44.375Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:24:44.418Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:24:44.450Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:24:59.005Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:24:59.019Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:24:59.026Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:25:11.046Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:25:11.055Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:25:11.056Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:33:42.906Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:33:42.914Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:33:42.918Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:39:15.087Z] INFO: SIGINT received. Shutting down gracefully...
+[2025-11-05T10:39:24.053Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:39:24.061Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:39:24.062Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:40:08.796Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:40:08.804Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:40:08.805Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:40:14.885Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:40:14.905Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:40:14.910Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:40:21.890Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:40:21.898Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:40:21.900Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:40:35.221Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:40:35.231Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:40:35.234Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:40:45.780Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:40:45.802Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:40:45.807Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:42:24.640Z] INFO: Request received {"method":"POST","url":"/api/v2/role/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:43:02.261Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:43:02.287Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:43:02.290Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:43:16.826Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:43:16.838Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:43:16.841Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:43:22.303Z] INFO: Request received {"method":"POST","url":"/api/v2/role/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:43:22.541Z] INFO: Role created successfully {"roleId":"690b2a4a4af1cef89b544a94","role_id":1}
+[2025-11-05T10:43:34.335Z] INFO: Request received {"method":"POST","url":"/api/v2/role/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:43:34.494Z] INFO: Role created successfully {"roleId":"690b2a564af1cef89b544a97","role_id":2}
+[2025-11-05T10:43:43.854Z] INFO: Request received {"method":"POST","url":"/api/v2/role/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:43:44.053Z] INFO: Role created successfully {"roleId":"690b2a5f4af1cef89b544a9b","role_id":3}
+[2025-11-05T10:44:14.145Z] INFO: Request received {"method":"POST","url":"/api/v2/role/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:44:14.287Z] INFO: Role created successfully {"roleId":"690b2a7e4af1cef89b544a9f","role_id":4}
+[2025-11-05T10:45:06.483Z] INFO: Request received {"method":"POST","url":"/api/v2/user/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:45:31.842Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:45:31.850Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:45:31.852Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:46:57.143Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:46:57.155Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:46:57.159Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:47:04.467Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:47:04.481Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:47:04.488Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:47:10.208Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:47:10.217Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:47:10.220Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:47:18.146Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:47:18.159Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:47:18.164Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:47:30.581Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:47:30.594Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:47:30.596Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:47:40.209Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:47:40.220Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:47:40.223Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:48:20.943Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:48:20.953Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:48:20.965Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:48:34.987Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:48:34.995Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:48:34.997Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:48:41.370Z] INFO: Request received {"method":"POST","url":"/api/v2/user/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:50:25.899Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:50:25.910Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:50:25.917Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:51:10.148Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:51:10.159Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:51:10.161Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:51:18.127Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:51:18.135Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:51:18.138Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:51:28.599Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:51:28.611Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:51:28.613Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:53:35.959Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:53:35.975Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:53:35.988Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:53:48.269Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:53:48.279Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:53:48.282Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:53:54.832Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:53:54.841Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:53:54.843Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:54:09.276Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:54:09.286Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:54:09.288Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:54:19.199Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:54:19.213Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:54:19.224Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:54:25.357Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:54:25.367Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:54:25.369Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:54:38.522Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:54:38.530Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:54:38.533Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:54:51.848Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:54:51.856Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:54:51.858Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:55:00.334Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:55:00.346Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:55:00.348Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:55:22.126Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:55:22.141Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:55:22.143Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:55:29.379Z] INFO: Request received {"method":"POST","url":"/api/v2/user/create","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:55:29.635Z] INFO: User created successfully {"userId":"690b2d215a9010e652557511","user_id":1}
+[2025-11-05T10:56:00.098Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:57:10.265Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:57:10.282Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:57:10.304Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:57:11.701Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:57:31.177Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:57:31.186Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:57:31.188Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:58:24.425Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:58:24.435Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:58:24.438Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:58:34.363Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:58:34.375Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:58:34.382Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:59:03.615Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:59:03.624Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:59:03.626Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:59:16.884Z] INFO: Server running in development mode on port 3030
+[2025-11-05T10:59:16.899Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T10:59:16.905Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T10:59:23.957Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T10:59:24.193Z] INFO: OTP sent successfully {"userId":"690b2d215a9010e652557511","phoneNo":"9876543210"}
+[2025-11-05T11:00:15.249Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/verify_otp","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:00:15.397Z] INFO: OTP verified successfully {"userId":"690b2d215a9010e652557511","phoneNo":"9876543210"}
+[2025-11-05T11:03:57.819Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:03:57.842Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:03:57.853Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:04:09.615Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:04:09.626Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:04:09.628Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:04:33.697Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:04:33.712Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:04:33.719Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:05:05.154Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:05:05.164Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:05:05.167Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:05:30.643Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:05:30.651Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:05:30.653Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:06:12.825Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:06:12.838Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:06:12.846Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:06:20.952Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:06:20.960Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:06:20.962Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:06:32.493Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:06:32.506Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:06:32.509Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:06:39.774Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:06:39.785Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:06:39.787Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:07:01.235Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:07:01.244Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:07:01.247Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:09:17.228Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:09:17.260Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:09:17.263Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:09:58.532Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:10:15.952Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:11:04.242Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:11:42.581Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:11:42.589Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:11:42.591Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:12:21.022Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:13:31.418Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:13:31.427Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:13:31.428Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:13:43.084Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:13:43.092Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:13:43.094Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:13:54.316Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:15:05.770Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:15:05.778Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:15:05.782Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:15:42.921Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:15:42.930Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:15:42.932Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:16:09.633Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:16:09.642Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:16:09.644Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:16:24.487Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:16:24.518Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:16:24.536Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:16:53.270Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:16:53.281Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:16:53.283Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:17:10.179Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:17:10.188Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:17:10.190Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:17:28.171Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:17:28.191Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:17:28.204Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:17:44.555Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:17:44.573Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:17:44.590Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:17:57.813Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:17:57.822Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:17:57.826Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:18:08.648Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:18:08.661Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:18:08.666Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:18:29.634Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:18:29.654Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:18:29.661Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:18:39.455Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:18:39.463Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:18:39.465Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:18:56.366Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:18:56.378Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:18:56.381Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:19:03.192Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:20:14.673Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:20:14.683Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:20:14.688Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:20:39.462Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:20:39.475Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:20:39.478Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:20:55.876Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:20:55.884Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:20:55.886Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:21:05.140Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:21:05.156Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:21:05.161Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:21:27.562Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:21:27.577Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:21:27.585Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:21:35.468Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:21:35.476Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:21:35.478Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:21:45.588Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:21:45.601Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:21:45.607Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:21:52.108Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:21:52.119Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:21:52.121Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:22:08.045Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:22:08.057Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:22:08.060Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:22:30.704Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:22:30.713Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:22:30.715Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:22:44.481Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:22:44.496Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:22:44.499Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:22:56.799Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:22:56.828Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:22:56.843Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:23:10.024Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:24:18.214Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:24:18.224Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:24:18.226Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:24:25.382Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:24:50.951Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:24:50.963Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:24:50.965Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:25:03.377Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:25:03.385Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:25:03.388Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:26:19.985Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:26:19.994Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:26:19.996Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:26:25.813Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:26:26.077Z] INFO: User updated successfully {"userId":"690b2d215a9010e652557511"}
+[2025-11-05T11:27:39.840Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:27:39.853Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:27:39.855Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:28:05.951Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:28:05.959Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:28:05.961Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:28:12.922Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/update/1","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:28:13.310Z] INFO: User updated successfully {"userId":"690b2d215a9010e652557511"}
+[2025-11-05T11:33:42.697Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:33:42.707Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:33:42.713Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:34:01.879Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:34:01.891Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:34:01.895Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:34:19.126Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:34:19.138Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:34:19.142Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:34:29.281Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:34:29.290Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:34:29.292Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:34:56.107Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:34:56.117Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:34:56.119Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:35:13.086Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:35:13.098Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:35:13.101Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:35:38.573Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:35:38.582Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:35:38.584Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:36:03.602Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:36:03.611Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:36:03.614Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:36:17.547Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:36:17.563Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:36:17.582Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:36:22.171Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:36:22.181Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:36:22.183Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:36:37.071Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:36:37.087Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:36:37.093Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:36:46.893Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:36:46.901Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:36:46.903Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:38:51.203Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:38:51.213Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:38:51.215Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:39:10.667Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:39:10.675Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:39:10.677Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:39:27.539Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/activeDeviceLocation","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:39:53.906Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:39:53.914Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:39:53.916Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:39:58.677Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/activeDeviceLocation","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:40:56.160Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:40:56.168Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:40:56.170Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:41:11.869Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/activeDeviceLocation","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:42:00.429Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:42:00.439Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:42:00.444Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:42:17.956Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:42:17.968Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:42:17.971Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T11:42:22.797Z] INFO: Request received {"method":"PUT","url":"/api/v2/user/activeDeviceLocation","ip":"::1","userAgent":"PostmanRuntime/7.49.1"}
+[2025-11-05T11:42:22.982Z] INFO: Device location permission activated {"userId":"690b2d215a9010e652557511","user_id":1}
+[2025-11-05T11:42:54.090Z] INFO: Server running in development mode on port 3030
+[2025-11-05T11:42:54.098Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T11:42:54.101Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:12:43.194Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:12:43.203Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:12:43.205Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:12:58.552Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:12:58.560Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:12:58.563Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:13:14.892Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:13:14.902Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:13:14.905Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:13:30.253Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:13:30.262Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:13:30.264Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:13:44.942Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:13:44.951Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:13:44.954Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:14:01.791Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:14:01.802Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:14:01.806Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:15:08.403Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:15:08.412Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:15:08.414Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:16:04.352Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:16:04.363Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:16:04.366Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:17:46.598Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:17:46.612Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:17:46.614Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:18:51.280Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:18:51.298Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:18:51.301Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:19:40.580Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:19:40.594Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:19:40.596Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:20:29.994Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:20:30.005Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:20:30.007Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:21:01.498Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:21:01.508Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:21:01.511Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:21:20.174Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:21:20.183Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:21:20.185Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:21:40.687Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:21:40.696Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:21:40.702Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:22:03.279Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:22:03.289Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:22:03.293Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:22:22.948Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:22:22.957Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:22:22.962Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:22:44.356Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:22:44.364Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:22:44.366Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:23:13.733Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:23:13.747Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:23:13.750Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:23:28.737Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:23:28.748Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:23:28.750Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:23:44.357Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:23:44.367Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:23:44.369Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:24:00.320Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:24:00.330Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:24:00.334Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:24:21.138Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:24:21.148Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:24:21.151Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:24:36.400Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:24:36.410Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:24:36.412Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:24:49.400Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:24:49.409Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:24:49.411Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:25:14.786Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:25:14.796Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:25:14.798Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:25:24.797Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:25:24.807Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:25:24.809Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:26:00.591Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:26:00.614Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:26:00.620Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:26:14.254Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:26:14.265Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:26:14.268Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:27:28.259Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:27:28.270Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:27:28.273Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:27:47.247Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:27:47.259Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:27:47.262Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:28:02.987Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:28:02.996Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:28:02.998Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:28:46.513Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:28:46.524Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:28:46.526Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:29:34.532Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:29:34.542Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:29:34.544Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:30:43.295Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:30:43.303Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:30:43.305Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:31:06.118Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:31:06.130Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:31:06.132Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:31:35.050Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:31:35.059Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:31:35.061Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:31:55.634Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:31:55.644Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:31:55.650Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:32:11.071Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:32:11.083Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:32:11.087Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:32:27.889Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:32:27.900Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:32:27.902Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:32:47.022Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:32:47.033Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:32:47.038Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:33:05.784Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:33:05.794Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:33:05.797Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:33:26.170Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:33:26.181Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:33:26.185Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:34:15.508Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:34:15.534Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:34:15.541Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:35:16.654Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:35:16.669Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:35:16.681Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:35:36.668Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:35:36.678Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:35:36.680Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:35:54.709Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:35:54.717Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:35:54.719Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:37:38.795Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:37:38.805Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:37:38.807Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:40:26.643Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:40:26.656Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:40:26.662Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:42:06.734Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:42:06.748Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:42:06.753Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:44:38.901Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:44:38.909Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:44:38.913Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:44:51.543Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:44:51.551Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:44:51.553Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T12:50:37.668Z] INFO: Server running in development mode on port 3030
+[2025-11-05T12:50:37.676Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-05T12:50:37.678Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-05T13:44:39.425Z] INFO: SIGINT received. Shutting down gracefully...
+[2025-11-06T05:26:55.046Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:26:55.056Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:26:55.059Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:27:09.577Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:27:09.587Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:27:09.589Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:27:28.287Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:27:28.299Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:27:28.301Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:27:43.356Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:27:43.369Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:27:43.371Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:27:53.029Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:27:53.038Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:27:53.041Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:28:01.848Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:28:01.865Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:28:01.870Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:28:11.912Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:28:11.920Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:28:11.922Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:28:21.207Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:28:21.225Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:28:21.230Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:28:37.702Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:28:37.737Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:28:37.761Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:28:48.005Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:28:48.027Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:28:48.040Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:28:58.717Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:28:58.730Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:28:58.735Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:29:18.742Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:29:18.753Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:29:18.755Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:34:04.238Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:34:04.250Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:34:04.253Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:34:49.841Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:34:49.849Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:34:49.851Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:34:57.522Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:34:57.538Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:34:57.558Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:35:05.470Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:35:05.479Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:35:05.481Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:35:15.209Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:35:15.224Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:35:15.227Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:35:23.935Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:35:23.943Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:35:23.945Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:35:31.806Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:35:31.815Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:35:31.816Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:35:40.625Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:35:40.634Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:35:40.636Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:35:53.284Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:35:53.294Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:35:53.296Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:36:03.963Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:36:04.033Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:36:04.077Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:36:13.414Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:36:13.423Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:36:13.425Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:36:22.009Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:36:22.019Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:36:22.022Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:36:32.023Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:36:32.032Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:36:32.034Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:36:40.599Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:36:40.609Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:36:40.611Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:36:50.007Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:36:50.016Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:36:50.018Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:40:11.198Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:40:11.208Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:40:11.216Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:40:59.466Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:40:59.482Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:40:59.488Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:41:22.953Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:41:22.964Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:41:22.968Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:43:47.935Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:43:47.955Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:43:47.957Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:44:08.170Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:44:08.187Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:44:08.195Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:44:28.376Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:44:28.401Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:44:28.405Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:55:52.503Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:55:52.515Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:55:52.518Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:56:22.003Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:56:22.015Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:56:22.018Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:58:05.870Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:58:05.887Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:58:05.890Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:58:16.571Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:58:16.581Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:58:16.583Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:58:24.329Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:58:24.344Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:58:24.347Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:58:34.355Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:58:34.367Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:58:34.370Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:58:46.447Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:58:46.457Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:58:46.460Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:58:55.535Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:58:55.543Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:58:55.545Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:03.027Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:03.037Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:03.040Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:11.168Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:11.180Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:11.182Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:18.474Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:18.491Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:18.496Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:26.735Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:26.750Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:26.754Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:34.175Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:34.186Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:34.191Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:42.065Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:42.078Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:42.085Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:50.295Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:50.306Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:50.309Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T05:59:58.869Z] INFO: Server running in development mode on port 3030
+[2025-11-06T05:59:58.878Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T05:59:58.881Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:00:06.244Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:00:06.252Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:00:06.254Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:00:14.678Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:00:14.687Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:00:14.689Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:00:22.337Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:00:22.348Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:00:22.350Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:00:33.520Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:00:33.542Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:00:33.569Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:00:51.052Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:00:51.070Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:00:51.075Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:01:13.338Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:01:13.353Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:01:13.364Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:14:25.490Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:14:25.539Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:14:25.548Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:14:41.518Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:14:41.532Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:14:41.556Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:14:54.549Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:14:54.573Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:14:54.575Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:15:12.426Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:15:12.450Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:15:12.459Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:15:47.691Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:15:47.716Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:15:47.741Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T06:18:52.432Z] INFO: Server running in development mode on port 3030
+[2025-11-06T06:18:52.495Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T06:18:52.505Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:57:36.548Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:57:36.561Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:57:36.567Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:58:11.538Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:58:11.552Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:58:11.554Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:58:25.427Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:58:25.436Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:58:25.438Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:58:42.157Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:58:42.172Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:58:42.175Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:58:57.318Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:58:57.328Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:58:57.330Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:59:09.441Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:59:09.454Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:59:09.458Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T08:59:39.398Z] INFO: Server running in development mode on port 3030
+[2025-11-06T08:59:39.409Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T08:59:39.412Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:13:33.344Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:13:33.355Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:13:33.358Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:13:44.590Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:13:44.605Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:13:44.609Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:13:51.762Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:13:51.772Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:13:51.778Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:14:48.535Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:14:48.545Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:14:48.548Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:15:04.591Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:15:04.600Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:15:04.603Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:15:18.442Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:15:18.454Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:15:18.457Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:15:31.150Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:15:31.161Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:15:31.163Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:15:47.662Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:15:47.672Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:15:47.675Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:16:19.884Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:16:19.903Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:16:19.916Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:16:41.223Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:16:41.233Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:16:41.237Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:17:06.278Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:17:06.288Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:17:06.291Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:17:27.870Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:17:27.878Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:17:27.880Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:34:34.530Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:34:34.547Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:34:34.557Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:51:01.693Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:51:01.707Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:51:01.711Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:51:28.499Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:51:28.509Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:51:28.511Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:51:45.028Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:51:45.043Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:51:45.047Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:52:06.293Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:52:06.302Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:52:06.305Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:52:25.018Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:52:25.027Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:52:25.031Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:52:42.361Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:52:42.371Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:52:42.377Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:52:55.777Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:52:55.786Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:52:55.790Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:53:08.301Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:53:08.309Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:53:08.313Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:53:21.461Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:53:21.469Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:53:21.473Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:53:33.724Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:53:33.735Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:53:33.739Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:53:46.258Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:53:46.268Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:53:46.272Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:53:58.685Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:53:58.697Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:53:58.700Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:54:19.338Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:54:19.349Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:54:19.352Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:54:38.642Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:54:38.660Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:54:38.664Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:55:15.737Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:55:15.745Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:55:15.748Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T09:59:28.128Z] INFO: Server running in development mode on port 3030
+[2025-11-06T09:59:28.144Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T09:59:28.151Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:00:44.145Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:00:44.156Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:00:44.161Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:05:46.075Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:05:46.084Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:05:46.087Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:05:52.652Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:05:52.664Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:05:52.672Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:06:00.860Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:06:00.869Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:06:00.872Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:08:33.977Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:08:33.986Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:08:33.988Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:09:11.776Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:09:11.785Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:09:11.787Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:09:46.518Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:09:46.525Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:09:46.527Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:41:34.995Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:41:35.013Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:41:35.025Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:41:47.181Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:41:47.190Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:41:47.193Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:49:00.357Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:49:00.369Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:49:00.384Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T10:49:09.596Z] INFO: Server running in development mode on port 3030
+[2025-11-06T10:49:09.606Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T10:49:09.610Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:09:26.282Z] INFO: Request received {"method":"GET","url":"/","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"}
+[2025-11-06T11:09:26.827Z] INFO: Request received {"method":"GET","url":"/favicon.ico","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"}
+[2025-11-06T11:11:53.898Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:11:53.914Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:11:53.923Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:12:06.925Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:12:06.933Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:12:06.935Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:16:39.575Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:16:39.586Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:16:39.590Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:30:47.133Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:30:47.154Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:30:47.157Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:31:12.818Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:31:12.833Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:31:12.837Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:31:24.760Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:31:24.774Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:31:24.778Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:33:46.661Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:33:46.676Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:33:46.683Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:37:31.976Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:37:31.987Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:37:31.992Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:37:58.691Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:37:58.699Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:37:58.702Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:38:10.792Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:38:10.825Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:38:10.839Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:38:29.253Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:38:29.266Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:38:29.270Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:39:22.402Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:39:22.412Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:39:22.415Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:40:14.124Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:40:14.133Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:40:14.137Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:40:36.239Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:40:36.247Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:40:36.249Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:41:08.822Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:41:08.832Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:41:08.834Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:41:26.023Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:41:26.032Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:41:26.035Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:42:00.494Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:42:00.504Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:42:00.507Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:42:26.991Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:42:27.003Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:42:27.006Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:43:03.544Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:43:03.552Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:43:03.554Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:43:10.301Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:43:10.345Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:43:10.407Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:44:17.960Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:44:17.974Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:44:17.977Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:55:39.654Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:55:39.665Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:55:39.670Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:56:13.283Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:56:13.295Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:56:13.298Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:56:50.946Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:56:50.954Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:56:50.959Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:57:08.312Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:57:08.325Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:57:08.328Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:57:27.340Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:57:27.377Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:57:27.415Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:57:42.425Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:57:42.437Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:57:42.441Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:58:07.486Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:58:07.496Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:58:07.499Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T11:59:39.191Z] INFO: Server running in development mode on port 3030
+[2025-11-06T11:59:39.200Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T11:59:39.203Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:01:47.134Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:01:47.144Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:01:47.147Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:01:59.202Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:01:59.211Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:01:59.213Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:03:30.369Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:03:30.382Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:03:30.384Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:03:51.800Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:03:51.811Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:03:51.813Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:04:07.544Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:04:07.554Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:04:07.557Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:04:21.273Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:04:21.281Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:04:21.285Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:04:46.435Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:04:46.446Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:04:46.448Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:05:02.100Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:05:02.108Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:05:02.110Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:05:20.407Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:05:20.417Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:05:20.421Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:07:13.167Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:07:13.175Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:07:13.177Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:07:42.941Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:07:42.952Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:07:42.955Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:08:07.370Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:08:07.380Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:08:07.382Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:08:24.314Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:08:24.325Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:08:24.328Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:08:56.318Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:08:56.326Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:08:56.328Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:09:08.481Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:09:08.490Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:09:08.495Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:09:40.424Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:09:40.435Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:09:40.438Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:09:55.880Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:09:55.888Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:09:55.890Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:10:38.100Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:10:38.125Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:10:38.128Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:11:03.033Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:11:03.041Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:11:03.044Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:12:05.954Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:12:05.962Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:12:05.964Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:37:46.356Z] INFO: Server running in development mode on port 3030
+[2025-11-06T12:37:46.367Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-06T12:37:46.369Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-06T12:37:48.353Z] INFO: SIGINT received. Shutting down gracefully...
+[2025-11-10T11:42:54.458Z] INFO: Server running in development mode on port 3030
+[2025-11-10T11:42:54.467Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-10T11:42:54.469Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-10T11:43:05.217Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:43:27.395Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:44:26.244Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:45:49.814Z] INFO: Server running in development mode on port 3030
+[2025-11-10T11:45:49.834Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-10T11:45:49.840Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-10T11:45:54.956Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/userLogin","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:45:55.381Z] INFO: OTP sent successfully {"userId":"690b2d215a9010e652557511","phoneNo":"9876543210"}
+[2025-11-10T11:47:40.851Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/verify_otp","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:48:36.421Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/verify_otp","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:49:09.760Z] INFO: Server running in development mode on port 3030
+[2025-11-10T11:49:09.771Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-10T11:49:09.774Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-10T11:49:13.665Z] INFO: Request received {"method":"POST","url":"/api/v2/authentication/verify_otp","ip":"::1","userAgent":"PostmanRuntime/7.50.0"}
+[2025-11-10T11:49:14.008Z] INFO: OTP verified successfully {"userId":"690b2d215a9010e652557511","phoneNo":"9876543210"}
