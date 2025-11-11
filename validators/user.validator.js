@@ -372,6 +372,13 @@ const verifyOTPSchema = Joi.object({
     .messages({
       'string.empty': 'OTP is required',
       'string.pattern.base': 'OTP must be a 4-digit number'
+    }),
+  role: Joi.string()
+    .trim()
+    .valid('User', 'Vendor', 'Admin', 'Restaurant')
+    .optional()
+    .messages({
+      'any.only': 'Role must be one of User, Vendor, Admin, or Restaurant'
     })
 });
 

@@ -149,7 +149,7 @@ const resendOTP = asyncHandler(async (req, res) => {
  */
 const verifyOTPHandler = asyncHandler(async (req, res) => {
   try {
-    const { phoneNo, otp } = req.body;
+    const { phoneNo, otp, role } = req.body;
 
     // Find user with OTP
     const user = await User.findOne({ phoneNo }).select('+otp +otpExpiresAt');
@@ -169,7 +169,8 @@ const verifyOTPHandler = asyncHandler(async (req, res) => {
     }
 
     // Validate role
-    const roleValidation = await ensureRoleMatch(user.role_id, ['User']);
+    const allowedRoles = role ? [role] : ['User'];
+    const roleValidation = await ensureRoleMatch(user.role_id, allowedRoles);
     if (!roleValidation.isValid) {
       return sendError(res, roleValidation.message, 403);
     }

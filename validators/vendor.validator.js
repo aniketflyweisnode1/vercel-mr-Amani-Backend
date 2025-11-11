@@ -4,7 +4,7 @@ const Joi = require('joi');
  * Vendor validation schemas using Joi
  */
 
-// Vendor login validation schema (email or phoneNo with OTP)
+// Vendor login validation schema (email or phoneNo)
 const loginVendorSchema = Joi.object({
   email: Joi.string()
     .email()
@@ -19,11 +19,6 @@ const loginVendorSchema = Joi.object({
     .optional()
     .messages({
       'string.pattern.base': 'Please enter a valid 10-digit phone number'
-    }),
-  otp: Joi.string()
-    .required()
-    .messages({
-      'string.empty': 'OTP is required'
     })
 }).or('email', 'phoneNo').messages({
   'object.missing': 'Either email or phone number is required'
