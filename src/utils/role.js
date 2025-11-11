@@ -1,10 +1,10 @@
-const Role = require('../models/Role.model');
+const Role = require('../models/role.model');
 
 /**
  * Ensures the provided role_id maps to one of the allowed role names.
  * @param {number|null|undefined} roleId - Numeric role identifier from the user document.
  * @param {string[]} allowedRoleNames - List of permissible role names.
- * @returns {Promise<{isValid: boolean, message?: string, role?: import('../models/Role.model')}>}
+ * @returns {Promise<{isValid: boolean, message?: string, role?: import('../models/role.model')}>}
  */
 const ensureRoleMatch = async (roleId, allowedRoleNames = []) => {
   if (!allowedRoleNames.length) {
