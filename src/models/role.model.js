@@ -52,8 +52,14 @@ roleSchema.pre('save', function(next) {
   next();
 });
 
-// Auto-increment plugin for role_id
-roleSchema.plugin(AutoIncrement, { inc_field: 'role_id', start_seq: 1 });
+// Auto-increment plugin for role_id (apply only once)
+let RoleModel;
+try {
+  RoleModel = mongoose.model('Role');
+} catch (error) {
+  roleSchema.plugin(AutoIncrement, { inc_field: 'role_id', start_seq: 1 });
+  RoleModel = mongoose.model('Role', roleSchema);
+}
 
-module.exports = mongoose.model('Role', roleSchema);
+module.exports = RoleModel;
 
