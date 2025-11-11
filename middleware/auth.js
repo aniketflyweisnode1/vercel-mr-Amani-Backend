@@ -1,7 +1,6 @@
 const { verifyAccessToken } = require('../utils/jwt');
 const { sendUnauthorized, sendForbidden } = require('../utils/response');
 const User = require('../src/models/User.model.js');
-const logger = require('../utils/logger');
 
 /**
  * Authentication middleware to verify JWT token
@@ -29,7 +28,7 @@ const auth = async (req, res, next) => {
     try {
       decoded = verifyAccessToken(token);
     } catch (error) {
-      logger.error('Token verification failed', { error: error.message, token: token.substring(0, 20) + '...' });
+      console.error('Token verification failed', { error: error.message, token: token.substring(0, 20) + '...' });
       return sendUnauthorized(res, 'Invalid or expired token');
     }
 
@@ -64,7 +63,7 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (error) {
-    logger.error('Authentication middleware error', { error: error.message, stack: error.stack });
+    console.error('Authentication middleware error', { error: error.message, stack: error.stack });
     return sendUnauthorized(res, 'Authentication failed');
   }
 };
@@ -104,12 +103,12 @@ const optionalAuth = async (req, res, next) => {
       }
     } catch (error) {
       // Token is invalid, but we don't fail the request
-      logger.debug('Optional auth token verification failed', { error: error.message });
+      console.debug('Optional auth token verification failed', { error: error.message });
     }
 
     next();
   } catch (error) {
-    logger.error('Optional authentication middleware error', { error: error.message });
+    console.error('Optional authentication middleware error', { error: error.message });
     next(); // Continue even if there's an error
   }
 };

@@ -1,4 +1,3 @@
-const logger = require('../utils/logger');
 const { sendError } = require('../utils/response');
 
 /**
@@ -13,7 +12,7 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message;
 
   // Log error
-  logger.error('Error occurred', {
+  console.error('Error occurred', {
     message: err.message,
     stack: err.stack,
     url: req.originalUrl,
