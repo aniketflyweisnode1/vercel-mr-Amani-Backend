@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Phone number is required'],
     unique: true,
     trim: true,
-  //  match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
+    match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
   },
   dob: {
     type: Date,
@@ -43,6 +43,21 @@ const userSchema = new mongoose.Schema({
     type: Number,
     ref: 'Role',
     default: 2
+  },
+  country_id: {
+    type: Number,
+    ref: 'Country',
+    default: null
+  },
+  state_id: {
+    type: Number,
+    ref: 'State',
+    default: null
+  },
+  city_id: {
+    type: Number,
+    ref: 'City',
+    default: null
   },
   status: {
     type: Boolean,
@@ -96,8 +111,12 @@ const userSchema = new mongoose.Schema({
   },
   created_by: {
     type: Number,
+    default: null
+  },
+  created_by_object: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    default: 1
+    default: null
   },
   created_at: {
     type: Date,
@@ -117,13 +136,18 @@ const userSchema = new mongoose.Schema({
   versionKey: false
 });
 
-// // Index for better query performance
-// userSchema.index({ user_id: 1 });
-// userSchema.index({ phoneNo: 1 });
-// userSchema.index({ role_id: 1 });
-// userSchema.index({ status: 1 });
-// userSchema.index({ Email: 1 });
-// userSchema.index({ personType: 1 });
+// Index for better query performance
+userSchema.index({ user_id: 1 });
+userSchema.index({ phoneNo: 1 });
+userSchema.index({ role_id: 1 });
+userSchema.index({ status: 1 });
+userSchema.index({ Email: 1 });
+userSchema.index({ personType: 1 });
+userSchema.index({ country_id: 1 });
+userSchema.index({ state_id: 1 });
+userSchema.index({ city_id: 1 });
+userSchema.index({ created_by: 1 });
+userSchema.index({ created_by_object: 1 });
 
 // Pre-save middleware to update updated_at timestamp
 userSchema.pre('save', function (next) {

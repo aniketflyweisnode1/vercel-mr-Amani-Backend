@@ -14,7 +14,8 @@ const createUser = asyncHandler(async (req, res) => {
     const userData = {
       ...req.body,
       password: req.body.password || req.body.phoneNo.toString(),
-      created_by: req.userIdNumber || 1
+      created_by: req.userId || null,
+      created_by_object: req.userId || null
     };
 
     // Create user
@@ -28,7 +29,8 @@ const createUser = asyncHandler(async (req, res) => {
         Amount: 0,
         HoldAmount: 0,
         Status: true,
-        created_by: req.userIdNumber || null
+        created_by: req.userIdNumber || null,
+        created_by_object: req.userId || null
       });
       console.info('Wallet auto-created for new user', { userId: user._id, user_id: user.user_id });
     } catch (walletError) {
@@ -87,7 +89,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     // Add status filter
     if (status !== undefined) {
-      filter.status = status === 'true';
+      filter.status = status;
     }
 
     // Build sort object
@@ -96,7 +98,6 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     // Calculate pagination
     const skip = (page - 1) * limit;
-
     // Execute query
     const [users, total] = await Promise.all([
       User.find(filter)
@@ -183,7 +184,7 @@ const getUserById = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-console.log("---------------------------\n",req.body, req.userIdNumber);
+
     // Add update metadata
     const updateData = {
       ...req.body,
@@ -210,6 +211,7 @@ console.log("---------------------------\n",req.body, req.userIdNumber);
       if (isNaN(userId)) {
         return sendNotFound(res, 'Invalid user ID format');
       }
+      console.log("------------------pankaj ---------\n",userId);
       user = await User.findOneAndUpdate(
         { user_id: userId },
         updateData,

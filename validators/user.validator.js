@@ -148,6 +148,36 @@ const createUserSchema = Joi.object({
       'number.integer': 'Role ID must be an integer',
       'number.positive': 'Role ID must be a positive number'
     }),
+  country_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': 'Country ID must be a number',
+      'number.integer': 'Country ID must be an integer',
+      'number.positive': 'Country ID must be a positive number'
+    }),
+  state_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': 'State ID must be a number',
+      'number.integer': 'State ID must be an integer',
+      'number.positive': 'State ID must be a positive number'
+    }),
+  city_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': 'City ID must be a number',
+      'number.integer': 'City ID must be an integer',
+      'number.positive': 'City ID must be a positive number'
+    }),
   status: Joi.boolean()
     .default(true)
     .messages({
@@ -256,11 +286,36 @@ const updateUserSchema = Joi.object({
     .integer()
     .positive()
     .optional()
+    .allow(null),
+  country_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
     .allow(null)
     .messages({
-      'number.base': 'Role ID must be a number',
-      'number.integer': 'Role ID must be an integer',
-      'number.positive': 'Role ID must be a positive number'
+      'number.base': 'Country ID must be a number',
+      'number.integer': 'Country ID must be an integer',
+      'number.positive': 'Country ID must be a positive number'
+    }),
+  state_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': 'State ID must be a number',
+      'number.integer': 'State ID must be an integer',
+      'number.positive': 'State ID must be a positive number'
+    }),
+  city_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': 'City ID must be a number',
+      'number.integer': 'City ID must be an integer',
+      'number.positive': 'City ID must be a positive number'
     }),
   status: Joi.boolean()
     .optional()
