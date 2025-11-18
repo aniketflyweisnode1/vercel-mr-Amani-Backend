@@ -33,6 +33,9 @@ const WalletRoutes = require('./routes/Master/Wallet.routes');
 const BankRoutes = require('./routes/Master/Bank.routes');
 const NotificationTypeRoutes = require('./routes/Master/Notification_type.routes');
 const NotificationRoutes = require('./routes/Master/Notification.routes');
+const ItemTypeRoutes = require('./routes/Master/Item_type.routes');
+const ItemRoutes = require('./routes/Master/Item.routes');
+const MyFavoritesRoutes = require('./routes/User/myFavorites.routes');
 
 const { sendSuccess } = require('../utils/response');
 
@@ -68,6 +71,7 @@ router.get('/health', (req, res) => {
 
 router.use('/authentication', LoginRoutes);
 router.use('/user', UserRoutes);
+router.use('/myFavorites', MyFavoritesRoutes);
 router.use('/Reel', ReelRoutes);
 router.use('/Reel_View', Reel_ViewRoutes);
 router.use('/Reel_Follow', Reel_FollowRoutes);
@@ -96,5 +100,7 @@ router.use('/Wallet', WalletRoutes);
 router.use('/Bank', BankRoutes);
 router.use('/Notification_type', NotificationTypeRoutes);
 router.use('/Notification', NotificationRoutes);
+router.use('/Item_type', ItemTypeRoutes);
+router.use('/Item', ItemRoutes);
 
 module.exports = router;
