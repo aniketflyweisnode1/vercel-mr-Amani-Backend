@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Phone number is required'],
     unique: true,
     trim: true,
-    match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
+  //  match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
   },
   dob: {
     type: Date,
@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema({
   role_id: {
     type: Number,
     ref: 'Role',
-    default: null
+    default: 2
   },
   status: {
     type: Boolean,
@@ -97,7 +97,7 @@ const userSchema = new mongoose.Schema({
   created_by: {
     type: Number,
     ref: 'User',
-    default: null
+    default: 1
   },
   created_at: {
     type: Date,
@@ -117,13 +117,13 @@ const userSchema = new mongoose.Schema({
   versionKey: false
 });
 
-// Index for better query performance
-userSchema.index({ user_id: 1 });
-userSchema.index({ phoneNo: 1 });
-userSchema.index({ role_id: 1 });
-userSchema.index({ status: 1 });
-userSchema.index({ Email: 1 });
-userSchema.index({ personType: 1 });
+// // Index for better query performance
+// userSchema.index({ user_id: 1 });
+// userSchema.index({ phoneNo: 1 });
+// userSchema.index({ role_id: 1 });
+// userSchema.index({ status: 1 });
+// userSchema.index({ Email: 1 });
+// userSchema.index({ personType: 1 });
 
 // Pre-save middleware to update updated_at timestamp
 userSchema.pre('save', function (next) {

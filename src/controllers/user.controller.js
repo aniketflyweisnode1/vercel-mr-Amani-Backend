@@ -14,12 +14,12 @@ const createUser = asyncHandler(async (req, res) => {
     const userData = {
       ...req.body,
       password: req.body.password || req.body.phoneNo.toString(),
-      created_by: req.userIdNumber || null
+      created_by: req.userIdNumber || 1
     };
 
     // Create user
     const user = await User.create(userData);
-    
+
     // Auto-create wallet for new user with 0 amount
     const Wallet = require('../models/Wallet.model');
     try {
@@ -40,7 +40,15 @@ const createUser = asyncHandler(async (req, res) => {
 
     sendSuccess(res, user, 'User created successfully', 201);
   } catch (error) {
+    
     console.error('Error creating user', { error: error.message, stack: error.stack });
+
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue || {})[0] || 'phoneNo';
+      const friendlyField = field === 'phoneNo' ? 'Phone number' : field;
+      return sendError(res, `${friendlyField} already exists`, 400);
+    }
+
     throw error;
   }
 });

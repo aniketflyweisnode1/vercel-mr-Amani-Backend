@@ -72,6 +72,7 @@ const getAllItemTypesSchema = Joi.object({
     .trim()
     .max(100)
     .optional()
+    .allow('')
     .messages({
       'string.max': 'Search term cannot exceed 100 characters'
     }),
@@ -120,6 +121,7 @@ const getItemTypesByAuthSchema = Joi.object({
     .trim()
     .max(100)
     .optional()
+    .allow('')
     .messages({
       'string.max': 'Search term cannot exceed 100 characters'
     }),
