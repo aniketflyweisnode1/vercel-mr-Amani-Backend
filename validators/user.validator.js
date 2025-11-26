@@ -118,6 +118,14 @@ const createUserSchema = Joi.object({
       'string.min': 'Last name must be at least 2 characters long',
       'string.max': 'Last name cannot exceed 50 characters'
     }),
+  BusinessName: Joi.string()
+    .trim()
+    .max(150)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Business name cannot exceed 150 characters'
+    }),
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)
     .required()
@@ -147,36 +155,6 @@ const createUserSchema = Joi.object({
       'number.base': 'Role ID must be a number',
       'number.integer': 'Role ID must be an integer',
       'number.positive': 'Role ID must be a positive number'
-    }),
-  country_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .allow(null)
-    .messages({
-      'number.base': 'Country ID must be a number',
-      'number.integer': 'Country ID must be an integer',
-      'number.positive': 'Country ID must be a positive number'
-    }),
-  state_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .allow(null)
-    .messages({
-      'number.base': 'State ID must be a number',
-      'number.integer': 'State ID must be an integer',
-      'number.positive': 'State ID must be a positive number'
-    }),
-  city_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .allow(null)
-    .messages({
-      'number.base': 'City ID must be a number',
-      'number.integer': 'City ID must be an integer',
-      'number.positive': 'City ID must be a positive number'
     }),
   status: Joi.boolean()
     .default(true)
@@ -264,6 +242,14 @@ const updateUserSchema = Joi.object({
       'string.min': 'Last name must be at least 2 characters long',
       'string.max': 'Last name cannot exceed 50 characters'
     }),
+  BusinessName: Joi.string()
+    .trim()
+    .max(150)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Business name cannot exceed 150 characters'
+    }),
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)
     .optional()
@@ -286,36 +272,11 @@ const updateUserSchema = Joi.object({
     .integer()
     .positive()
     .optional()
-    .allow(null),
-  country_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
     .allow(null)
     .messages({
-      'number.base': 'Country ID must be a number',
-      'number.integer': 'Country ID must be an integer',
-      'number.positive': 'Country ID must be a positive number'
-    }),
-  state_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .allow(null)
-    .messages({
-      'number.base': 'State ID must be a number',
-      'number.integer': 'State ID must be an integer',
-      'number.positive': 'State ID must be a positive number'
-    }),
-  city_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .allow(null)
-    .messages({
-      'number.base': 'City ID must be a number',
-      'number.integer': 'City ID must be an integer',
-      'number.positive': 'City ID must be a positive number'
+      'number.base': 'Role ID must be a number',
+      'number.integer': 'Role ID must be an integer',
+      'number.positive': 'Role ID must be a positive number'
     }),
   status: Joi.boolean()
     .optional()
@@ -560,6 +521,14 @@ const updateUserByIdBodySchema = Joi.object({
     .messages({
       'string.min': 'Last name must be at least 2 characters long',
       'string.max': 'Last name cannot exceed 50 characters'
+    }),
+  BusinessName: Joi.string()
+    .trim()
+    .max(150)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Business name cannot exceed 150 characters'
     }),
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)

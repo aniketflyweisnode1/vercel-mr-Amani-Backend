@@ -14,13 +14,12 @@ const createUser = asyncHandler(async (req, res) => {
     const userData = {
       ...req.body,
       password: req.body.password || req.body.phoneNo.toString(),
-      created_by: req.userId || null,
-      created_by_object: req.userId || null
+      created_by: req.userIdNumber || null
     };
 
     // Create user
     const user = await User.create(userData);
-
+    
     // Auto-create wallet for new user with 0 amount
     const Wallet = require('../models/Wallet.model');
     try {
@@ -29,8 +28,7 @@ const createUser = asyncHandler(async (req, res) => {
         Amount: 0,
         HoldAmount: 0,
         Status: true,
-        created_by: req.userIdNumber || null,
-        created_by_object: req.userId || null
+        created_by: req.userIdNumber || null
       });
       console.info('Wallet auto-created for new user', { userId: user._id, user_id: user.user_id });
     } catch (walletError) {
@@ -42,15 +40,7 @@ const createUser = asyncHandler(async (req, res) => {
 
     sendSuccess(res, user, 'User created successfully', 201);
   } catch (error) {
-    
     console.error('Error creating user', { error: error.message, stack: error.stack });
-
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyValue || {})[0] || 'phoneNo';
-      const friendlyField = field === 'phoneNo' ? 'Phone number' : field;
-      return sendError(res, `${friendlyField} already exists`, 400);
-    }
-
     throw error;
   }
 });
@@ -79,6 +69,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
       filter.$or = [
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
+        { BusinessName: { $regex: search, $options: 'i' } },
         { phoneNo: { $regex: search, $options: 'i' } },
         { Email: { $regex: search, $options: 'i' } },
         { Bio: { $regex: search, $options: 'i' } },
@@ -89,7 +80,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     // Add status filter
     if (status !== undefined) {
-      filter.status = status;
+      filter.status = status === 'true';
     }
 
     // Build sort object
@@ -98,6 +89,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     // Calculate pagination
     const skip = (page - 1) * limit;
+
     // Execute query
     const [users, total] = await Promise.all([
       User.find(filter)
@@ -184,7 +176,7 @@ const getUserById = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-
+console.log("---------------------------\n",req.body, req.userIdNumber);
     // Add update metadata
     const updateData = {
       ...req.body,
@@ -211,7 +203,6 @@ const updateUser = asyncHandler(async (req, res) => {
       if (isNaN(userId)) {
         return sendNotFound(res, 'Invalid user ID format');
       }
-      console.log("------------------pankaj ---------\n",userId);
       user = await User.findOneAndUpdate(
         { user_id: userId },
         updateData,

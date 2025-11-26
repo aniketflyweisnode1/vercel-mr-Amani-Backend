@@ -18,17 +18,16 @@ const ensureRoleMatch = async (roleId, allowedRoleNames = []) => {
     };
   }
 
-const role = await Role.findOne({ role_id: roleId, status: true });
+  const role = await Role.findOne({ role_id: roleId, status: true });
 
-if (!role) {
-  return {
-    isValid: false,
-    message: 'Assigned role does not exist or is inactive'
-  };
-}
+  if (!role) {
+    return {
+      isValid: false,
+      message: 'Assigned role does not exist or is inactive'
+    };
+  }
 
-if (allowedRoleNames !== 'any') {
-  const normalizedAllowedNames = (allowedRoleNames || []).map((name) => name.toLowerCase());
+  const normalizedAllowedNames = allowedRoleNames.map((name) => name.toLowerCase());
 
   if (!normalizedAllowedNames.includes(role.name.toLowerCase())) {
     return {
@@ -36,12 +35,11 @@ if (allowedRoleNames !== 'any') {
       message: `User role '${role.name}' is not permitted for this operation`
     };
   }
-}
 
-return {
-  isValid: true,
-  role
-};
+  return {
+    isValid: true,
+    role
+  };
 };
 
 module.exports = {

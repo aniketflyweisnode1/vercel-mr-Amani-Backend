@@ -22,6 +22,26 @@ const itemSchema = new mongoose.Schema({
     ref: 'Item_type',
     required: [true, 'Item type ID is required']
   },
+  item_Category_id: {
+    type: Number,
+    ref: 'Item_Category',
+    required: [true, 'Item category ID is required']
+  },
+  Description: {
+    type: String,
+    trim: true,
+    maxlength: [1000, 'Description cannot exceed 1000 characters']
+  },
+  business_Branch_id: {
+    type: Number,
+    ref: 'Business_Branch',
+    required: [true, 'Business branch ID is required']
+  },
+  Stock_count: {
+    type: Number,
+    default: 0,
+    min: [0, 'Stock count cannot be negative']
+  },
   item_price: {
     type: Number,
     required: [true, 'Item price is required'],
@@ -62,6 +82,8 @@ const itemSchema = new mongoose.Schema({
 itemSchema.index({ Item_id: 1 });
 itemSchema.index({ service_id: 1 });
 itemSchema.index({ item_type_id: 1 });
+itemSchema.index({ item_Category_id: 1 });
+itemSchema.index({ business_Branch_id: 1 });
 itemSchema.index({ name: 1 });
 itemSchema.index({ status: 1 });
 

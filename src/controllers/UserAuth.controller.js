@@ -169,7 +169,7 @@ const verifyOTPHandler = asyncHandler(async (req, res) => {
     }
 
     // Validate role
-    const allowedRoles = role ? [role] : 'any';
+    const allowedRoles = role ? [role] : ['User'];
     const roleValidation = await ensureRoleMatch(user.role_id, allowedRoles);
     if (!roleValidation.isValid) {
       return sendError(res, roleValidation.message, 403);

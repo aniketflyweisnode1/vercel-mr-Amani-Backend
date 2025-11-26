@@ -10,10 +10,9 @@ const { asyncHandler } = require('../../middleware/errorHandler');
  */
 const createCountry = asyncHandler(async (req, res) => {
   try {
-  
     const countryData = {
       ...req.body,
-      created_by: req.userIdNumber || null
+      created_by: req.userId || null
     };
 
     const country = await Country.create(countryData);

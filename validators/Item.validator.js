@@ -31,6 +31,34 @@ const createItemSchema = Joi.object({
       'number.integer': 'Item type ID must be an integer',
       'number.positive': 'Item type ID must be a positive number'
     }),
+  item_Category_id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'Item category ID must be a number',
+      'number.empty': 'Item category ID is required',
+      'number.integer': 'Item category ID must be an integer',
+      'number.positive': 'Item category ID must be a positive number'
+    }),
+  Description: Joi.string()
+    .trim()
+    .max(1000)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Description cannot exceed 1000 characters'
+    }),
+  business_Branch_id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'Business branch ID must be a number',
+      'number.empty': 'Business branch ID is required',
+      'number.integer': 'Business branch ID must be an integer',
+      'number.positive': 'Business branch ID must be a positive number'
+    }),
   item_price: Joi.number()
     .min(0)
     .required()
@@ -82,6 +110,32 @@ const updateItemSchema = Joi.object({
       'number.integer': 'Item type ID must be an integer',
       'number.positive': 'Item type ID must be a positive number'
     }),
+  item_Category_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'Item category ID must be a number',
+      'number.integer': 'Item category ID must be an integer',
+      'number.positive': 'Item category ID must be a positive number'
+    }),
+  Description: Joi.string()
+    .trim()
+    .max(1000)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Description cannot exceed 1000 characters'
+    }),
+  business_Branch_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'Business branch ID must be a number',
+      'number.integer': 'Business branch ID must be an integer',
+      'number.positive': 'Business branch ID must be a positive number'
+    }),
   item_price: Joi.number()
     .min(0)
     .optional()
@@ -116,7 +170,7 @@ const getItemByIdSchema = Joi.object({
     })
 });
 
-const getAllItemsSchema = Joi.object({
+const listQueryBase = {
   page: Joi.number()
     .integer()
     .min(1)
@@ -141,7 +195,6 @@ const getAllItemsSchema = Joi.object({
     .trim()
     .max(150)
     .optional()
-    .allow('')
     .messages({
       'string.max': 'Search term cannot exceed 150 characters'
     }),
@@ -169,11 +222,29 @@ const getAllItemsSchema = Joi.object({
       'number.integer': 'Item type ID must be an integer',
       'number.positive': 'Item type ID must be a positive number'
     }),
+  item_Category_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'Item category ID must be a number',
+      'number.integer': 'Item category ID must be an integer',
+      'number.positive': 'Item category ID must be a positive number'
+    }),
+  business_Branch_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'Business branch ID must be a number',
+      'number.integer': 'Business branch ID must be an integer',
+      'number.positive': 'Business branch ID must be a positive number'
+    }),
   sortBy: Joi.string()
-    .valid('name', 'created_at', 'updated_at', 'Item_id', 'item_price')
+    .valid('name', 'created_at', 'updated_at', 'Item_id', 'item_price', 'item_Category_id', 'business_Branch_id')
     .default('created_at')
     .messages({
-      'any.only': 'Sort by must be one of: name, created_at, updated_at, Item_id, item_price'
+      'any.only': 'Sort by must be one of: name, created_at, updated_at, Item_id, item_price, item_Category_id, business_Branch_id'
     }),
   sortOrder: Joi.string()
     .valid('asc', 'desc')
@@ -181,72 +252,22 @@ const getAllItemsSchema = Joi.object({
     .messages({
       'any.only': 'Sort order must be either asc or desc'
     })
-});
+};
 
-const getItemsByAuthSchema = Joi.object({
-  page: Joi.number()
+const getAllItemsSchema = Joi.object(listQueryBase);
+
+const getItemsByAuthSchema = Joi.object(listQueryBase);
+
+const updateStockCountSchema = Joi.object({
+  Stock_count: Joi.number()
     .integer()
-    .min(1)
-    .default(1)
+    .min(0)
+    .required()
     .messages({
-      'number.base': 'Page must be a number',
-      'number.integer': 'Page must be an integer',
-      'number.min': 'Page must be at least 1'
-    }),
-  limit: Joi.number()
-    .integer()
-    .min(1)
-    .max(100)
-    .default(10)
-    .messages({
-      'number.base': 'Limit must be a number',
-      'number.integer': 'Limit must be an integer',
-      'number.min': 'Limit must be at least 1',
-      'number.max': 'Limit cannot exceed 100'
-    }),
-  search: Joi.string()
-    .trim()
-    .max(150)
-    .optional()
-    .allow('')
-    .messages({
-      'string.max': 'Search term cannot exceed 150 characters'
-    }),
-  status: Joi.string()
-    .valid('true', 'false')
-    .optional()
-    .messages({
-      'any.only': 'Status must be either true or false'
-    }),
-  service_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .messages({
-      'number.base': 'Service ID must be a number',
-      'number.integer': 'Service ID must be an integer',
-      'number.positive': 'Service ID must be a positive number'
-    }),
-  item_type_id: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .messages({
-      'number.base': 'Item type ID must be a number',
-      'number.integer': 'Item type ID must be an integer',
-      'number.positive': 'Item type ID must be a positive number'
-    }),
-  sortBy: Joi.string()
-    .valid('name', 'created_at', 'updated_at', 'Item_id', 'item_price')
-    .default('created_at')
-    .messages({
-      'any.only': 'Sort by must be one of: name, created_at, updated_at, Item_id, item_price'
-    }),
-  sortOrder: Joi.string()
-    .valid('asc', 'desc')
-    .default('desc')
-    .messages({
-      'any.only': 'Sort order must be either asc or desc'
+      'number.base': 'Stock count must be a number',
+      'number.integer': 'Stock count must be an integer',
+      'number.min': 'Stock count cannot be negative',
+      'any.required': 'Stock count is required'
     })
 });
 
@@ -255,6 +276,7 @@ module.exports = {
   updateItemSchema,
   getItemByIdSchema,
   getAllItemsSchema,
-  getItemsByAuthSchema
+  getItemsByAuthSchema,
+  updateStockCountSchema
 };
 

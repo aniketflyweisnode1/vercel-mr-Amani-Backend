@@ -8,19 +8,21 @@ const userSchema = new mongoose.Schema({
   },
   firstName: {
     type: String,
-    required: [true, 'First name is required'],
     trim: true,
     maxlength: [50, 'First name cannot exceed 50 characters']
   },
   lastName: {
     type: String,
-    required: [true, 'Last name is required'],
     trim: true,
     maxlength: [50, 'Last name cannot exceed 50 characters']
   },
+  BusinessName: {
+    type: String,
+    trim: true,
+    maxlength: [150, 'Business name cannot exceed 150 characters']
+  },
   password: {
     type: String,
-    required: [true, 'Password is required'],
     trim: true,
     maxlength: [100, 'Password cannot exceed 100 characters']
   },
@@ -42,21 +44,6 @@ const userSchema = new mongoose.Schema({
   role_id: {
     type: Number,
     ref: 'Role',
-    default: 2
-  },
-  country_id: {
-    type: Number,
-    ref: 'Country',
-    default: null
-  },
-  state_id: {
-    type: Number,
-    ref: 'State',
-    default: null
-  },
-  city_id: {
-    type: Number,
-    ref: 'City',
     default: null
   },
   status: {
@@ -111,10 +98,6 @@ const userSchema = new mongoose.Schema({
   },
   created_by: {
     type: Number,
-    default: null
-  },
-  created_by_object: {
-    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null
   },
@@ -143,11 +126,7 @@ userSchema.index({ role_id: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ Email: 1 });
 userSchema.index({ personType: 1 });
-userSchema.index({ country_id: 1 });
-userSchema.index({ state_id: 1 });
-userSchema.index({ city_id: 1 });
-userSchema.index({ created_by: 1 });
-userSchema.index({ created_by_object: 1 });
+userSchema.index({ BusinessName: 1 });
 
 // Pre-save middleware to update updated_at timestamp
 userSchema.pre('save', function (next) {
@@ -157,8 +136,14 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-// Auto-increment plugin for user_id
-userSchema.plugin(AutoIncrement, { inc_field: 'user_id', start_seq: 1 });
+let UserModel;
+try {
+  UserModel = mongoose.model('User');
+} catch (error) {
+  // Auto-increment plugin for user_id - only apply if model doesn't exist
+  userSchema.plugin(AutoIncrement, { inc_field: 'user_id', start_seq: 1 });
+  UserModel = mongoose.model('User', userSchema);
+}
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = UserModel;
 

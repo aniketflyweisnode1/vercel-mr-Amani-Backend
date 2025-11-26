@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 const { sendError } = require('../utils/response');
 
 /**
@@ -12,7 +13,7 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message;
 
   // Log error
-  console.error('Error occurred', {
+  logger.error('Error occurred', {
     message: err.message,
     stack: err.stack,
     url: req.originalUrl,
@@ -30,7 +31,6 @@ const errorHandler = (err, req, res, next) => {
   // Mongoose duplicate key
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    console.log("---------------------------\n",field);
     const message = `${field} already exists`;
     error = { message, statusCode: 400 };
   }

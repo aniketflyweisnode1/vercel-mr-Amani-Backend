@@ -236,6 +236,21 @@ const retry = async (fn, maxRetries = 3, delay = 1000) => {
   }
 };
 
+/**
+ * Generate a reference issue number
+ * Format: REF-YYYYMMDD-XXXXXX (where XXXXXX is a 6-digit random number)
+ * @returns {string} Reference issue number
+ */
+const generateReferenceIssue = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const dateStr = `${year}${month}${day}`;
+  const randomNum = generateRandomNumber(6);
+  return `REF-${dateStr}-${randomNum}`;
+};
+
 module.exports = {
   generateRandomString,
   generateRandomNumber,
@@ -250,5 +265,6 @@ module.exports = {
   removeEmptyValues,
   generatePagination,
   sleep,
-  retry
+  retry,
+  generateReferenceIssue
 };

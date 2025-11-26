@@ -1,6 +1,8 @@
 const Item = require('../models/Item.model');
 const Services = require('../models/services.model');
 const ItemType = require('../models/Item_type.model');
+const ItemCategory = require('../models/Item_Category.model');
+const Business_Branch = require('../models/business_Branch.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -22,6 +24,24 @@ const ensureItemTypeExists = async (itemTypeId) => {
   return Boolean(itemType);
 };
 
+const ensureItemCategoryExists = async (itemCategoryId) => {
+  if (itemCategoryId === undefined) {
+    return true;
+  }
+
+  const itemCategory = await ItemCategory.findOne({ item_Category_id: itemCategoryId });
+  return Boolean(itemCategory);
+};
+
+const ensureBusinessBranchExists = async (businessBranchId) => {
+  if (businessBranchId === undefined) {
+    return true;
+  }
+
+  const businessBranch = await Business_Branch.findOne({ business_Branch_id: businessBranchId });
+  return Boolean(businessBranch);
+};
+
 const paginateMeta = (page, limit, total) => {
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -37,11 +57,17 @@ const paginateMeta = (page, limit, total) => {
 
 const createItem = asyncHandler(async (req, res) => {
   try {
-    const { service_id, item_type_id } = req.body;
+    const { service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count } = req.body;
 
-    const [serviceExists, itemTypeExists] = await Promise.all([
+    if (Stock_count !== undefined && Number(Stock_count) < 0) {
+      return sendError(res, 'Stock count cannot be negative', 400);
+    }
+
+    const [serviceExists, itemTypeExists, itemCategoryExists, businessBranchExists] = await Promise.all([
       ensureServiceExists(service_id),
-      ensureItemTypeExists(item_type_id)
+      ensureItemTypeExists(item_type_id),
+      ensureItemCategoryExists(item_Category_id),
+      ensureBusinessBranchExists(business_Branch_id)
     ]);
 
     if (!serviceExists) {
@@ -52,8 +78,17 @@ const createItem = asyncHandler(async (req, res) => {
       return sendError(res, 'Associated item type not found', 400);
     }
 
+    if (!itemCategoryExists) {
+      return sendError(res, 'Associated item category not found', 400);
+    }
+
+    if (!businessBranchExists) {
+      return sendError(res, 'Associated business branch not found', 400);
+    }
+
     const payload = {
       ...req.body,
+      Stock_count: Stock_count ?? 0,
       created_by: req.userIdNumber ?? null
     };
 
@@ -68,6 +103,85 @@ const createItem = asyncHandler(async (req, res) => {
   }
 });
 
+const buildItemFilter = ({ search, status, service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count }) => {
+  const filter = {};
+
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { Description: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  if (status !== undefined) {
+    filter.status = status === 'true';
+  }
+
+  if (service_id !== undefined) {
+    const serviceIdNum = Number(service_id);
+    if (!Number.isNaN(serviceIdNum)) {
+      filter.service_id = serviceIdNum;
+    }
+  }
+
+  if (item_type_id !== undefined) {
+    const typeIdNum = Number(item_type_id);
+    if (!Number.isNaN(typeIdNum)) {
+      filter.item_type_id = typeIdNum;
+    }
+  }
+
+  if (item_Category_id !== undefined) {
+    const categoryIdNum = Number(item_Category_id);
+    if (!Number.isNaN(categoryIdNum)) {
+      filter.item_Category_id = categoryIdNum;
+    }
+  }
+
+  if (business_Branch_id !== undefined) {
+    const branchIdNum = Number(business_Branch_id);
+    if (!Number.isNaN(branchIdNum)) {
+      filter.business_Branch_id = branchIdNum;
+    }
+  }
+
+  if (Stock_count !== undefined) {
+    const stockCountNum = Number(Stock_count);
+    if (!Number.isNaN(stockCountNum)) {
+      filter.Stock_count = stockCountNum;
+    }
+  }
+
+  return filter;
+};
+
+const applyItemSort = (sortBy, sortOrder) => {
+  const sort = {};
+  sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  return sort;
+};
+
+const listItemQuery = (filter = {}) =>
+  Item.find(filter)
+    .populate('service_id', 'name')
+    .populate('item_type_id', 'name')
+    .populate('item_Category_id', 'CategoryName')
+    .populate('business_Branch_id', 'name address City state country');
+
+const findItemByIdQuery = (id) =>
+  Item.findById(id)
+    .populate('service_id', 'name')
+    .populate('item_type_id', 'name')
+    .populate('item_Category_id', 'CategoryName')
+    .populate('business_Branch_id', 'name address City state country');
+
+const updateItemByIdQuery = (id, update, options) =>
+  Item.findByIdAndUpdate(id, update, options)
+    .populate('service_id', 'name')
+    .populate('item_type_id', 'name')
+    .populate('item_Category_id', 'CategoryName')
+    .populate('business_Branch_id', 'name address City state country');
+
 const getAllItems = asyncHandler(async (req, res) => {
   try {
     const {
@@ -77,6 +191,9 @@ const getAllItems = asyncHandler(async (req, res) => {
       status,
       service_id,
       item_type_id,
+      item_Category_id,
+      business_Branch_id,
+      Stock_count,
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
@@ -84,31 +201,13 @@ const getAllItems = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
 
-    const filter = {};
+    const filter = buildItemFilter({ search, status, service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count });
 
-    if (search) {
-      filter.name = { $regex: search, $options: 'i' };
-    }
-
-    if (status !== undefined) {
-      filter.status = status === 'true';
-    }
-
-    if (service_id !== undefined) {
-      filter.service_id = Number(service_id);
-    }
-
-    if (item_type_id !== undefined) {
-      filter.item_type_id = Number(item_type_id);
-    }
-
-    const sort = {};
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
+    const sort = applyItemSort(sortBy, sortOrder);
     const skip = (numericPage - 1) * numericLimit;
 
     const [items, total] = await Promise.all([
-      Item.find(filter)
+      listItemQuery(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
@@ -133,6 +232,9 @@ const getItemsByAuthUser = asyncHandler(async (req, res) => {
       status,
       service_id,
       item_type_id,
+      item_Category_id,
+      business_Branch_id,
+      Stock_count,
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
@@ -140,33 +242,14 @@ const getItemsByAuthUser = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
 
-    const filter = {
-      created_by: req.userIdNumber
-    };
+    const filter = buildItemFilter({ search, status, service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count });
+    filter.created_by = req.userIdNumber;
 
-    if (search) {
-      filter.name = { $regex: search, $options: 'i' };
-    }
-
-    if (status !== undefined) {
-      filter.status = status === 'true';
-    }
-
-    if (service_id !== undefined) {
-      filter.service_id = Number(service_id);
-    }
-
-    if (item_type_id !== undefined) {
-      filter.item_type_id = Number(item_type_id);
-    }
-
-    const sort = {};
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
+    const sort = applyItemSort(sortBy, sortOrder);
     const skip = (numericPage - 1) * numericLimit;
 
     const [items, total] = await Promise.all([
-      Item.find(filter)
+      listItemQuery(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
@@ -186,7 +269,7 @@ const getItemById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await Item.findById(id);
+    const item = await findItemByIdQuery(id);
 
     if (!item) {
       return sendNotFound(res, 'Item not found');
@@ -204,20 +287,33 @@ const getItemById = asyncHandler(async (req, res) => {
 const updateItem = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { service_id, item_type_id } = req.body;
+    const { service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count } = req.body;
 
-    if (service_id !== undefined) {
-      const exists = await ensureServiceExists(service_id);
-      if (!exists) {
-        return sendError(res, 'Associated service not found', 400);
-      }
+    if (Stock_count !== undefined && Number(Stock_count) < 0) {
+      return sendError(res, 'Stock count cannot be negative', 400);
     }
 
-    if (item_type_id !== undefined) {
-      const exists = await ensureItemTypeExists(item_type_id);
-      if (!exists) {
-        return sendError(res, 'Associated item type not found', 400);
-      }
+    const [serviceExists, itemTypeExists, itemCategoryExists, businessBranchExists] = await Promise.all([
+      ensureServiceExists(service_id),
+      ensureItemTypeExists(item_type_id),
+      ensureItemCategoryExists(item_Category_id),
+      ensureBusinessBranchExists(business_Branch_id)
+    ]);
+
+    if (!serviceExists) {
+      return sendError(res, 'Associated service not found', 400);
+    }
+
+    if (!itemTypeExists) {
+      return sendError(res, 'Associated item type not found', 400);
+    }
+
+    if (!itemCategoryExists) {
+      return sendError(res, 'Associated item category not found', 400);
+    }
+
+    if (!businessBranchExists) {
+      return sendError(res, 'Associated business branch not found', 400);
     }
 
     const update = {
@@ -226,7 +322,11 @@ const updateItem = asyncHandler(async (req, res) => {
       updated_at: new Date()
     };
 
-    const item = await Item.findByIdAndUpdate(id, update, {
+    if (Stock_count !== undefined) {
+      update.Stock_count = Number(Stock_count);
+    }
+
+    const item = await updateItemByIdQuery(id, update, {
       new: true,
       runValidators: true
     });
@@ -248,7 +348,7 @@ const deleteItem = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const item = await Item.findByIdAndUpdate(
+    const item = await updateItemByIdQuery(
       id,
       {
         status: false,
@@ -271,12 +371,50 @@ const deleteItem = asyncHandler(async (req, res) => {
   }
 });
 
+const updateStockCount = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Stock_count } = req.body;
+
+    const numericStock = Number(Stock_count);
+    if (Number.isNaN(numericStock)) {
+      return sendError(res, 'Stock count must be a number', 400);
+    }
+
+    if (numericStock < 0) {
+      return sendError(res, 'Stock count cannot be negative', 400);
+    }
+
+    const item = await updateItemByIdQuery(
+      id,
+      {
+        Stock_count: numericStock,
+        updated_by: req.userIdNumber ?? null,
+        updated_at: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!item) {
+      return sendNotFound(res, 'Item not found');
+    }
+
+    console.info('Item stock count updated successfully', { id: item._id, Stock_count: numericStock });
+
+    sendSuccess(res, item, 'Stock count updated successfully');
+  } catch (error) {
+    console.error('Error updating stock count', { error: error.message, id: req.params.id });
+    throw error;
+  }
+});
+
 module.exports = {
   createItem,
   getAllItems,
   getItemsByAuthUser,
   getItemById,
   updateItem,
-  deleteItem
+  deleteItem,
+  updateStockCount
 };
 

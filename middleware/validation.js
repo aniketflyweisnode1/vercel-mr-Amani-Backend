@@ -6,28 +6,6 @@ const { sendValidationError } = require('../utils/response');
  * @param {string} property - Request property to validate (body, query, params)
  * @returns {Function} Express middleware function
  */
-const removeEmptyStrings = (data) => {
-  if (!data || typeof data !== 'object') {
-    return data;
-  }
-
-  return Object.entries(data).reduce((acc, [key, value]) => {
-    if (typeof value === 'string' && value.trim() === '') {
-      return acc;
-    }
-
-    if (Array.isArray(value)) {
-      acc[key] = value
-        .map((item) => (typeof item === 'string' ? item.trim() : item))
-        .filter((item) => !(typeof item === 'string' && item === ''));
-      return acc;
-    }
-
-    acc[key] = value;
-    return acc;
-  }, Array.isArray(data) ? [] : {});
-};
-
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
     // Check if schema is defined
@@ -39,9 +17,7 @@ const validate = (schema, property = 'body') => {
       }]);
     }
 
-    const payload = removeEmptyStrings(req[property]);
-
-    const { error, value } = schema.validate(payload, {
+    const { error, value } = schema.validate(req[property], {
       abortEarly: false, // Show all validation errors
       stripUnknown: true, // Remove unknown fields
       allowUnknown: false // Don't allow unknown fields

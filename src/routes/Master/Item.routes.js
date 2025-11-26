@@ -7,7 +7,8 @@ const {
   getItemsByAuthUser,
   getItemById,
   updateItem,
-  deleteItem
+  deleteItem,
+  updateStockCount
 } = require('../../controllers/Item.controller.js');
 
 const { auth } = require('../../../middleware/auth.js');
@@ -18,7 +19,8 @@ const {
   updateItemSchema,
   getItemByIdSchema,
   getAllItemsSchema,
-  getItemsByAuthSchema
+  getItemsByAuthSchema,
+  updateStockCountSchema
 } = require('../../../validators/Item.validator');
 
 router.post('/create', auth, validateBody(createItemSchema), createItem);
@@ -26,6 +28,7 @@ router.get('/getAll', validateQuery(getAllItemsSchema), getAllItems);
 router.get('/getByAuth', auth, validateQuery(getItemsByAuthSchema), getItemsByAuthUser);
 router.get('/getById/:id', auth, validateParams(getItemByIdSchema), getItemById);
 router.put('/update/:id', auth, validateParams(getItemByIdSchema), validateBody(updateItemSchema), updateItem);
+router.patch('/updateStockCount/:id', auth, validateParams(getItemByIdSchema), validateBody(updateStockCountSchema), updateStockCount);
 router.delete('/delete/:id', auth, validateParams(getItemByIdSchema), deleteItem);
 
 module.exports = router;
