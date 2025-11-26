@@ -1,6 +1,6 @@
 const AdminPlanSubscription = require('../models/Admin_Plan_Subscripiton.model');
 const AdminPlan = require('../models/Admin_Plan.model');
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 

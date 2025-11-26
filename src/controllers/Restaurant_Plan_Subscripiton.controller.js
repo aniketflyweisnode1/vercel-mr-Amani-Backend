@@ -1,6 +1,6 @@
 const RestaurantPlanSubscription = require('../models/Restaurant_Plan_Subscripiton.model');
 const RestaurantPlan = require('../models/Restaurant_Plan.model');
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 

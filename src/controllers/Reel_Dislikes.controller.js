@@ -1,6 +1,6 @@
 const Reel_Dislikes = require('../models/Reel_Dislikes.model');
 const Reel = require('../models/Reel.model');
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
