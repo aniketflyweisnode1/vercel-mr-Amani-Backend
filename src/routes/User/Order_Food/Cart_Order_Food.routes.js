@@ -10,7 +10,7 @@ const {
   deleteCartOrderFood,
   getCartOrderFoodsByAuth,
   getCartOrderFoodsByDate
-} = require('../../../controllers/cart_Order_Food.controller');
+} = require('../../../controllers/Cart_Order_Food.controller');
 const {
   createCartOrderFoodSchema,
   updateCartOrderFoodSchema,
