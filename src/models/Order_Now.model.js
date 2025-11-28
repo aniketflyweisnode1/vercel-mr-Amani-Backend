@@ -134,7 +134,13 @@ orderNowSchema.pre('save', function (next) {
 });
 
 // Auto-increment plugin for Order_Now_id
-orderNowSchema.plugin(AutoIncrement, { inc_field: 'Order_Now_id', start_seq: 1 });
+let OrderNowModel;
+try {
+  OrderNowModel = mongoose.model('Order_Now');
+} catch (error) {
+  orderNowSchema.plugin(AutoIncrement, { inc_field: 'Order_Now_id', start_seq: 1 });
+  OrderNowModel = mongoose.model('Order_Now', orderNowSchema);
+}
 
-module.exports = mongoose.model('Order_Now', orderNowSchema);
+module.exports = OrderNowModel;
 

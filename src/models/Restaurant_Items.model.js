@@ -91,8 +91,14 @@ restaurantItemsSchema.pre('findOneAndUpdate', function (next) {
   next();
 });
 
-restaurantItemsSchema.plugin(AutoIncrement, { inc_field: 'Restaurant_Items_id', start_seq: 1 });
+let RestaurantItemsModel;
+try {
+  RestaurantItemsModel = mongoose.model('Restaurant_Items');
+} catch (error) {
+  restaurantItemsSchema.plugin(AutoIncrement, { inc_field: 'Restaurant_Items_id', start_seq: 1 });
+  RestaurantItemsModel = mongoose.model('Restaurant_Items', restaurantItemsSchema);
+}
 
-module.exports = mongoose.model('Restaurant_Items', restaurantItemsSchema);
+module.exports = RestaurantItemsModel;
 
 

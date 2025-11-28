@@ -54,7 +54,13 @@ paymentMethodSchema.pre('save', function (next) {
   next();
 });
 
-paymentMethodSchema.plugin(AutoIncrement, { inc_field: 'payment_method_id', start_seq: 1 });
+let PaymentMethodsModel;
+try {
+  PaymentMethodsModel = mongoose.model('PaymentMethods');
+} catch (error) {
+  paymentMethodSchema.plugin(AutoIncrement, { inc_field: 'payment_method_id', start_seq: 1 });
+  PaymentMethodsModel = mongoose.model('PaymentMethods', paymentMethodSchema);
+}
 
-module.exports = mongoose.model('PaymentMethods', paymentMethodSchema);
+module.exports = PaymentMethodsModel;
 

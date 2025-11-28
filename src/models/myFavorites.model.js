@@ -59,6 +59,12 @@ myFavoritesSchema.pre('save', function (next) {
 });
 
 // Auto-increment plugin for MyFavorites_id
-myFavoritesSchema.plugin(AutoIncrement, { inc_field: 'MyFavorites_id', start_seq: 1 });
+let MyFavoritesModel;
+try {
+  MyFavoritesModel = mongoose.model('MyFavorites');
+} catch (error) {
+  myFavoritesSchema.plugin(AutoIncrement, { inc_field: 'MyFavorites_id', start_seq: 1 });
+  MyFavoritesModel = mongoose.model('MyFavorites', myFavoritesSchema);
+}
 
-module.exports = mongoose.model('MyFavorites', myFavoritesSchema);
+module.exports = MyFavoritesModel;

@@ -97,7 +97,13 @@ cartOrderFoodSchema.pre('save', function (next) {
 });
 
 // Auto-increment plugin for Cart_Order_Food_id
-cartOrderFoodSchema.plugin(AutoIncrement, { inc_field: 'Cart_Order_Food_id', start_seq: 1 });
+let CartOrderFoodModel;
+try {
+  CartOrderFoodModel = mongoose.model('Cart_Order_Food');
+} catch (error) {
+  cartOrderFoodSchema.plugin(AutoIncrement, { inc_field: 'Cart_Order_Food_id', start_seq: 1 });
+  CartOrderFoodModel = mongoose.model('Cart_Order_Food', cartOrderFoodSchema);
+}
 
-module.exports = mongoose.model('Cart_Order_Food', cartOrderFoodSchema);
+module.exports = CartOrderFoodModel;
 

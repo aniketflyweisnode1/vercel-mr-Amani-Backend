@@ -78,7 +78,13 @@ discountsSchema.pre('save', function (next) {
   next();
 });
 
-discountsSchema.plugin(AutoIncrement, { inc_field: 'Discounts_id', start_seq: 1 });
+let DiscountsModel;
+try {
+  DiscountsModel = mongoose.model('Discounts');
+} catch (error) {
+  discountsSchema.plugin(AutoIncrement, { inc_field: 'Discounts_id', start_seq: 1 });
+  DiscountsModel = mongoose.model('Discounts', discountsSchema);
+}
 
-module.exports = mongoose.model('Discounts', discountsSchema);
+module.exports = DiscountsModel;
 

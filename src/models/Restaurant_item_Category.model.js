@@ -61,8 +61,14 @@ restaurantItemCategorySchema.pre('findOneAndUpdate', function (next) {
   next();
 });
 
-restaurantItemCategorySchema.plugin(AutoIncrement, { inc_field: 'Restaurant_item_Category_id', start_seq: 1 });
+let RestaurantItemCategoryModel;
+try {
+  RestaurantItemCategoryModel = mongoose.model('Restaurant_item_Category');
+} catch (error) {
+  restaurantItemCategorySchema.plugin(AutoIncrement, { inc_field: 'Restaurant_item_Category_id', start_seq: 1 });
+  RestaurantItemCategoryModel = mongoose.model('Restaurant_item_Category', restaurantItemCategorySchema);
+}
 
-module.exports = mongoose.model('Restaurant_item_Category', restaurantItemCategorySchema);
+module.exports = RestaurantItemCategoryModel;
 
 

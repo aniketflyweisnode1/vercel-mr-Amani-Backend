@@ -216,7 +216,13 @@ businessBranchSchema.pre('save', function (next) {
   next();
 });
 
-businessBranchSchema.plugin(AutoIncrement, { inc_field: 'business_Branch_id', start_seq: 1 });
+let BusinessBranchModel;
+try {
+  BusinessBranchModel = mongoose.model('Business_Branch');
+} catch (error) {
+  businessBranchSchema.plugin(AutoIncrement, { inc_field: 'business_Branch_id', start_seq: 1 });
+  BusinessBranchModel = mongoose.model('Business_Branch', businessBranchSchema);
+}
 
-module.exports = mongoose.model('Business_Branch', businessBranchSchema);
+module.exports = BusinessBranchModel;
 

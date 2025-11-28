@@ -90,7 +90,13 @@ userAddressSchema.pre('save', function (next) {
 });
 
 // Auto-increment plugin for User_Address_id
-userAddressSchema.plugin(AutoIncrement, { inc_field: 'User_Address_id', start_seq: 1 });
+let UserAddressModel;
+try {
+  UserAddressModel = mongoose.model('User_Address');
+} catch (error) {
+  userAddressSchema.plugin(AutoIncrement, { inc_field: 'User_Address_id', start_seq: 1 });
+  UserAddressModel = mongoose.model('User_Address', userAddressSchema);
+}
 
-module.exports = mongoose.model('User_Address', userAddressSchema);
+module.exports = UserAddressModel;
 

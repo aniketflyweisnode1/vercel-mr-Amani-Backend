@@ -138,7 +138,13 @@ transactionSchema.pre('save', function (next) {
   next();
 });
 
-transactionSchema.plugin(AutoIncrement, { inc_field: 'transaction_id', start_seq: 1 });
+let TransactionModel;
+try {
+  TransactionModel = mongoose.model('Transaction');
+} catch (error) {
+  transactionSchema.plugin(AutoIncrement, { inc_field: 'transaction_id', start_seq: 1 });
+  TransactionModel = mongoose.model('Transaction', transactionSchema);
+}
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+module.exports = TransactionModel;
 
