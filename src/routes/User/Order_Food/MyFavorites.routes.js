@@ -9,14 +9,14 @@ const {
   updateMyFavorites,
   deleteMyFavorites,
   getMyFavoritesByAuth
-} = require('../../../controllers/MyFavorites.controller');
+} = require('../../../controllers/myFavorites.controller.js');
 const {
   createMyFavoritesSchema,
   updateMyFavoritesSchema,
   getMyFavoritesByIdSchema,
   getAllMyFavoritesSchema,
   getMyFavoritesByAuthSchema
-} = require('../../../../validators/MyFavorites.validator');
+} = require('../../../../validators/myFavorites.validator.js');
 
 router.post('/create', auth, validateBody(createMyFavoritesSchema), createMyFavorites);
 router.get('/getAll', validateQuery(getAllMyFavoritesSchema), getAllMyFavorites);
