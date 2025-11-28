@@ -7,6 +7,7 @@ const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../u
 const { asyncHandler } = require('../../middleware/errorHandler');
 
 // Manual population function for Number refs
+
 const populateUserAddressData = async (addresses) => {
   const addressesArray = Array.isArray(addresses) ? addresses : [addresses];
   const populatedAddresses = await Promise.all(
