@@ -1,4 +1,4 @@
-const CartOrderFood = require('../models/Cart_Order_Food.model');
+const CartOrderFood = require('../models/Cart_Order_Food.model.js');
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const Discounts = require('../models/discounts.model');
 const User = require('../models/User.model');

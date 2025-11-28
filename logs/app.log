@@ -21,3 +21,6 @@
 [2025-11-28T13:02:36.450Z] INFO: Server running in development mode on port 3030
 [2025-11-28T13:02:36.460Z] INFO: API Documentation: http://localhost:3030/api/v2
 [2025-11-28T13:02:36.462Z] INFO: Health Check: http://localhost:3030/api/v2/health
+[2025-11-28T13:04:56.850Z] INFO: Server running in development mode on port 3030
+[2025-11-28T13:04:56.865Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-28T13:04:56.868Z] INFO: Health Check: http://localhost:3030/api/v2/health
