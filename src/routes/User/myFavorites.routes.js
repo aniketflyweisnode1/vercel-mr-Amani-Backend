@@ -8,7 +8,7 @@ const {
   getFavoriteById,
   updateFavorite,
   deleteFavorite
-} = require('../../controllers/myFavorites.controller.js');
+} = require('../../controllers/myFavorites.controller');
 
 const { auth } = require('../../../middleware/auth.js');
 const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
