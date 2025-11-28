@@ -212,6 +212,13 @@ const createUserSchema = Joi.object({
     .messages({
       'any.only': 'Person type must be one of: Family Person, Friends Person, Social Person'
     }),
+  RegistrationType: Joi.string()
+    .valid('Individual', 'Company')
+    .default('Individual')
+    .optional()
+    .messages({
+      'any.only': 'Registration type must be either Individual or Company'
+    }),
   user_image: Joi.string()
     .trim()
     .uri()
@@ -331,6 +338,12 @@ const updateUserSchema = Joi.object({
     .allow('')
     .messages({
       'any.only': 'Person type must be one of: Family Person, Friends Person, Social Person'
+    }),
+  RegistrationType: Joi.string()
+    .valid('Individual', 'Company')
+    .optional()
+    .messages({
+      'any.only': 'Registration type must be either Individual or Company'
     }),
   user_image: Joi.string()
     .trim()
@@ -481,11 +494,17 @@ const getAllUsersSchema = Joi.object({
       'number.integer': 'Role ID must be an integer',
       'number.positive': 'Role ID must be a positive number'
     }),
+  RegistrationType: Joi.string()
+    .valid('Individual', 'Company')
+    .optional()
+    .messages({
+      'any.only': 'Registration type must be either Individual or Company'
+    }),
   sortBy: Joi.string()
-    .valid('firstName', 'lastName', 'created_at', 'updated_at', 'user_id')
+    .valid('firstName', 'lastName', 'created_at', 'updated_at', 'user_id', 'RegistrationType')
     .default('created_at')
     .messages({
-      'any.only': 'Sort by must be one of: firstName, lastName, created_at, updated_at, user_id'
+      'any.only': 'Sort by must be one of: firstName, lastName, created_at, updated_at, user_id, RegistrationType'
     }),
   sortOrder: Joi.string()
     .valid('asc', 'desc')
@@ -611,6 +630,12 @@ const updateUserByIdBodySchema = Joi.object({
     .allow('')
     .messages({
       'any.only': 'Person type must be one of: Family Person, Friends Person, Social Person'
+    }),
+  RegistrationType: Joi.string()
+    .valid('Individual', 'Company')
+    .optional()
+    .messages({
+      'any.only': 'Registration type must be either Individual or Company'
     }),
   user_image: Joi.string()
     .trim()

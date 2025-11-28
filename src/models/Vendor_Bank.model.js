@@ -1,0 +1,87 @@
+const mongoose = require('mongoose');
+const AutoIncrement = require('mongoose-sequence')(mongoose);
+
+const vendorBankSchema = new mongoose.Schema({
+  Vendor_Bank_id: {
+    type: Number,
+    unique: true
+  },
+  user_id: {
+    type: Number,
+    ref: 'User',
+    required: [true, 'User ID is required']
+  },
+  BankName: {
+    type: String,
+    required: [true, 'Bank name is required'],
+    trim: true,
+    maxlength: [200, 'Bank name cannot exceed 200 characters']
+  },
+  AccountNo: {
+    type: String,
+    required: [true, 'Account number is required'],
+    trim: true,
+    maxlength: [50, 'Account number cannot exceed 50 characters']
+  },
+  AccountType: {
+    type: String,
+    enum: ['Savings', 'Current'],
+    default: 'Savings',
+    trim: true
+  },
+  AccountHolderName: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Account holder name cannot exceed 200 characters']
+  },
+  RoutingNo: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Routing number cannot exceed 50 characters']
+  },
+  Status: {
+    type: Boolean,
+    default: true
+  },
+  created_by: {
+    type: Number,
+    ref: 'User',
+    default: null
+  },
+  created_at: {
+    type: Date,
+    default: Date.now
+  },
+  updated_by: {
+    type: Number,
+    ref: 'User',
+    default: null
+  },
+  updated_at: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: false,
+  versionKey: false
+});
+
+// Index for better query performance
+vendorBankSchema.index({ Vendor_Bank_id: 1 });
+vendorBankSchema.index({ user_id: 1 });
+vendorBankSchema.index({ Status: 1 });
+vendorBankSchema.index({ BankName: 1 });
+
+// Pre-save middleware to update updated_at timestamp
+vendorBankSchema.pre('save', function (next) {
+  if (this.isModified() && !this.isNew) {
+    this.updated_at = new Date();
+  }
+  next();
+});
+
+// Auto-increment plugin for Vendor_Bank_id
+vendorBankSchema.plugin(AutoIncrement, { inc_field: 'Vendor_Bank_id', start_seq: 1 });
+
+module.exports = mongoose.model('Vendor_Bank', vendorBankSchema);
+

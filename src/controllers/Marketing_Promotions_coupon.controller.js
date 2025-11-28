@@ -1,7 +1,7 @@
 const MarketingCoupon = require('../models/Marketing_Promotions_coupon.model');
 const MarketingCouponCategory = require('../models/Marketing_Promotions_coupon_Category.model');
 const Business_Branch = require('../models/business_Branch.model');
-const Item = require('../models/Item.model');
+const RestaurantItems = require('../models/Restaurant_Items.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -70,7 +70,7 @@ const validateProductsExist = async (productIds = []) => {
   }
 
   for (const productId of productIds) {
-    const product = await Item.findOne({ Item_id: productId, Status: true });
+    const product = await RestaurantItems.findOne({ Restaurant_Items_id: productId, Status: true });
     if (!product) {
       return {
         valid: false,

@@ -168,8 +168,8 @@ const verifyOTPHandler = asyncHandler(async (req, res) => {
       return sendError(res, 'Login permissions are disabled', 403);
     }
 
-    // Validate role
-    const allowedRoles = role ? [role] : ['User'];
+    // Validate role - allow User, Restaurant, Vendor, Admin roles
+    const allowedRoles = role ? [role] : ['User', 'Restaurant', 'Vendor', 'Admin'];
     const roleValidation = await ensureRoleMatch(user.role_id, allowedRoles);
     if (!roleValidation.isValid) {
       return sendError(res, roleValidation.message, 403);

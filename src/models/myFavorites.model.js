@@ -2,26 +2,21 @@ const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const myFavoritesSchema = new mongoose.Schema({
-  myFavorites_id: {
+  MyFavorites_id: {
     type: Number,
     unique: true
   },
-  user_id: {
+  Item_id: {
+    type: Number,
+    ref: 'Restaurant_Items',
+    required: [true, 'Item ID is required']
+  },
+  User_Id: {
     type: Number,
     ref: 'User',
     required: [true, 'User ID is required']
   },
-  service_id: {
-    type: Number,
-    ref: 'Services',
-    required: [true, 'Service ID is required']
-  },
-  Item_id: {
-    type: Number,
-    ref: 'Item',
-    required: [true, 'Item ID is required']
-  },
-  status: {
+  Status: {
     type: Boolean,
     default: true
   },
@@ -48,12 +43,14 @@ const myFavoritesSchema = new mongoose.Schema({
   versionKey: false
 });
 
-myFavoritesSchema.index({ myFavorites_id: 1 });
-myFavoritesSchema.index({ user_id: 1 });
-myFavoritesSchema.index({ service_id: 1 });
+// Index for better query performance
+myFavoritesSchema.index({ MyFavorites_id: 1 });
 myFavoritesSchema.index({ Item_id: 1 });
-myFavoritesSchema.index({ status: 1 });
+myFavoritesSchema.index({ User_Id: 1 });
+myFavoritesSchema.index({ Status: 1 });
+myFavoritesSchema.index({ User_Id: 1, Item_id: 1 }); // Compound index for unique user-item combination
 
+// Pre-save middleware to update updated_at timestamp
 myFavoritesSchema.pre('save', function (next) {
   if (this.isModified() && !this.isNew) {
     this.updated_at = new Date();
@@ -61,19 +58,7 @@ myFavoritesSchema.pre('save', function (next) {
   next();
 });
 
-myFavoritesSchema.pre('findOneAndUpdate', function (next) {
-  this.set({ updated_at: new Date() });
-  next();
-});
+// Auto-increment plugin for MyFavorites_id
+myFavoritesSchema.plugin(AutoIncrement, { inc_field: 'MyFavorites_id', start_seq: 1 });
 
-myFavoritesSchema.plugin(AutoIncrement, { inc_field: 'myFavorites_id', start_seq: 1 });
-
-let MyFavoritesModel;
-try {
-  MyFavoritesModel = mongoose.model('myFavorites');
-} catch (error) {
-  MyFavoritesModel = mongoose.model('myFavorites', myFavoritesSchema);
-}
-
-module.exports = MyFavoritesModel;
-
+module.exports = mongoose.model('MyFavorites', myFavoritesSchema);

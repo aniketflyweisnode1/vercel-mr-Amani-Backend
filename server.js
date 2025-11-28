@@ -16,6 +16,9 @@ const routes = require('./src');
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
+// Import logger
+const logger = require('./utils/logger');
+
 // Initialize Express app
 const app = express();
 
@@ -49,7 +52,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 if ('development') {
   app.use(morgan('dev'));
 } else {
-  app.use(morgan('combined'));
+  app.use(morgan('combined', {
+    stream: {
+      write: (message) => logger.info(message.trim())
+    }
+  }));
 }
 
 // Rate limiting
@@ -78,7 +85,7 @@ app.use((req, res, next) => {
   if (req.originalUrl === '/favicon.ico') {
     return next();
   }
-  console.info('Request received', {
+  logger.info('Request received', {
     method: req.method,
     url: req.originalUrl,
     ip: req.ip,
@@ -110,18 +117,18 @@ app.use(errorHandler);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.info('SIGTERM received. Shutting down gracefully...');
+  logger.info('SIGTERM received. Shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.info('SIGINT received. Shutting down gracefully...');
+  logger.info('SIGINT received. Shutting down gracefully...');
   process.exit(0);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.error('Unhandled Promise Rejection', {
+  logger.error('Unhandled Promise Rejection', {
     error: err.message,
     stack: err.stack,
     promise: promise
@@ -131,7 +138,7 @@ process.on('unhandledRejection', (err, promise) => {
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception', {
+  logger.error('Uncaught Exception', {
     error: err.message,
     stack: err.stack
   });
@@ -141,9 +148,9 @@ process.on('uncaughtException', (err) => {
 // Start server
 const PORT = 3030;
 const server = app.listen(PORT, () => {
-  console.info(`Server running in ${'development'} mode on port ${PORT}`);
-  console.info(`API Documentation: http://localhost:${PORT}/api/v2`);
-  console.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
+  logger.info(`Server running in ${'development'} mode on port ${PORT}`);
+  logger.info(`API Documentation: http://localhost:${PORT}/api/v2`);
+  logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
 });
 
 // Handle server errors
@@ -156,11 +163,11 @@ server.on('error', (error) => {
 
   switch (error.code) {
     case 'EACCES':
-      console.error(`${bind} requires elevated privileges`);
+      logger.error(`${bind} requires elevated privileges`);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(`${bind} is already in use`);
+      logger.error(`${bind} is already in use`);
       process.exit(1);
       break;
     default:
@@ -168,6 +175,4 @@ server.on('error', (error) => {
   }
 });
 
-
-// https://vercel-mr-amani-backend.vercel.app
 module.exports = app;

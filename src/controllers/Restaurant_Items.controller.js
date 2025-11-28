@@ -17,7 +17,8 @@ const buildFilter = ({ search, status, business_Branch_id, Restaurant_item_Categ
   if (search) {
     filter.$or = [
       { SupplierName: { $regex: search, $options: 'i' } },
-      { unit: { $regex: search, $options: 'i' } }
+      { unit: { $regex: search, $options: 'i' } },
+      { DeliveryTime: { $regex: search, $options: 'i' } }
     ];
   }
 

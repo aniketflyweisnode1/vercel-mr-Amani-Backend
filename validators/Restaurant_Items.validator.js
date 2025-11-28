@@ -26,6 +26,7 @@ const createRestaurantItemSchema = Joi.object({
   minStock: Joi.number().min(0).optional(),
   unitPrice: Joi.number().min(0).required(),
   SupplierName: Joi.string().trim().max(200).optional(),
+  DeliveryTime: Joi.string().trim().max(50).optional().allow(''),
   Status: Joi.boolean().optional().default(true)
 });
 
@@ -37,6 +38,7 @@ const updateRestaurantItemSchema = Joi.object({
   minStock: Joi.number().min(0).optional(),
   unitPrice: Joi.number().min(0).optional(),
   SupplierName: Joi.string().trim().max(200).optional(),
+  DeliveryTime: Joi.string().trim().max(50).optional().allow(''),
   Status: Joi.boolean().optional()
 }).min(1);
 

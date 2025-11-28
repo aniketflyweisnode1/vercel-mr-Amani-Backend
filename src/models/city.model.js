@@ -82,8 +82,11 @@ citySchema.pre('save', function(next) {
   next();
 });
 
-// Auto-increment plugin for city_id
-citySchema.plugin(AutoIncrement, { inc_field: 'city_id', start_seq: 1 });
-
-module.exports = mongoose.model('City', citySchema);
+// Auto-increment plugin for city_id - only apply if model doesn't exist
+if (!mongoose.models.City) {
+  citySchema.plugin(AutoIncrement, { inc_field: 'city_id', start_seq: 1 });
+  module.exports = mongoose.model('City', citySchema);
+} else {
+  module.exports = mongoose.models.City;
+}
 

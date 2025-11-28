@@ -74,13 +74,19 @@ const getAllUsers = asyncHandler(async (req, res) => {
         { Email: { $regex: search, $options: 'i' } },
         { Bio: { $regex: search, $options: 'i' } },
         { address: { $regex: search, $options: 'i' } },
-        { personType: { $regex: search, $options: 'i' } }
+        { personType: { $regex: search, $options: 'i' } },
+        { RegistrationType: { $regex: search, $options: 'i' } }
       ];
     }
 
     // Add status filter
     if (status !== undefined) {
       filter.status = status === 'true';
+    }
+
+    // Add RegistrationType filter
+    if (req.query.RegistrationType) {
+      filter.RegistrationType = req.query.RegistrationType;
     }
 
     // Build sort object

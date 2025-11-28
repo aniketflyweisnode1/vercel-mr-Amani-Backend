@@ -124,8 +124,11 @@ countrySchema.pre('save', function(next) {
   next();
 });
 
-// Auto-increment plugin for country_id
-countrySchema.plugin(AutoIncrement, { inc_field: 'country_id', start_seq: 1 });
-
-module.exports = mongoose.model('Country', countrySchema);
+// Auto-increment plugin for country_id - only apply if model doesn't exist
+if (!mongoose.models.Country) {
+  countrySchema.plugin(AutoIncrement, { inc_field: 'country_id', start_seq: 1 });
+  module.exports = mongoose.model('Country', countrySchema);
+} else {
+  module.exports = mongoose.models.Country;
+}
 

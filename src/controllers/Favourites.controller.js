@@ -1,6 +1,6 @@
 const Favourites = require('../models/Favourites.model');
 const Business_Branch = require('../models/business_Branch.model');
-const Item = require('../models/Item.model');
+const RestaurantItems = require('../models/Restaurant_Items.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -23,9 +23,9 @@ const validateItemsExist = async (items) => {
   }
 
   for (const itemId of items) {
-    const item = await Item.findOne({ Item_id: itemId, Status: true });
+    const item = await RestaurantItems.findOne({ Restaurant_Items_id: itemId, Status: true });
     if (!item) {
-      return { valid: false, message: `Item with ID ${itemId} not found or inactive` };
+      return { valid: false, message: `Restaurant item with ID ${itemId} not found or inactive` };
     }
   }
   return { valid: true };

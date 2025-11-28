@@ -5,3 +5,6 @@
 [2025-11-11T09:51:25.807Z] INFO: API Documentation: http://localhost:3030/api/v2
 [2025-11-11T09:51:25.808Z] INFO: Health Check: http://localhost:3030/api/v2/health
 [2025-11-11T09:51:32.932Z] INFO: SIGINT received. Shutting down gracefully...
+[2025-11-28T12:11:15.940Z] INFO: Server running in development mode on port 3030
+[2025-11-28T12:11:16.055Z] INFO: API Documentation: http://localhost:3030/api/v2
+[2025-11-28T12:11:16.066Z] INFO: Health Check: http://localhost:3030/api/v2/health

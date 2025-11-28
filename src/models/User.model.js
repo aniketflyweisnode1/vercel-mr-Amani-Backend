@@ -84,6 +84,12 @@ const userSchema = new mongoose.Schema({
     enum: ['Family Person', 'Friends Person', 'Social Person'],
     trim: true
   },
+  RegistrationType: {
+    type: String,
+    enum: ['Individual', 'Company'],
+    default: 'Individual',
+    trim: true
+  },
   user_image: {
     type: String,
     trim: true
@@ -126,6 +132,7 @@ userSchema.index({ role_id: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ Email: 1 });
 userSchema.index({ personType: 1 });
+userSchema.index({ RegistrationType: 1 });
 userSchema.index({ BusinessName: 1 });
 
 // Pre-save middleware to update updated_at timestamp

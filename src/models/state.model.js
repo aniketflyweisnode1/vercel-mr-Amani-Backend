@@ -79,8 +79,11 @@ stateSchema.pre('save', function(next) {
   next();
 });
 
-// Auto-increment plugin for state_id
-stateSchema.plugin(AutoIncrement, { inc_field: 'state_id', start_seq: 1 });
-
-module.exports = mongoose.model('State', stateSchema);
+// Auto-increment plugin for state_id - only apply if model doesn't exist
+if (!mongoose.models.State) {
+  stateSchema.plugin(AutoIncrement, { inc_field: 'state_id', start_seq: 1 });
+  module.exports = mongoose.model('State', stateSchema);
+} else {
+  module.exports = mongoose.models.State;
+}
 

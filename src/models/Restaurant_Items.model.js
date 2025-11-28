@@ -41,6 +41,11 @@ const restaurantItemsSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Supplier name cannot exceed 200 characters']
   },
+  DeliveryTime: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Delivery time cannot exceed 50 characters']
+  },
   Status: {
     type: Boolean,
     default: true
