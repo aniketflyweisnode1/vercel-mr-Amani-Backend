@@ -1,4 +1,4 @@
-const UserAddress = require('../models/user_Address.model');
+const UserAddress = require('../models/User_Address.model');
 const City = require('../models/city.model');
 const State = require('../models/state.model');
 const Country = require('../models/country.model');
