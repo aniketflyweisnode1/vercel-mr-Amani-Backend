@@ -1,7 +1,7 @@
-const UserAddress = require('../models/User_Address.model');
-const City = require('../models/City.model');
-const State = require('../models/State.model');
-const Country = require('../models/Country.model');
+const UserAddress = require('../models/user_Address.model');
+const City = require('../models/city.model');
+const State = require('../models/state.model');
+const Country = require('../models/country.model');
 const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
