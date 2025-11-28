@@ -1,4 +1,4 @@
-const MyFavorites = require('../models/MyFavorites.model');
+const MyFavorites = require('../models/myFavorites.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const BusinessBranch = require('../models/business_Branch.model');
 const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
