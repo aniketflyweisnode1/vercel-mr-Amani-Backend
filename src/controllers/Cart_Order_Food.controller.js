@@ -2,8 +2,8 @@ const CartOrderFood = require('../models/Cart_Order_Food.model.js');
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const Discounts = require('../models/Discounts.model.js');
 const User = require('../models/User.model');
-const BusinessBranch = require('../models/business_Branch.model');
-const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
+const BusinessBranch = require('../models/business_Branch.model.js');
+const RestaurantItemCategory = require('../models/Restaurant_item_Category.model.js');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
