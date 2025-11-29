@@ -651,10 +651,10 @@ const updateUserByIdBodySchema = Joi.object({
 
 // Change password validation schema
 const changePasswordSchema = Joi.object({
-  currentPassword: Joi.string()
+  oldPassword: Joi.string()
     .required()
     .messages({
-      'string.empty': 'Current password is required'
+      'string.empty': 'Old password is required'
     }),
   newPassword: Joi.string()
     .min(6)

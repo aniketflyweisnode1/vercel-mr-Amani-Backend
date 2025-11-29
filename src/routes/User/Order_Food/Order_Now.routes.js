@@ -9,7 +9,8 @@ const {
   updateOrderNow,
   deleteOrderNow,
   getOrderNowsByAuth,
-  getOrderNowsByDate
+  getOrderNowsByDate,
+  processPayment
 } = require('../../../controllers/Order_Now.controller');
 const {
   createOrderNowSchema,
@@ -17,10 +18,12 @@ const {
   getOrderNowByIdSchema,
   getAllOrderNowsSchema,
   getOrderNowsByAuthSchema,
-  getOrderNowsByDateQuerySchema
+  getOrderNowsByDateQuerySchema,
+  processPaymentSchema
 } = require('../../../../validators/Order_Now.validator');
 
 router.post('/create', auth, validateBody(createOrderNowSchema), createOrderNow);
+router.post('/processPayment', auth, validateBody(processPaymentSchema), processPayment);
 router.get('/getAll', validateQuery(getAllOrderNowsSchema), getAllOrderNows);
 router.get('/getById/:id', auth, validateParams(getOrderNowByIdSchema), getOrderNowById);
 router.put('/update/:id', auth, validateParams(getOrderNowByIdSchema), validateBody(updateOrderNowSchema), updateOrderNow);

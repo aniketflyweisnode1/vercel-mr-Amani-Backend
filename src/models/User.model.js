@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
+const bcrypt = require('bcryptjs');
+const { generateUniqueReferralCode } = require('../../utils/referralCode');
 
 const userSchema = new mongoose.Schema({
   user_id: {
@@ -102,6 +104,19 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
+  ReferralCode: {
+    type: String,
+    unique: true,
+    trim: true,
+    uppercase: true,
+    length: [10, 'Referral code must be exactly 10 characters'],
+    match: [/^[A-Z0-9]{10}$/, 'Referral code must contain only uppercase letters and numbers']
+  },
+  invitedBy: {
+    type: Number,
+    ref: 'User',
+    default: null
+  },
   created_by: {
     type: Number,
     ref: 'User',
@@ -134,14 +149,49 @@ userSchema.index({ Email: 1 });
 userSchema.index({ personType: 1 });
 userSchema.index({ RegistrationType: 1 });
 userSchema.index({ BusinessName: 1 });
+userSchema.index({ ReferralCode: 1 });
+userSchema.index({ invitedBy: 1 });
 
-// Pre-save middleware to update updated_at timestamp
-userSchema.pre('save', function (next) {
+// Pre-save middleware to hash password, update updated_at timestamp and generate referral code
+userSchema.pre('save', async function (next) {
   if (this.isModified() && !this.isNew) {
     this.updated_at = new Date();
   }
+  
+  // Hash password if it's modified
+  if (this.isModified('password') && this.password) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
+  // Generate referral code for new users if not already set
+  if (this.isNew && !this.ReferralCode) {
+    try {
+      // Use this.constructor to get the model without circular dependency
+      this.ReferralCode = await generateUniqueReferralCode(this.constructor);
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
   next();
 });
+
+// Method to compare password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password || !candidatePassword) {
+    return false;
+  }
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    return false;
+  }
+};
 
 let UserModel;
 try {

@@ -387,7 +387,19 @@ const updateUserByIdBody = asyncHandler(async (req, res) => {
  */
 const changePassword = asyncHandler(async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword) {
+      return sendError(res, 'Old password is required', 400);
+    }
+
+    if (!newPassword) {
+      return sendError(res, 'New password is required', 400);
+    }
+
+    if (oldPassword === newPassword) {
+      return sendError(res, 'New password must be different from old password', 400);
+    }
 
     // Find user with password
     const user = await User.findById(req.userId).select('+password');
@@ -396,11 +408,11 @@ const changePassword = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    // Verify current password
-    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    // Verify old password
+    const isOldPasswordValid = await user.comparePassword(oldPassword);
 
-    if (!isCurrentPasswordValid) {
-      return sendError(res, 'Current password is incorrect', 400);
+    if (!isOldPasswordValid) {
+      return sendError(res, 'Old password is incorrect', 400);
     }
 
     // Update password

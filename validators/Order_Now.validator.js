@@ -9,13 +9,11 @@ const productSchema = Joi.object({
 });
 
 const createOrderNowSchema = Joi.object({
-  Product: Joi.array().items(productSchema).min(1).required(),
+  Product: Joi.array().items(productSchema).min(1).optional(), // Optional - will use cart if not provided
   applyDiscount_id: Joi.number().integer().positive().optional().allow(null),
-  Order: Joi.string().valid('Picup', 'Delivery').required(),
   payment_method_id: Joi.number().integer().positive().required(),
   paymentStatus: Joi.string().trim().max(100).optional().allow(''),
   Delivery_address_id: Joi.number().integer().positive().optional().allow(null),
-  Trangection_Id: Joi.number().integer().positive().optional().allow(null),
   OrderStatus: Joi.string().valid('Pending', 'Preparing', 'Confirmed', 'Out for Delivery', 'Cancelled', 'Un-Delivered', 'Placed', 'Return').default('Pending').optional(),
   Status: Joi.boolean().optional().default(true)
 });
@@ -82,12 +80,25 @@ const getOrderNowsByDateQuerySchema = Joi.object({
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
 });
 
+const processPaymentSchema = Joi.object({
+  order_id: Joi.alternatives().try(
+    Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
+    Joi.string().pattern(/^\d+$/),
+    Joi.number().integer().positive()
+  ).required(),
+  payment_method_id: Joi.number().integer().positive().required(),
+  amount: Joi.number().positive().required(),
+  reference_number: Joi.string().trim().max(100).optional().allow(null, ''),
+  metadata: Joi.string().trim().optional().allow(null, '')
+});
+
 module.exports = {
   createOrderNowSchema,
   updateOrderNowSchema,
   getOrderNowByIdSchema,
   getAllOrderNowsSchema,
   getOrderNowsByAuthSchema,
-  getOrderNowsByDateQuerySchema
+  getOrderNowsByDateQuerySchema,
+  processPaymentSchema
 };
 

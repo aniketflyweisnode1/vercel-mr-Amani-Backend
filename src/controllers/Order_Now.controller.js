@@ -288,17 +288,47 @@ const findByIdentifier = (identifier) => {
 
 const createOrderNow = asyncHandler(async (req, res) => {
   try {
-    const { Product, applyDiscount_id, payment_method_id, Delivery_address_id, Trangection_Id, Order } = req.body;
+    const {  applyDiscount_id, payment_method_id, Delivery_address_id } = req.body;
     
-    if (!Product || !Array.isArray(Product) || Product.length === 0) {
-      return sendError(res, 'Product array is required and must contain at least one item', 400);
+    // Get cart items for the user
+    const cartItems = await CartOrderFood.find({
+      User_Id: req.userIdNumber,
+      Status: true
+    });
+    
+    if (!cartItems || cartItems.length === 0) {
+      return sendError(res, 'Cart is empty. Please add items to cart before creating an order', 400);
     }
     
-    if (!(await ensureItemsExist(Product))) {
+    // Combine all products from all cart items
+    let productsFromCart = [];
+    let cartDiscountId = null;
+    
+    for (const cartItem of cartItems) {
+      if (cartItem.Product && cartItem.Product.length > 0) {
+        productsFromCart = productsFromCart.concat(cartItem.Product);
+      }
+      // Use discount from first cart item if available
+      if (cartItem.applyDiscount_id && !cartDiscountId) {
+        cartDiscountId = cartItem.applyDiscount_id;
+      }
+    }
+    
+    if (productsFromCart.length === 0) {
+      return sendError(res, 'No products found in cart', 400);
+    }
+    
+    // Always use products from cart
+    const finalProducts = productsFromCart;
+    
+    // Use discount from cart if not provided in request
+    const finalDiscountId = applyDiscount_id !== undefined && applyDiscount_id !== null ? applyDiscount_id : cartDiscountId;
+    
+    if (!(await ensureItemsExist(finalProducts))) {
       return sendError(res, 'One or more restaurant items not found or inactive', 400);
     }
     
-    if (applyDiscount_id !== undefined && applyDiscount_id !== null && !(await ensureDiscountExists(applyDiscount_id))) {
+    if (finalDiscountId !== undefined && finalDiscountId !== null && !(await ensureDiscountExists(finalDiscountId))) {
       return sendError(res, 'Discount not found or inactive', 400);
     }
     
@@ -310,28 +340,79 @@ const createOrderNow = asyncHandler(async (req, res) => {
       return sendError(res, 'Delivery address not found or inactive', 400);
     }
     
-    if (Trangection_Id !== undefined && Trangection_Id !== null && !(await ensureTransactionExists(Trangection_Id))) {
-      return sendError(res, 'Transaction not found', 400);
-    }
-    
-    if (Order === 'Delivery' && !Delivery_address_id) {
-      return sendError(res, 'Delivery address is required for Delivery orders', 400);
-    }
-    
-    // Extract Item_ids from Product array
-    const productItemIds = Product.map(p => p.Item_id);
-    
-    // Delete cart items with these Item_ids
-    await deleteCartItemsByProductIds(req.userIdNumber, productItemIds);
-    
     const payload = {
-      ...req.body,
-      User_Id: req.userIdNumber || null, // Set from login user id
+      Product: finalProducts,
+      applyDiscount_id: finalDiscountId,
+      payment_method_id: payment_method_id,
+      Delivery_address_id: Delivery_address_id,
+      User_Id: req.userIdNumber || null,
       created_by: req.userIdNumber || null
     };
+    
     const order = await OrderNow.create(payload);
+    
+    // Verify and remove cart items that belong to this user after successful order creation
+    const userId = req.userIdNumber;
+    if (!userId) {
+      return sendError(res, 'User ID is required', 400);
+    }
+    
+    // Get Item_ids from the order products
+    const orderItemIds = finalProducts.map(product => product.Item_id);
+    
+    // Find cart items that belong to the user and contain the items used in the order
+    const cartItemsToDelete = await CartOrderFood.find({
+      User_Id: userId,
+      Status: true
+    });
+    
+    // Verify all cart items belong to the user and check Item_ids match
+    const allItemsBelongToUser = cartItemsToDelete.every(item => {
+      // Check user ownership
+      if (item.User_Id !== userId) {
+        return false;
+      }
+      // Check if cart item contains any of the Item_ids used in the order
+      if (item.Product && item.Product.length > 0) {
+        const cartItemIds = item.Product.map(p => p.Item_id);
+        return cartItemIds.some(itemId => orderItemIds.includes(itemId));
+      }
+      return false;
+    });
+    
+    if (!allItemsBelongToUser) {
+      return sendError(res, 'Unauthorized: Some cart items do not belong to you or do not match order items', 403);
+    }
+    
+    // Remove cart items that contain the Item_ids used in the order
+    for (const cartItem of cartItemsToDelete) {
+      if (cartItem.Product && cartItem.Product.length > 0) {
+        const cartItemIds = cartItem.Product.map(p => p.Item_id);
+        const hasMatchingItems = cartItemIds.some(itemId => orderItemIds.includes(itemId));
+        
+        if (hasMatchingItems) {
+          // Remove matching products from cart item or mark as inactive if all products match
+          const remainingProducts = cartItem.Product.filter(p => !orderItemIds.includes(p.Item_id));
+          
+          if (remainingProducts.length === 0) {
+            // All products in this cart item were used, mark cart item as inactive
+            await CartOrderFood.findByIdAndUpdate(
+              cartItem._id,
+              { Status: false, updated_at: new Date() }
+            );
+          } else {
+            // Some products remain, update the cart item with remaining products
+            await CartOrderFood.findByIdAndUpdate(
+              cartItem._id,
+              { Product: remainingProducts, updated_at: new Date() }
+            );
+          }
+        }
+      }
+    }
+    
     const populated = await populateOrderNowData(order);
-    sendSuccess(res, populated, 'Order created successfully', 201);
+    sendSuccess(res, populated, 'Order created successfully from cart', 201);
   } catch (error) {
     console.error('Error creating order', { error: error.message });
     throw error;
@@ -570,6 +651,103 @@ const getOrderNowsByDate = asyncHandler(async (req, res) => {
   }
 });
 
+const processPayment = asyncHandler(async (req, res) => {
+  try {
+    const { order_id, payment_method_id, amount, reference_number, metadata } = req.body;
+    
+    if (!order_id) {
+      return sendError(res, 'Order ID is required', 400);
+    }
+    
+    if (!payment_method_id) {
+      return sendError(res, 'Payment method ID is required', 400);
+    }
+    
+    if (!amount || amount <= 0) {
+      return sendError(res, 'Valid amount is required', 400);
+    }
+    
+    // Find the order
+    let order;
+    if (order_id.match(/^[0-9a-fA-F]{24}$/)) {
+      order = await OrderNow.findById(order_id);
+    } else {
+      const numericId = parseInt(order_id, 10);
+      if (Number.isNaN(numericId)) {
+        return sendError(res, 'Invalid order ID format', 400);
+      }
+      order = await OrderNow.findOne({ Order_Now_id: numericId });
+    }
+    
+    if (!order) {
+      return sendNotFound(res, 'Order not found');
+    }
+    
+    // Check if order belongs to the authenticated user
+    if (order.User_Id !== req.userIdNumber) {
+      return sendError(res, 'Unauthorized: Order does not belong to you', 403);
+    }
+    
+    // Check if order already has a transaction
+    if (order.Trangection_Id) {
+      return sendError(res, 'Order already has a transaction', 400);
+    }
+    
+    // Verify payment method exists
+    if (!(await ensurePaymentMethodExists(payment_method_id))) {
+      return sendError(res, 'Payment method not found or inactive', 400);
+    }
+    
+    // Create transaction
+    const transactionData = {
+      user_id: req.userIdNumber,
+      amount: amount,
+      payment_method_id: payment_method_id,
+      transactionType: 'Recharge', // You can change this based on your business logic
+      status: 'completed', // Set to 'pending' if you need to verify payment first
+      reference_number: reference_number || null,
+      metadata: metadata || null,
+      created_by: req.userIdNumber || null
+    };
+    
+    const transaction = await Transaction.create(transactionData);
+    
+    // Update order with transaction ID and payment method
+    const updatePayload = {
+      Trangection_Id: transaction.transaction_id,
+      payment_method_id: payment_method_id,
+      paymentStatus: 'completed',
+      updated_by: req.userIdNumber || null,
+      updated_at: new Date()
+    };
+    
+    let updatedOrder;
+    if (order_id.match(/^[0-9a-fA-F]{24}$/)) {
+      updatedOrder = await OrderNow.findByIdAndUpdate(order_id, updatePayload, { new: true, runValidators: true });
+    } else {
+      updatedOrder = await OrderNow.findOneAndUpdate(
+        { Order_Now_id: parseInt(order_id, 10) },
+        updatePayload,
+        { new: true, runValidators: true }
+      );
+    }
+    
+    if (!updatedOrder) {
+      return sendError(res, 'Failed to update order with transaction', 500);
+    }
+    
+    const populated = await populateOrderNowData(updatedOrder);
+    
+    sendSuccess(res, {
+      order: populated,
+      transaction: transaction
+    }, 'Payment processed successfully and transaction created', 200);
+  } catch (error) {
+    console.error('Error processing payment', { error: error.message });
+    throw error;
+  }
+});
+
 module.exports = {
   createOrderNow,
   getAllOrderNows,
@@ -577,6 +755,7 @@ module.exports = {
   updateOrderNow,
   deleteOrderNow,
   getOrderNowsByAuth,
-  getOrderNowsByDate
+  getOrderNowsByDate,
+  processPayment
 };
 
