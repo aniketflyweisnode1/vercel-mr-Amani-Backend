@@ -1,0 +1,17 @@
+{
+  "SmsAlerts": true,
+  "appTheme": "Blue & White",
+  "TermsCondition": true,
+  "PrivacyPolicy": true,
+  "Notification": [
+    {
+      "Type": "Order Updates",
+      "Status": true
+    },
+    {
+      "Type": "Promotions",
+      "Status": true
+    }
+  ]
+}
+

@@ -1,5 +1,14 @@
 ﻿const User = require('../models/User.model');
-const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
+const User_Address = require('../models/User_Address.model');
+const City = require('../models/city.model');
+const State = require('../models/state.model');
+const Country = require('../models/country.model');
+const Role = require('../models/role.model');
+const Wallet = require('../models/Wallet.model');
+const Business_Details = require('../models/Business_Details.model');
+const BusinessType = require('../models/businessType.model');
+const Subscription = require('../models/subscription.model');
+const { sendSuccess, sendError, sendNotFound, sendPaginated, sendUnauthorized } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
 
@@ -387,19 +396,7 @@ const updateUserByIdBody = asyncHandler(async (req, res) => {
  */
 const changePassword = asyncHandler(async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
-
-    if (!oldPassword) {
-      return sendError(res, 'Old password is required', 400);
-    }
-
-    if (!newPassword) {
-      return sendError(res, 'New password is required', 400);
-    }
-
-    if (oldPassword === newPassword) {
-      return sendError(res, 'New password must be different from old password', 400);
-    }
+    const { currentPassword, newPassword } = req.body;
 
     // Find user with password
     const user = await User.findById(req.userId).select('+password');
@@ -408,11 +405,11 @@ const changePassword = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
-    // Verify old password
-    const isOldPasswordValid = await user.comparePassword(oldPassword);
+    // Verify current password
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
 
-    if (!isOldPasswordValid) {
-      return sendError(res, 'Old password is incorrect', 400);
+    if (!isCurrentPasswordValid) {
+      return sendError(res, 'Current password is incorrect', 400);
     }
 
     // Update password
@@ -465,6 +462,264 @@ const activeDeviceLocation = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Manual population function for Wallet Number refs
+ */
+const populateWalletData = async (wallet) => {
+  if (!wallet) return null;
+  
+  const walletObj = wallet.toObject ? wallet.toObject() : wallet;
+  
+  // Populate created_by
+  if (walletObj.created_by) {
+    const createdById = typeof walletObj.created_by === 'object' ? walletObj.created_by : walletObj.created_by;
+    const createdBy = await User.findOne({ user_id: createdById })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (createdBy) {
+      walletObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+    }
+  }
+  
+  // Populate updated_by
+  if (walletObj.updated_by) {
+    const updatedById = typeof walletObj.updated_by === 'object' ? walletObj.updated_by : walletObj.updated_by;
+    const updatedBy = await User.findOne({ user_id: updatedById })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (updatedBy) {
+      walletObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+    }
+  }
+  
+  return walletObj;
+};
+
+/**
+ * Manual population function for Business Details Number refs
+ */
+const populateBusinessDetailsData = async (businessDetails) => {
+  if (!businessDetails) return null;
+  
+  const businessObj = businessDetails.toObject ? businessDetails.toObject() : businessDetails;
+  
+  // Populate BusinessType_id
+  if (businessObj.BusinessType_id) {
+    const businessType = await BusinessType.findOne({ businessType_id: businessObj.BusinessType_id });
+    if (businessType) {
+      businessObj.BusinessType_id = businessType.toObject ? businessType.toObject() : businessType;
+    }
+  }
+  
+  // Populate subscription_Id
+  if (businessObj.subscription_Id) {
+    const subscription = await Subscription.findOne({ subscription_id: businessObj.subscription_Id });
+    if (subscription) {
+      const subscriptionObj = subscription.toObject ? subscription.toObject() : subscription;
+      // Also populate Plan_id in subscription if it exists
+      if (subscriptionObj.Plan_id) {
+        const Plan = require('../models/Plan.model');
+        const plan = await Plan.findOne({ Plan_id: subscriptionObj.Plan_id });
+        if (plan) {
+          subscriptionObj.Plan_id = plan.toObject ? plan.toObject() : plan;
+        }
+      }
+      // Populate transaction_id in subscription if it exists
+      if (subscriptionObj.transaction_id) {
+        const Transaction = require('../models/transaction.model');
+        const transaction = await Transaction.findOne({ transaction_id: subscriptionObj.transaction_id });
+        if (transaction) {
+          subscriptionObj.transaction_id = transaction.toObject ? transaction.toObject() : transaction;
+        }
+      }
+      // Populate created_by and updated_by in subscription
+      if (subscriptionObj.created_by) {
+        const createdById = typeof subscriptionObj.created_by === 'object' ? subscriptionObj.created_by : subscriptionObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (createdBy) {
+          subscriptionObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      if (subscriptionObj.updated_by) {
+        const updatedById = typeof subscriptionObj.updated_by === 'object' ? subscriptionObj.updated_by : subscriptionObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (updatedBy) {
+          subscriptionObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      businessObj.subscription_Id = subscriptionObj;
+    }
+  }
+  
+  // Populate created_by
+  if (businessObj.created_by) {
+    const createdById = typeof businessObj.created_by === 'object' ? businessObj.created_by : businessObj.created_by;
+    const createdBy = await User.findOne({ user_id: createdById })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (createdBy) {
+      businessObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+    }
+  }
+  
+  // Populate updated_by
+  if (businessObj.updated_by) {
+    const updatedById = typeof businessObj.updated_by === 'object' ? businessObj.updated_by : businessObj.updated_by;
+    const updatedBy = await User.findOne({ user_id: updatedById })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (updatedBy) {
+      businessObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+    }
+  }
+  
+  return businessObj;
+};
+
+/**
+ * Manual population function for User Address Number refs
+ */
+const populateUserAddressData = async (addresses) => {
+  const addressesArray = Array.isArray(addresses) ? addresses : [addresses];
+  const populatedAddresses = await Promise.all(
+    addressesArray.map(async (address) => {
+      const addressObj = address.toObject ? address.toObject() : address;
+      
+      // Populate City
+      if (addressObj.City) {
+        const city = await City.findOne({ city_id: addressObj.City });
+        if (city) {
+          addressObj.City = city.toObject ? city.toObject() : city;
+        }
+      }
+      
+      // Populate State
+      if (addressObj.State) {
+        const state = await State.findOne({ state_id: addressObj.State });
+        if (state) {
+          addressObj.State = state.toObject ? state.toObject() : state;
+        }
+      }
+      
+      // Populate Country
+      if (addressObj.Country) {
+        const country = await Country.findOne({ country_id: addressObj.Country });
+        if (country) {
+          addressObj.Country = country.toObject ? country.toObject() : country;
+        }
+      }
+      
+      // Populate created_by
+      if (addressObj.created_by) {
+        const createdById = typeof addressObj.created_by === 'object' ? addressObj.created_by : addressObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById });
+        if (createdBy) {
+          addressObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (addressObj.updated_by) {
+        const updatedById = typeof addressObj.updated_by === 'object' ? addressObj.updated_by : addressObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById });
+        if (updatedBy) {
+          addressObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return addressObj;
+    })
+  );
+  
+  return Array.isArray(addresses) ? populatedAddresses : populatedAddresses[0];
+};
+
+/**
+ * Get authenticated user profile with full details, multiple addresses, and all ID populates
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getbyAuthProfile = asyncHandler(async (req, res) => {
+  try {
+    if (!req.userIdNumber) {
+      return sendUnauthorized(res, 'Authentication required');
+    }
+
+    // Get user
+    const user = await User.findOne({ user_id: req.userIdNumber })
+      .select('-password');
+
+    if (!user) {
+      return sendNotFound(res, 'User not found');
+    }
+
+    // Convert user to object for manipulation
+    const userProfile = user.toObject ? user.toObject() : user;
+
+    // Manually populate role_id
+    if (userProfile.role_id) {
+      const role = await Role.findOne({ role_id: userProfile.role_id });
+      if (role) {
+        userProfile.role_id = role.toObject ? role.toObject() : role;
+      }
+    }
+
+    // Manually populate created_by
+    if (userProfile.created_by) {
+      const createdById = typeof userProfile.created_by === 'object' ? userProfile.created_by : userProfile.created_by;
+      const createdBy = await User.findOne({ user_id: createdById })
+        .select('user_id firstName lastName phoneNo BusinessName Email');
+      if (createdBy) {
+        userProfile.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+      }
+    }
+
+    // Manually populate updated_by
+    if (userProfile.updated_by) {
+      const updatedById = typeof userProfile.updated_by === 'object' ? userProfile.updated_by : userProfile.updated_by;
+      const updatedBy = await User.findOne({ user_id: updatedById })
+        .select('user_id firstName lastName phoneNo BusinessName Email');
+      if (updatedBy) {
+        userProfile.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+      }
+    }
+
+    // Get all addresses for the user
+    const addresses = await User_Address.find({ 
+      user_id: req.userIdNumber,
+      Status: true 
+    })
+      .sort({ setDefult: -1, created_at: -1 }); // Default address first, then by creation date
+
+    // Populate addresses with all references
+    const populatedAddresses = await populateUserAddressData(addresses);
+    userProfile.addresses = Array.isArray(populatedAddresses) ? populatedAddresses : [populatedAddresses];
+
+    // Get and populate Wallet
+    const wallet = await Wallet.findOne({ user_id: req.userIdNumber, Status: true });
+    if (wallet) {
+      userProfile.wallet = await populateWalletData(wallet);
+    }
+
+    // Get and populate Business_Details
+    const businessDetails = await Business_Details.findOne({ user_id: req.userIdNumber, Status: true });
+    if (businessDetails) {
+      userProfile.businessDetails = await populateBusinessDetailsData(businessDetails);
+    }
+
+    console.info('User profile retrieved successfully', { 
+      userId: user._id, 
+      user_id: user.user_id, 
+      addressCount: userProfile.addresses.length,
+      hasWallet: !!userProfile.wallet,
+      hasBusinessDetails: !!userProfile.businessDetails
+    });
+
+    sendSuccess(res, userProfile, 'User profile retrieved successfully');
+  } catch (error) {
+    console.error('Error retrieving user profile', { error: error.message, userId: req.userIdNumber });
+    throw error;
+  }
+});
+
 module.exports = {
   createUser,
   getAllUsers,
@@ -475,5 +730,6 @@ module.exports = {
   getProfile,
   updateProfile,
   changePassword,
-  activeDeviceLocation
+  activeDeviceLocation,
+  getbyAuthProfile
 };

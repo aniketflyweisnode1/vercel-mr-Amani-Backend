@@ -1,0 +1,22 @@
+{
+  "User_id": 1,
+  "SmsAlerts": false,
+  "appTheme": "Red & White",
+  "TermsCondition": false,
+  "PrivacyPolicy": false,
+  "Notification": [
+    {
+      "Type": "Order Updates",
+      "Status": true
+    },
+    {
+      "Type": "Promotions",
+      "Status": false
+    },
+    {
+      "Type": "Discounts",
+      "Status": true
+    }
+  ]
+}
+

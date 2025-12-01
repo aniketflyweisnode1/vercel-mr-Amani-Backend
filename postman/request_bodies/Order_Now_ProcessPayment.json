@@ -1,0 +1,8 @@
+{
+  "order_id": 1,
+  "payment_method_id": 1,
+  "amount": 100.50,
+  "reference_number": "REF123456",
+  "metadata": "Payment metadata"
+}
+

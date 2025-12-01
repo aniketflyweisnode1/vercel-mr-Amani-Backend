@@ -1,0 +1,605 @@
+{
+	"info": {
+		"_postman_id": "amani-backend-api",
+		"name": "Amani Backend API",
+		"description": "Complete API collection for Amani Backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "amani",
+			"value": "http://localhost:3030",
+			"type": "string"
+		},
+		{
+			"key": "auth",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "User Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNo\": \"1234567890\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/authentication/userLogin",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "authentication", "userLogin"]
+						}
+					}
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNo\": \"1234567890\",\n  \"otp\": \"12345\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/authentication/verify_otp",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "authentication", "verify_otp"]
+						}
+					}
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phoneNo\": \"1234567890\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/authentication/resendOtp",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "authentication", "resendOtp"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/authentication/logout",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "authentication", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNo\": \"1234567890\",\n  \"dob\": \"1990-01-01\",\n  \"Email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"isAgreeTermsConditions\": true,\n  \"role_id\": 1,\n  \"address\": \"123 Main Street, City, State\",\n  \"BusinessName\": \"John's Business\",\n  \"RegistrationType\": \"Individual\",\n  \"personType\": \"Family Person\",\n  \"hobby\": [\"Reading\", \"Swimming\"],\n  \"Bio\": \"This is my bio\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/user/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "user", "create"]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oldPassword\": \"old_password_here\",\n  \"newPassword\": \"new_password_here\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/user/changePassword",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "user", "changePassword"]
+						}
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/api/v2/user/getAll?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "user", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/user/getById/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "user", "getById", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Order Now",
+			"item": [
+				{
+					"name": "Create Order (from Cart)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"payment_method_id\": 1,\n  \"Delivery_address_id\": 1,\n  \"applyDiscount_id\": null,\n  \"Order\": \"Delivery\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_Now/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_Now", "create"]
+						}
+					}
+				},
+				{
+					"name": "Process Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": 1,\n  \"payment_method_id\": 1,\n  \"amount\": 100.50,\n  \"reference_number\": \"REF123456\",\n  \"metadata\": \"Payment metadata\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_Now/processPayment",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_Now", "processPayment"]
+						}
+					}
+				},
+				{
+					"name": "Get All Orders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_Now/getAll?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_Now", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Order By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_Now/getById/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_Now", "getById", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Orders By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_Now/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_Now", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Order History",
+			"item": [
+				{
+					"name": "Get Ongoing Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_History/Ongoing?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_History", "Ongoing"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Completed Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Order_History/Completed?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Order_History", "Completed"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cart Order Food",
+			"item": [
+				{
+					"name": "Create Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Product\": [\n    {\n      \"Item_id\": 1,\n      \"Size\": 1,\n      \"Quantity\": 2,\n      \"Price\": 50.00,\n      \"DiscountPrice\": 5.00\n    },\n    {\n      \"Item_id\": 2,\n      \"Size\": 2,\n      \"Quantity\": 1,\n      \"Price\": 75.00,\n      \"DiscountPrice\": 0.00\n    }\n  ],\n  \"applyDiscount_id\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Cart_Order_Food/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Cart_Order_Food", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get Cart By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Cart_Order_Food/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Cart_Order_Food", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Referral",
+			"item": [
+				{
+					"name": "Create Referral",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Referral_To\": 1,\n  \"Referral_from\": 2,\n  \"Earning\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Referral/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Referral", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get Referrals By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Referral/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Referral", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Profile Setting",
+			"item": [
+				{
+					"name": "Create Profile Setting",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"User_id\": 1,\n  \"SmsAlerts\": false,\n  \"appTheme\": \"Red & White\",\n  \"TermsCondition\": false,\n  \"PrivacyPolicy\": false,\n  \"Notification\": [\n    {\n      \"Type\": \"Order Updates\",\n      \"Status\": true\n    },\n    {\n      \"Type\": \"Promotions\",\n      \"Status\": false\n    },\n    {\n      \"Type\": \"Discounts\",\n      \"Status\": true\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Profile_setting/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Profile_setting", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get Profile Setting By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Profile_setting/getByAuth",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Profile_setting", "getByAuth"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile Setting",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"SmsAlerts\": true,\n  \"appTheme\": \"Blue & White\",\n  \"TermsCondition\": true,\n  \"PrivacyPolicy\": true,\n  \"Notification\": [\n    {\n      \"Type\": \"Order Updates\",\n      \"Status\": true\n    },\n    {\n      \"Type\": \"Promotions\",\n      \"Status\": true\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Profile_setting/update/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Profile_setting", "update", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+
