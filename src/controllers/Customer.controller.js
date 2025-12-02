@@ -1,6 +1,7 @@
 const Customer = require('../models/Customer.model');
 const Services = require('../models/services.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -12,6 +13,60 @@ const ensureServiceExists = async (service_id) => {
 const ensureBranchExists = async (Branch_id) => {
   const branch = await Business_Branch.findOne({ business_Branch_id: Branch_id });
   return !!branch;
+};
+
+// Manual population function for Number refs
+const populateCustomerData = async (customers) => {
+  const customersArray = Array.isArray(customers) ? customers : [customers];
+  const populatedCustomers = await Promise.all(
+    customersArray.map(async (customer) => {
+      if (!customer) return null;
+      
+      const customerObj = customer.toObject ? customer.toObject() : customer;
+      
+      // Populate service_id
+      if (customerObj.service_id) {
+        const service = await Services.findOne({ service_id: customerObj.service_id })
+          .select('service_id name description emozji');
+        if (service) {
+          customerObj.service_id = service.toObject ? service.toObject() : service;
+        }
+      }
+      
+      // Populate Branch_id
+      if (customerObj.Branch_id) {
+        const branch = await Business_Branch.findOne({ business_Branch_id: customerObj.Branch_id })
+          .select('business_Branch_id name address City state country');
+        if (branch) {
+          customerObj.Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (customerObj.created_by) {
+        const createdById = typeof customerObj.created_by === 'object' ? customerObj.created_by : customerObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          customerObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (customerObj.updated_by) {
+        const updatedById = typeof customerObj.updated_by === 'object' ? customerObj.updated_by : customerObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          customerObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return customerObj;
+    })
+  );
+  
+  return Array.isArray(customers) ? populatedCustomers : populatedCustomers[0];
 };
 
 const createCustomer = asyncHandler(async (req, res) => {
@@ -115,15 +170,13 @@ const getAllCustomers = asyncHandler(async (req, res) => {
 
     const [customers, total] = await Promise.all([
       Customer.find(filter)
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName')
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit, 10)),
       Customer.countDocuments(filter)
     ]);
+
+    const populatedCustomers = await populateCustomerData(customers);
 
     const totalPages = Math.ceil(total / limit);
     const pagination = {
@@ -136,7 +189,7 @@ const getAllCustomers = asyncHandler(async (req, res) => {
     };
 
     console.info('Customers retrieved successfully', { total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
-    sendPaginated(res, customers, pagination, 'Customers retrieved successfully');
+    sendPaginated(res, populatedCustomers, pagination, 'Customers retrieved successfully');
   } catch (error) {
     console.error('Error retrieving customers', { error: error.message, stack: error.stack });
     throw error;
@@ -149,29 +202,23 @@ const getCustomerById = asyncHandler(async (req, res) => {
     let customer;
 
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      customer = await Customer.findById(id)
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+      customer = await Customer.findById(id);
     } else {
       const customerId = parseInt(id, 10);
       if (isNaN(customerId)) {
         return sendNotFound(res, 'Invalid customer ID format');
       }
-      customer = await Customer.findOne({ Customer_id: customerId })
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+      customer = await Customer.findOne({ Customer_id: customerId });
     }
 
     if (!customer) {
       return sendNotFound(res, 'Customer not found');
     }
 
+    const populatedCustomer = await populateCustomerData(customer);
+
     console.info('Customer retrieved successfully', { id: customer._id });
-    sendSuccess(res, customer, 'Customer retrieved successfully');
+    sendSuccess(res, populatedCustomer, 'Customer retrieved successfully');
   } catch (error) {
     console.error('Error retrieving customer', { error: error.message, customerId: req.params.id });
     throw error;
@@ -205,29 +252,23 @@ const updateCustomer = asyncHandler(async (req, res) => {
 
     let customer;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      customer = await Customer.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+      customer = await Customer.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     } else {
       const customerId = parseInt(id, 10);
       if (isNaN(customerId)) {
         return sendNotFound(res, 'Invalid customer ID format');
       }
-      customer = await Customer.findOneAndUpdate({ Customer_id: customerId }, updateData, { new: true, runValidators: true })
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+      customer = await Customer.findOneAndUpdate({ Customer_id: customerId }, updateData, { new: true, runValidators: true });
     }
 
     if (!customer) {
       return sendNotFound(res, 'Customer not found');
     }
 
+    const populatedCustomer = await populateCustomerData(customer);
+
     console.info('Customer updated successfully', { id: customer._id });
-    sendSuccess(res, customer, 'Customer updated successfully');
+    sendSuccess(res, populatedCustomer, 'Customer updated successfully');
   } catch (error) {
     console.error('Error updating customer', { error: error.message, customerId: req.params.id });
     throw error;
@@ -293,15 +334,13 @@ const getCustomersByAuth = asyncHandler(async (req, res) => {
 
     const [customers, total] = await Promise.all([
       Customer.find(filter)
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName')
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit, 10)),
       Customer.countDocuments(filter)
     ]);
+
+    const populatedCustomers = await populateCustomerData(customers);
 
     const totalPages = Math.ceil(total / limit);
     const pagination = {
@@ -314,7 +353,7 @@ const getCustomersByAuth = asyncHandler(async (req, res) => {
     };
 
     console.info('Customers retrieved for authenticated user', { userId, total });
-    sendPaginated(res, customers, pagination, 'Customers retrieved successfully');
+    sendPaginated(res, populatedCustomers, pagination, 'Customers retrieved successfully');
   } catch (error) {
     console.error('Error retrieving customers for authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
@@ -355,15 +394,13 @@ const getCustomersByServiceId = asyncHandler(async (req, res) => {
 
     const [customers, total] = await Promise.all([
       Customer.find(filter)
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName')
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit, 10)),
       Customer.countDocuments(filter)
     ]);
+
+    const populatedCustomers = await populateCustomerData(customers);
 
     const totalPages = Math.ceil(total / limit);
     const pagination = {
@@ -376,7 +413,7 @@ const getCustomersByServiceId = asyncHandler(async (req, res) => {
     };
 
     console.info('Customers retrieved by service ID', { service_id: serviceIdNum, total });
-    sendPaginated(res, customers, pagination, 'Customers retrieved successfully');
+    sendPaginated(res, populatedCustomers, pagination, 'Customers retrieved successfully');
   } catch (error) {
     console.error('Error retrieving customers by service ID', { error: error.message, service_id: req.params.service_id });
     throw error;
@@ -417,15 +454,13 @@ const getCustomersByBranchId = asyncHandler(async (req, res) => {
 
     const [customers, total] = await Promise.all([
       Customer.find(filter)
-        .populate('service_id', 'name description emozji')
-        .populate('Branch_id', 'name address City state country')
-        .populate('created_by', 'firstName lastName phoneNo BusinessName')
-        .populate('updated_by', 'firstName lastName phoneNo BusinessName')
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit, 10)),
       Customer.countDocuments(filter)
     ]);
+
+    const populatedCustomers = await populateCustomerData(customers);
 
     const totalPages = Math.ceil(total / limit);
     const pagination = {
@@ -438,7 +473,7 @@ const getCustomersByBranchId = asyncHandler(async (req, res) => {
     };
 
     console.info('Customers retrieved by branch ID', { Branch_id: branchIdNum, total });
-    sendPaginated(res, customers, pagination, 'Customers retrieved successfully');
+    sendPaginated(res, populatedCustomers, pagination, 'Customers retrieved successfully');
   } catch (error) {
     console.error('Error retrieving customers by branch ID', { error: error.message, Branch_id: req.params.Branch_id });
     throw error;
