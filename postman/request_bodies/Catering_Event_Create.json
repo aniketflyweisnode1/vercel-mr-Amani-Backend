@@ -1,0 +1,54 @@
+{
+  "Catering_Eventtype_id": 1,
+  "EventName": "Summer Wedding Reception",
+  "userName": "John Doe",
+  "address": "123 Main Street, Los Angeles, CA 90001",
+  "DateTime": "2024-06-15T18:00:00Z",
+  "DeliveryDate": "2024-06-15",
+  "DeliveryTime": "18:00",
+  "NumberOfGuests": 150,
+  "CuisinePreference": "Italian",
+  "BudgetPerPerson": 50.00,
+  "SpecialInstructions": "Vegetarian options required",
+  "EventMode": "Catering",
+  "Receive": "Delivery",
+  "website": "https://example.com/event",
+  "Occasion": [
+    {
+      "type": "Wedding",
+      "status": true
+    },
+    {
+      "type": "Reception",
+      "status": true
+    }
+  ],
+  "CuisineSelection": [
+    {
+      "type": "Italian",
+      "status": true
+    },
+    {
+      "type": "Mediterranean",
+      "status": false
+    }
+  ],
+  "Days": [
+    {
+      "Day": "Saturday",
+      "StartDate": "2024-06-15",
+      "EndDate": "2024-06-15",
+      "StartTime": "18:00",
+      "EndTime": "23:00"
+    }
+  ],
+  "city": 1,
+  "state": 1,
+  "zip": "90001",
+  "country": 1,
+  "minimumGuarante": 5000.00,
+  "mobile": "+1234567890",
+  "Email": "john.doe@example.com",
+  "IsAgree": true
+}
+

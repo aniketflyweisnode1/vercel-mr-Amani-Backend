@@ -1,0 +1,8 @@
+{
+  "EventName": "Updated Event Name",
+  "NumberOfGuests": 200,
+  "BudgetPerPerson": 60.00,
+  "EventMode": "Vending",
+  "Receive": "Pickup"
+}
+

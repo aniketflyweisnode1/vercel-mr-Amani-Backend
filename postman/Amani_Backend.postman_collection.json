@@ -631,6 +631,726 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Catering Event Type",
+			"item": [
+				{
+					"name": "Create Catering Event Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Wedding\",\n  \"Status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_EventType/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_EventType", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get All Catering Event Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_EventType/getAll?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_EventType", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Event Type By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_EventType/getById/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_EventType", "getById", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Catering Event Type",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Corporate Event\",\n  \"Status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_EventType/update/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_EventType", "update", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Catering Event Type",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_EventType/delete/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_EventType", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Event Types By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_EventType/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_EventType", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Catering Event",
+			"item": [
+				{
+					"name": "Create Catering Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Catering_Eventtype_id\": 1,\n  \"EventName\": \"Summer Wedding Reception\",\n  \"userName\": \"John Doe\",\n  \"address\": \"123 Main Street, Los Angeles, CA 90001\",\n  \"DateTime\": \"2024-06-15T18:00:00Z\",\n  \"DeliveryDate\": \"2024-06-15\",\n  \"DeliveryTime\": \"18:00\",\n  \"NumberOfGuests\": 150,\n  \"CuisinePreference\": \"Italian\",\n  \"BudgetPerPerson\": 50.00,\n  \"SpecialInstructions\": \"Vegetarian options required\",\n  \"EventMode\": \"Catering\",\n  \"Receive\": \"Delivery\",\n  \"website\": \"https://example.com/event\",\n  \"Occasion\": [\n    {\n      \"type\": \"Wedding\",\n      \"status\": true\n    },\n    {\n      \"type\": \"Reception\",\n      \"status\": true\n    }\n  ],\n  \"CuisineSelection\": [\n    {\n      \"type\": \"Italian\",\n      \"status\": true\n    },\n    {\n      \"type\": \"Mediterranean\",\n      \"status\": false\n    }\n  ],\n  \"Days\": [\n    {\n      \"Day\": \"Saturday\",\n      \"StartDate\": \"2024-06-15\",\n      \"EndDate\": \"2024-06-15\",\n      \"StartTime\": \"18:00\",\n      \"EndTime\": \"23:00\"\n    }\n  ],\n  \"city\": 1,\n  \"state\": 1,\n  \"zip\": \"90001\",\n  \"country\": 1,\n  \"minimumGuarante\": 5000.00,\n  \"mobile\": \"+1234567890\",\n  \"Email\": \"john.doe@example.com\",\n  \"IsAgree\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get All Catering Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/getAll?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Event By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/getById/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "getById", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Catering Event",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"EventName\": \"Updated Event Name\",\n  \"NumberOfGuests\": 200,\n  \"BudgetPerPerson\": 60.00\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/update/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "update", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Catering Event",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/delete/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Events By Type ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/getByTypeId/:Catering_Eventtype_id?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "getByTypeId", ":Catering_Eventtype_id"],
+							"variable": [
+								{
+									"key": "Catering_Eventtype_id",
+									"value": "1"
+								}
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Events By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Event/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Event", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Catering Type",
+			"item": [
+				{
+					"name": "Create Catering Type",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Full Service Catering\",\n  \"Status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Type/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Type", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get All Catering Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Type/getAll?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Type", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Type By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Type/getById/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Type", "getById", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Catering Type",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Buffet Style Catering\",\n  \"Status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Type/update/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Type", "update", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Catering Type",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Type/delete/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Type", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering Types By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering_Type/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering_Type", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Catering",
+			"item": [
+				{
+					"name": "Create Catering",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Catering_type_id\": 1,\n  \"Branch_id\": 1,\n  \"Name\": \"Premium Catering Services\",\n  \"Reating\": 4.5,\n  \"Review\": \"Excellent service and delicious food\",\n  \"MinPriceOrder\": 1000.00,\n  \"Tags\": [\"Wedding\", \"Corporate\", \"Buffet\"],\n  \"CateringImage\": \"https://example.com/images/catering.jpg\",\n  \"Status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get All Caterings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/getAll?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "getAll"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Catering By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/getById/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "getById", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Catering",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Name\": \"Updated Catering Name\",\n  \"Reating\": 4.8,\n  \"MinPriceOrder\": 1200.00\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/update/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "update", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Catering",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/delete/:id",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Caterings By Type ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/getByTypeId/:Catering_type_id?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "getByTypeId", ":Catering_type_id"],
+							"variable": [
+								{
+									"key": "Catering_type_id",
+									"value": "1"
+								}
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Caterings By Auth",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{amani}}/api/v2/Catering/getByAuth?page=1&limit=10",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "Catering", "getByAuth"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
 		}
 	]
 }
