@@ -12,7 +12,7 @@ const createState = asyncHandler(async (req, res) => {
   try {
     const stateData = {
       ...req.body,
-      created_by: req.userId || null
+      created_by: req.userIdNumber || null
     };
 
     const state = await State.create(stateData);
@@ -135,7 +135,7 @@ const updateState = asyncHandler(async (req, res) => {
 
     const updateData = {
       ...req.body,
-      updated_by: req.userId,
+      updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
 
@@ -174,7 +174,7 @@ const deleteState = asyncHandler(async (req, res) => {
       id,
       { 
         status: false,
-        updated_by: req.userId,
+        updated_by: req.userIdNumber || null,
         updated_at: new Date()
       },
       { new: true }

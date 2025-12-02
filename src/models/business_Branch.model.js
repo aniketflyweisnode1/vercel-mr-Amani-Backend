@@ -13,7 +13,7 @@ const businessBranchSchema = new mongoose.Schema({
   },
   subscription_id: {
     type: Number,
-    ref: 'subscription',
+    ref: 'Subscription',
     default: null
   },
   firstName: {

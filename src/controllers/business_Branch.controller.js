@@ -3,6 +3,7 @@ const City = require('../models/city.model');
 const State = require('../models/state.model');
 const Country = require('../models/country.model');
 const Subscription = require('../models/subscription.model');
+const Business_Details = require('../models/Business_Details.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -43,6 +44,76 @@ const ensureRecordExists = async (Model, field, value) => {
   }
   const record = await Model.findOne({ [field]: value });
   return Boolean(record);
+};
+
+// Helper function to lookup ID by name
+const lookupIdByName = async (Model, nameField, nameValue, idField) => {
+  if (!nameValue || typeof nameValue !== 'string') {
+    return null;
+  }
+  const record = await Model.findOne({ [nameField]: { $regex: new RegExp(`^${nameValue.trim()}$`, 'i') } });
+  return record ? record[idField] : null;
+};
+
+// Manual population function for Number refs
+const populateBusinessBranch = async (businessBranches) => {
+  const branchesArray = Array.isArray(businessBranches) ? businessBranches : [businessBranches];
+  const populatedBranches = await Promise.all(
+    branchesArray.map(async (branch) => {
+      if (!branch) return null;
+      
+      const branchObj = branch.toObject ? branch.toObject() : branch;
+      
+      // Populate Business_id
+      if (branchObj.Business_id) {
+        const business = await Business_Details.findOne({ Business_Details_id: branchObj.Business_id })
+          .select('Business_Details_id BussinessName user_id');
+        if (business) {
+          branchObj.Business_id = business.toObject ? business.toObject() : business;
+        }
+      }
+      
+      // Populate City_id
+      if (branchObj.City_id) {
+        const city = await City.findOne({ city_id: branchObj.City_id })
+          .select('city_id name');
+        if (city) {
+          branchObj.City_id = city.toObject ? city.toObject() : city;
+        }
+      }
+      
+      // Populate State_id
+      if (branchObj.State_id) {
+        const state = await State.findOne({ state_id: branchObj.State_id })
+          .select('state_id name');
+        if (state) {
+          branchObj.State_id = state.toObject ? state.toObject() : state;
+        }
+      }
+      
+      // Populate Country_id
+      if (branchObj.Country_id) {
+        const country = await Country.findOne({ country_id: branchObj.Country_id })
+          .select('country_id name');
+        if (country) {
+          branchObj.Country_id = country.toObject ? country.toObject() : country;
+        }
+      }
+      
+      // Populate subscription_id
+      if (branchObj.subscription_id) {
+        const subscription = await Subscription.findOne({ subscription_id: branchObj.subscription_id })
+          .select('subscription_id planStatus expiryDate');
+        if (subscription) {
+          branchObj.subscription_id = subscription.toObject ? subscription.toObject() : subscription;
+        }
+      }
+      
+      return branchObj;
+    })
+  );
+  
+  return Array.isArray(businessBranches) ? populatedBranches : populatedBranches[0];
 };
 
 const toArray = (value) => {
@@ -112,8 +183,11 @@ const trimString = (value) => {
 };
 
 const createBusinessBranch = asyncHandler(async (req, res) => {
+  console.log("==========\n\n", req.body);
   try {
-    const businessIdResult = parseNumber(req.body.Business_id, { fieldName: 'Business ID', allowNegative: false, integer: true });
+    // Handle both Business_id and Business_Details_id field names
+    const businessIdValue = req.body.Business_Details_id;
+    const businessIdResult = parseNumber(businessIdValue, { fieldName: 'Business ID', allowNegative: false, integer: true });
     if (businessIdResult.error) {
       return sendError(res, businessIdResult.error, 400);
     }
@@ -123,17 +197,36 @@ const createBusinessBranch = asyncHandler(async (req, res) => {
       return sendError(res, subscriptionIdResult.error, 400);
     }
 
-    const cityIdResult = parseNumber(req.body.City_id, { fieldName: 'City ID', allowNegative: false, integer: true });
+    // Handle City - check for City_id first, then lookup by City name if provided
+    let cityIdValue = req.body.City_id;
+    if (!cityIdValue && req.body.City) {
+      cityIdValue = await lookupIdByName(City, 'name', req.body.City, 'city_id');
+    }
+    const cityIdResult = parseNumber(cityIdValue, { fieldName: 'City ID', allowNegative: false, integer: true });
     if (cityIdResult.error) {
       return sendError(res, cityIdResult.error, 400);
     }
 
-    const stateIdResult = parseNumber(req.body.State_id, { fieldName: 'State ID', allowNegative: false, integer: true });
+    // Handle State - check for State_id first, then lookup by state name/code if provided
+    let stateIdValue = req.body.State_id;
+    if (!stateIdValue && (req.body.state || req.body.State)) {
+      const stateName = req.body.state || req.body.State;
+      // Try to find by name or stateCode
+      stateIdValue = await lookupIdByName(State, 'name', stateName, 'state_id') || 
+                     await lookupIdByName(State, 'stateCode', stateName, 'state_id');
+    }
+    const stateIdResult = parseNumber(stateIdValue, { fieldName: 'State ID', allowNegative: false, integer: true });
     if (stateIdResult.error) {
       return sendError(res, stateIdResult.error, 400);
     }
 
-    const countryIdResult = parseNumber(req.body.Country_id, { fieldName: 'Country ID', allowNegative: false, integer: true });
+    // Handle Country - check for Country_id first, then lookup by country name if provided
+    let countryIdValue = req.body.Country_id;
+    if (!countryIdValue && (req.body.country || req.body.Country)) {
+      const countryName = req.body.country || req.body.Country;
+      countryIdValue = await lookupIdByName(Country, 'name', countryName, 'country_id');
+    }
+    const countryIdResult = parseNumber(countryIdValue, { fieldName: 'Country ID', allowNegative: false, integer: true });
     if (countryIdResult.error) {
       return sendError(res, countryIdResult.error, 400);
     }
@@ -153,34 +246,57 @@ const createBusinessBranch = asyncHandler(async (req, res) => {
       return sendError(res, dayOpenCountResult.error, 400);
     }
 
+    // Handle field name variations - support both standard and alternative field names
+    const getFieldValue = (standardField, alternativeField) => {
+      return req.body[standardField] !== undefined ? req.body[standardField] : req.body[alternativeField];
+    };
+
+    // Build businessBranchData object with all fields from req.body
     const businessBranchData = {
       Business_id: businessIdResult.value ?? null,
       subscription_id: subscriptionIdResult.value ?? null,
-      firstName: trimString(req.body.firstName),
-      lastName: trimString(req.body.lastName),
-      Email: trimString(req.body.Email),
-      Driving_licenceFile: trimString(req.body.Driving_licenceFile),
+      firstName: trimString(getFieldValue('firstName', 'firstName')),
+      lastName: trimString(getFieldValue('lastName', 'lastName')),
+      Email: trimString(getFieldValue('Email', 'email')),
+      Driving_licenceFile: trimString(getFieldValue('Driving_licenceFile', 'driving_licenceFile')),
       printingTypesetting: normalizeBoolean(req.body.printingTypesetting, false),
       BranchCount: branchCountResult.value ?? 0,
       EmployeesCount: employeesCountResult.value ?? 0,
       DayOpenCount: dayOpenCountResult.value ?? 0,
-      GoogleLocaitonAddress: trimString(req.body.GoogleLocaitonAddress),
-      Address: trimString(req.body.Address),
-      StreetNumber: trimString(req.body.StreetNumber),
-      StreetName: trimString(req.body.StreetName),
+      GoogleLocaitonAddress: trimString(getFieldValue('GoogleLocaitonAddress', 'googleLocationAddress')),
+      // Handle address field variations: address -> Address
+      Address: trimString(getFieldValue('Address', 'address')),
+      // Handle street number variations: StreetNo -> StreetNumber
+      StreetNumber: trimString(getFieldValue('StreetNumber', 'StreetNo')),
+      // Handle street name variations: Streetname -> StreetName
+      StreetName: trimString(getFieldValue('StreetName', 'Streetname')),
       City_id: cityIdResult.value ?? null,
       State_id: stateIdResult.value ?? null,
       Country_id: countryIdResult.value ?? null,
-      Zipcode: trimString(req.body.Zipcode),
-      EmployeeIdFile: trimString(req.body.EmployeeIdFile),
-      FoodServiceLicenseFile: trimString(req.body.FoodServiceLicenseFile),
+      // Handle zipcode variations: zipcode -> Zipcode
+      Zipcode: trimString(getFieldValue('Zipcode', 'zipcode')),
+      EmployeeIdFile: trimString(getFieldValue('EmployeeIdFile', 'employeeIdFile')),
+      FoodServiceLicenseFile: trimString(getFieldValue('FoodServiceLicenseFile', 'foodServiceLicenseFile')),
       SericeOfferPOP: normalizeOfferEntries(req.body.SericeOfferPOP, 'offer'),
       ThirdPartyDelivery: normalizeOfferEntries(req.body.ThirdPartyDelivery, 'ThirdParty'),
       OrderMethod: normalizeOrderMethod(req.body.OrderMethod),
-      emozi: trimString(req.body.emozi),
-      BranchImage: trimString(req.body.BranchImage),
+      emozi: trimString(getFieldValue('emozi', 'emoji')),
+      BranchImage: trimString(getFieldValue('BranchImage', 'branchImage')),
+      Status: normalizeBoolean(req.body.Status, true), // Handle Status field from req.body
       created_by: req.userIdNumber || null
     };
+
+    // Handle 'name' field - if provided, use it as part of Address if Address is not set
+    if (req.body.name && !businessBranchData.Address) {
+      businessBranchData.Address = trimString(req.body.name);
+    }
+
+    // Remove undefined fields to avoid setting them in the database
+    Object.keys(businessBranchData).forEach(key => {
+      if (businessBranchData[key] === undefined) {
+        delete businessBranchData[key];
+      }
+    });
 
     const [
       cityExists,
@@ -208,8 +324,16 @@ const createBusinessBranch = asyncHandler(async (req, res) => {
     }
 
     const businessBranch = await Business_Branch.create(businessBranchData);
-    console.info('Business Branch created successfully', { businessBranchId: businessBranch._id, business_Branch_id: businessBranch.business_Branch_id });
-    sendSuccess(res, businessBranch, 'Business Branch created successfully', 201);
+    console.info('Business Branch created successfully', { 
+      businessBranchId: businessBranch._id, 
+      business_Branch_id: businessBranch.business_Branch_id,
+      data: businessBranchData 
+    });
+    
+    // Populate related data before sending response
+    const populatedBranch = await populateBusinessBranch(businessBranch);
+    
+    sendSuccess(res, populatedBranch, 'Business Branch created successfully', 201);
   } catch (error) {
     if (error.statusCode === 400) {
       return sendError(res, error.message, 400);
@@ -292,16 +416,13 @@ const getAllBusinessBranches = asyncHandler(async (req, res) => {
 
     const [businessBranches, total] = await Promise.all([
       Business_Branch.find(filter)
-        .populate('Business_id', 'BussinessName user_id')
-        .populate('City_id', 'city_id name')
-        .populate('State_id', 'state_id name')
-        .populate('Country_id', 'country_id name')
-        .populate('subscription_id', 'subscription_id planStatus expiryDate')
         .sort(sort)
         .skip(skip)
         .limit(limitNumber),
       Business_Branch.countDocuments(filter)
     ]);
+
+    const populatedBranches = await populateBusinessBranch(businessBranches);
 
     const totalPages = Math.ceil(total / limitNumber) || 1;
     const pagination = {
@@ -314,7 +435,7 @@ const getAllBusinessBranches = asyncHandler(async (req, res) => {
     };
 
     console.info('Business Branches retrieved successfully', { total, page: pageNumber, limit: limitNumber });
-    sendPaginated(res, businessBranches, pagination, 'Business Branches retrieved successfully');
+    sendPaginated(res, populatedBranches, pagination, 'Business Branches retrieved successfully');
   } catch (error) {
     console.error('Error retrieving business branches', { error: error.message, stack: error.stack });
     throw error;
@@ -326,25 +447,18 @@ const getBusinessBranchById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     let businessBranch;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      businessBranch = await Business_Branch.findById(id)
-        .populate('Business_id', 'BussinessName user_id')
-        .populate('City_id', 'city_id name')
-        .populate('State_id', 'state_id name')
-        .populate('Country_id', 'country_id name')
-        .populate('subscription_id', 'subscription_id planStatus expiryDate');
+      businessBranch = await Business_Branch.findById(id);
     } else {
       const businessBranchId = parseInt(id, 10);
       if (isNaN(businessBranchId)) return sendNotFound(res, 'Invalid business branch ID format');
-      businessBranch = await Business_Branch.findOne({ business_Branch_id: businessBranchId })
-        .populate('Business_id', 'BussinessName user_id')
-        .populate('City_id', 'city_id name')
-        .populate('State_id', 'state_id name')
-        .populate('Country_id', 'country_id name')
-        .populate('subscription_id', 'subscription_id planStatus expiryDate');
+      businessBranch = await Business_Branch.findOne({ business_Branch_id: businessBranchId });
     }
     if (!businessBranch) return sendNotFound(res, 'Business Branch not found');
+    
+    const populatedBranch = await populateBusinessBranch(businessBranch);
+    
     console.info('Business Branch retrieved successfully', { businessBranchId: businessBranch._id });
-    sendSuccess(res, businessBranch, 'Business Branch retrieved successfully');
+    sendSuccess(res, populatedBranch, 'Business Branch retrieved successfully');
   } catch (error) {
     console.error('Error retrieving business branch', { error: error.message, businessBranchId: req.params.id });
     throw error;
@@ -497,25 +611,18 @@ const updateBusinessBranch = asyncHandler(async (req, res) => {
 
     let businessBranch;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      businessBranch = await Business_Branch.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
-        .populate('Business_id', 'BussinessName user_id')
-        .populate('City_id', 'city_id name')
-        .populate('State_id', 'state_id name')
-        .populate('Country_id', 'country_id name')
-        .populate('subscription_id', 'subscription_id planStatus expiryDate');
+      businessBranch = await Business_Branch.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     } else {
       const businessBranchId = parseInt(id, 10);
       if (isNaN(businessBranchId)) return sendNotFound(res, 'Invalid business branch ID format');
-      businessBranch = await Business_Branch.findOneAndUpdate({ business_Branch_id: businessBranchId }, updateData, { new: true, runValidators: true })
-        .populate('Business_id', 'BussinessName user_id')
-        .populate('City_id', 'city_id name')
-        .populate('State_id', 'state_id name')
-        .populate('Country_id', 'country_id name')
-        .populate('subscription_id', 'subscription_id planStatus expiryDate');
+      businessBranch = await Business_Branch.findOneAndUpdate({ business_Branch_id: businessBranchId }, updateData, { new: true, runValidators: true });
     }
     if (!businessBranch) return sendNotFound(res, 'Business Branch not found');
+    
+    const populatedBranch = await populateBusinessBranch(businessBranch);
+    
     console.info('Business Branch updated successfully', { businessBranchId: businessBranch._id });
-    sendSuccess(res, businessBranch, 'Business Branch updated successfully');
+    sendSuccess(res, populatedBranch, 'Business Branch updated successfully');
   } catch (error) {
     if (error.statusCode === 400) {
       return sendError(res, error.message, 400);
@@ -556,14 +663,11 @@ const getBusinessBranchesByAuth = asyncHandler(async (req, res) => {
     const skip = (pageNumber - 1) * limitNumber;
     const [businessBranches, total] = await Promise.all([
       Business_Branch.find(filter)
-        .populate('Business_id', 'BussinessName user_id')
-        .populate('City_id', 'city_id name')
-        .populate('State_id', 'state_id name')
-        .populate('Country_id', 'country_id name')
-        .populate('subscription_id', 'subscription_id planStatus expiryDate')
         .sort(sort).skip(skip).limit(limitNumber),
       Business_Branch.countDocuments(filter)
     ]);
+
+    const populatedBranches = await populateBusinessBranch(businessBranches);
     const totalPages = Math.ceil(total / limitNumber) || 1;
     const pagination = {
       currentPage: pageNumber,
@@ -574,7 +678,7 @@ const getBusinessBranchesByAuth = asyncHandler(async (req, res) => {
       hasPrevPage: pageNumber > 1
     };
     console.info('Business Branches by authenticated user retrieved successfully', { total, page: pageNumber, limit: limitNumber, userId: req.userIdNumber });
-    sendPaginated(res, businessBranches, pagination, 'Business Branches retrieved successfully');
+    sendPaginated(res, populatedBranches, pagination, 'Business Branches retrieved successfully');
   } catch (error) {
     console.error('Error retrieving business branches by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;

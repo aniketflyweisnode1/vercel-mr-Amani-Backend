@@ -599,6 +599,38 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Business Branch",
+			"item": [
+				{
+					"name": "Create Business Branch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Business_id\": 1,\n  \"Business_Details_id\": 1,\n  \"subscription_id\": 1,\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"Email\": \"john.doe@example.com\",\n  \"Driving_licenceFile\": \"https://example.com/files/driving_licence.pdf\",\n  \"printingTypesetting\": true,\n  \"BranchCount\": 5,\n  \"EmployeesCount\": 25,\n  \"DayOpenCount\": 7,\n  \"GoogleLocaitonAddress\": \"456 Oak Avenue, Los Angeles, CA 90001, USA\",\n  \"Address\": \"456 Oak Avenue\",\n  \"StreetNumber\": \"456\",\n  \"StreetName\": \"Oak Avenue\",\n  \"City_id\": 1,\n  \"City\": \"Los Angeles\",\n  \"State_id\": 1,\n  \"state\": \"CA\",\n  \"State\": \"California\",\n  \"Country_id\": 1,\n  \"country\": \"USA\",\n  \"Country\": \"United States\",\n  \"Zipcode\": \"90001\",\n  \"zipcode\": \"90001\",\n  \"EmployeeIdFile\": \"https://example.com/files/employee_id.pdf\",\n  \"FoodServiceLicenseFile\": \"https://example.com/files/food_license.pdf\",\n  \"SericeOfferPOP\": [\n    {\n      \"offer\": \"Dine-in Service\",\n      \"use\": true\n    },\n    {\n      \"offer\": \"Takeout Service\",\n      \"use\": true\n    },\n    {\n      \"offer\": \"Delivery Service\",\n      \"use\": false\n    }\n  ],\n  \"ThirdPartyDelivery\": [\n    {\n      \"ThirdParty\": \"Uber Eats\",\n      \"use\": true\n    },\n    {\n      \"ThirdParty\": \"DoorDash\",\n      \"use\": true\n    },\n    {\n      \"ThirdParty\": \"Grubhub\",\n      \"use\": false\n    }\n  ],\n  \"OrderMethod\": {\n    \"MobileApp\": [\n      {\n        \"facility\": \"Online Ordering\",\n        \"use\": true\n      },\n      {\n        \"facility\": \"Mobile Payment\",\n        \"use\": true\n      },\n      {\n        \"facility\": \"Loyalty Program\",\n        \"use\": false\n      }\n    ],\n    \"Tablet\": [\n      {\n        \"facility\": \"Table Ordering\",\n        \"use\": true\n      },\n      {\n        \"facility\": \"Table Payment\",\n        \"use\": true\n      }\n    ]\n  },\n  \"emozi\": \"🍕\",\n  \"BranchImage\": \"https://example.com/images/branch_image.jpg\",\n  \"Status\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{amani}}/api/v2/business_Branch/create",
+							"host": ["{{amani}}"],
+							"path": ["api", "v2", "business_Branch", "create"]
+						}
+					}
+				}
+			]
 		}
 	]
 }

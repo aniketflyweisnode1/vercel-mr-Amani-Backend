@@ -12,7 +12,7 @@ const createCity = asyncHandler(async (req, res) => {
   try {
     const cityData = {
       ...req.body,
-      created_by: req.userId || null
+      created_by: req.userIdNumber || null
     };
 
     const city = await City.create(cityData);
@@ -135,7 +135,7 @@ const updateCity = asyncHandler(async (req, res) => {
 
     const updateData = {
       ...req.body,
-      updated_by: req.userId,
+      updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
 
@@ -174,7 +174,7 @@ const deleteCity = asyncHandler(async (req, res) => {
       id,
       { 
         status: false,
-        updated_by: req.userId,
+        updated_by: req.userIdNumber || null,
         updated_at: new Date()
       },
       { new: true }

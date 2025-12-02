@@ -26,6 +26,11 @@ const createBusinessBranchSchema = Joi.object({
     .positive()
     .optional()
     .allow(null),
+  Business_Details_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .allow(null),
   subscription_id: Joi.number()
     .integer()
     .positive()
