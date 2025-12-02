@@ -1,5 +1,6 @@
 const Closing_Days = require('../models/closing_days.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -49,10 +50,50 @@ const buildFilterFromQuery = ({ search, status, Branch_id, dateFrom, datedTo }) 
   return filter;
 };
 
-const populateClosingDays = (query) => query
-  .populate('Branch_id', 'business_Branch_id firstName lastName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateClosingDays = async (closingDays) => {
+  const closingDaysArray = Array.isArray(closingDays) ? closingDays : [closingDays];
+  const populatedClosingDays = await Promise.all(
+    closingDaysArray.map(async (cd) => {
+      if (!cd) return null;
+      
+      const cdObj = cd.toObject ? cd.toObject() : cd;
+      
+      // Populate Branch_id
+      if (cdObj.Branch_id) {
+        const branch = await Business_Branch.findOne({ business_Branch_id: cdObj.Branch_id })
+          .select('business_Branch_id firstName lastName Address');
+        if (branch) {
+          cdObj.Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (cdObj.created_by) {
+        const createdById = typeof cdObj.created_by === 'object' ? cdObj.created_by : cdObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          cdObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (cdObj.updated_by) {
+        const updatedById = typeof cdObj.updated_by === 'object' ? cdObj.updated_by : cdObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          cdObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return cdObj;
+    })
+  );
+  
+  return Array.isArray(closingDays) ? populatedClosingDays : populatedClosingDays[0];
+};
 
 const createClosingDays = asyncHandler(async (req, res) => {
   try {
@@ -83,7 +124,7 @@ const createClosingDays = asyncHandler(async (req, res) => {
     const closingDays = await Closing_Days.create(payload);
     console.info('Closing days created successfully', { id: closingDays._id, closing_days_id: closingDays.closing_days_id });
 
-    const populated = await populateClosingDays(Closing_Days.findById(closingDays._id));
+    const populated = await populateClosingDays(closingDays);
     sendSuccess(res, populated, 'Closing days created successfully', 201);
   } catch (error) {
     console.error('Error creating closing days', { error: error.message, stack: error.stack });
@@ -105,9 +146,11 @@ const getAllClosingDays = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [closingDays, total] = await Promise.all([
-      populateClosingDays(Closing_Days.find(filter).sort(sort).skip(skip).limit(limitNum)),
+      Closing_Days.find(filter).sort(sort).skip(skip).limit(limitNum),
       Closing_Days.countDocuments(filter)
     ]);
+
+    const populatedClosingDays = await populateClosingDays(closingDays);
 
     const paginationMeta = {
       page: pageNum,
@@ -116,8 +159,8 @@ const getAllClosingDays = asyncHandler(async (req, res) => {
       pages: Math.ceil(total / limitNum)
     };
 
-    console.info('Closing days retrieved successfully', { count: closingDays.length, total });
-    sendPaginated(res, closingDays, paginationMeta, 'Closing days retrieved successfully');
+    console.info('Closing days retrieved successfully', { count: populatedClosingDays.length, total });
+    sendPaginated(res, populatedClosingDays, paginationMeta, 'Closing days retrieved successfully');
   } catch (error) {
     console.error('Error retrieving closing days', { error: error.message });
     throw error;
@@ -139,14 +182,16 @@ const getClosingDaysById = asyncHandler(async (req, res) => {
       query = Closing_Days.findOne({ closing_days_id: numId });
     }
 
-    const closingDays = await populateClosingDays(query);
+    const closingDays = await query;
 
     if (!closingDays) {
       return sendNotFound(res, 'Closing days not found');
     }
 
+    const populatedClosingDays = await populateClosingDays(closingDays);
+
     console.info('Closing days retrieved successfully', { id: closingDays._id });
-    sendSuccess(res, closingDays, 'Closing days retrieved successfully');
+    sendSuccess(res, populatedClosingDays, 'Closing days retrieved successfully');
   } catch (error) {
     console.error('Error retrieving closing days', { error: error.message, id: req.params.id });
     throw error;
@@ -204,14 +249,16 @@ const updateClosingDays = asyncHandler(async (req, res) => {
       );
     }
 
-    const closingDays = await populateClosingDays(query);
+    const closingDays = await query;
 
     if (!closingDays) {
       return sendNotFound(res, 'Closing days not found');
     }
 
+    const populatedClosingDays = await populateClosingDays(closingDays);
+
     console.info('Closing days updated successfully', { id: closingDays._id });
-    sendSuccess(res, closingDays, 'Closing days updated successfully');
+    sendSuccess(res, populatedClosingDays, 'Closing days updated successfully');
   } catch (error) {
     console.error('Error updating closing days', { error: error.message, id: req.params.id });
     throw error;
@@ -302,9 +349,11 @@ const getClosingDaysByAuth = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [closingDays, total] = await Promise.all([
-      populateClosingDays(Closing_Days.find(filter).sort(sort).skip(skip).limit(limitNum)),
+      Closing_Days.find(filter).sort(sort).skip(skip).limit(limitNum),
       Closing_Days.countDocuments(filter)
     ]);
+
+    const populatedClosingDays = await populateClosingDays(closingDays);
 
     const paginationMeta = {
       page: pageNum,
@@ -313,8 +362,8 @@ const getClosingDaysByAuth = asyncHandler(async (req, res) => {
       pages: Math.ceil(total / limitNum)
     };
 
-    console.info('Closing days retrieved by auth successfully', { count: closingDays.length, total });
-    sendPaginated(res, closingDays, paginationMeta, 'Closing days retrieved successfully');
+    console.info('Closing days retrieved by auth successfully', { count: populatedClosingDays.length, total });
+    sendPaginated(res, populatedClosingDays, paginationMeta, 'Closing days retrieved successfully');
   } catch (error) {
     console.error('Error retrieving closing days by auth', { error: error.message });
     throw error;
@@ -365,9 +414,11 @@ const getClosingDaysByBranchId = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [closingDays, total] = await Promise.all([
-      populateClosingDays(Closing_Days.find(filter).sort(sort).skip(skip).limit(limitNum)),
+      Closing_Days.find(filter).sort(sort).skip(skip).limit(limitNum),
       Closing_Days.countDocuments(filter)
     ]);
+
+    const populatedClosingDays = await populateClosingDays(closingDays);
 
     const paginationMeta = {
       page: pageNum,
@@ -376,8 +427,8 @@ const getClosingDaysByBranchId = asyncHandler(async (req, res) => {
       pages: Math.ceil(total / limitNum)
     };
 
-    console.info('Closing days retrieved by branch ID successfully', { count: closingDays.length, total, Branch_id: branchIdNum });
-    sendPaginated(res, closingDays, paginationMeta, 'Closing days retrieved successfully');
+    console.info('Closing days retrieved by branch ID successfully', { count: populatedClosingDays.length, total, Branch_id: branchIdNum });
+    sendPaginated(res, populatedClosingDays, paginationMeta, 'Closing days retrieved successfully');
   } catch (error) {
     console.error('Error retrieving closing days by branch ID', { error: error.message, Branch_id: req.params.Branch_id });
     throw error;

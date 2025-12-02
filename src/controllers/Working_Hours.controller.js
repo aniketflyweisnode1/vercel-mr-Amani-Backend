@@ -1,5 +1,6 @@
 const Working_Hours = require('../models/Working_Hours.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -36,10 +37,50 @@ const buildFilterFromQuery = ({ search, status, Branch_id }) => {
   return filter;
 };
 
-const populateWorkingHours = (query) => query
-  .populate('Branch_id', 'business_Branch_id firstName lastName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateWorkingHours = async (workingHours) => {
+  const workingHoursArray = Array.isArray(workingHours) ? workingHours : [workingHours];
+  const populatedWorkingHours = await Promise.all(
+    workingHoursArray.map(async (wh) => {
+      if (!wh) return null;
+      
+      const whObj = wh.toObject ? wh.toObject() : wh;
+      
+      // Populate Branch_id
+      if (whObj.Branch_id) {
+        const branch = await Business_Branch.findOne({ business_Branch_id: whObj.Branch_id })
+          .select('business_Branch_id firstName lastName Address');
+        if (branch) {
+          whObj.Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (whObj.created_by) {
+        const createdById = typeof whObj.created_by === 'object' ? whObj.created_by : whObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          whObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (whObj.updated_by) {
+        const updatedById = typeof whObj.updated_by === 'object' ? whObj.updated_by : whObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          whObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return whObj;
+    })
+  );
+  
+  return Array.isArray(workingHours) ? populatedWorkingHours : populatedWorkingHours[0];
+};
 
 const createWorkingHours = asyncHandler(async (req, res) => {
   try {
@@ -59,7 +100,7 @@ const createWorkingHours = asyncHandler(async (req, res) => {
     const workingHours = await Working_Hours.create(payload);
     console.info('Working hours created successfully', { id: workingHours._id, Working_Hours_id: workingHours.Working_Hours_id });
 
-    const populated = await populateWorkingHours(Working_Hours.findById(workingHours._id));
+    const populated = await populateWorkingHours(workingHours);
     sendSuccess(res, populated, 'Working hours created successfully', 201);
   } catch (error) {
     console.error('Error creating working hours', { error: error.message, stack: error.stack });
@@ -81,9 +122,11 @@ const getAllWorkingHours = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [workingHours, total] = await Promise.all([
-      populateWorkingHours(Working_Hours.find(filter).sort(sort).skip(skip).limit(limitNum)),
+      Working_Hours.find(filter).sort(sort).skip(skip).limit(limitNum),
       Working_Hours.countDocuments(filter)
     ]);
+
+    const populatedWorkingHours = await populateWorkingHours(workingHours);
 
     const paginationMeta = {
       page: pageNum,
@@ -92,8 +135,8 @@ const getAllWorkingHours = asyncHandler(async (req, res) => {
       pages: Math.ceil(total / limitNum)
     };
 
-    console.info('Working hours retrieved successfully', { count: workingHours.length, total });
-    sendPaginated(res, workingHours, paginationMeta, 'Working hours retrieved successfully');
+    console.info('Working hours retrieved successfully', { count: populatedWorkingHours.length, total });
+    sendPaginated(res, populatedWorkingHours, paginationMeta, 'Working hours retrieved successfully');
   } catch (error) {
     console.error('Error retrieving working hours', { error: error.message });
     throw error;
@@ -115,14 +158,16 @@ const getWorkingHoursById = asyncHandler(async (req, res) => {
       query = Working_Hours.findOne({ Working_Hours_id: numId });
     }
 
-    const workingHours = await populateWorkingHours(query);
+    const workingHours = await query;
 
     if (!workingHours) {
       return sendNotFound(res, 'Working hours not found');
     }
 
+    const populatedWorkingHours = await populateWorkingHours(workingHours);
+
     console.info('Working hours retrieved successfully', { id: workingHours._id });
-    sendSuccess(res, workingHours, 'Working hours retrieved successfully');
+    sendSuccess(res, populatedWorkingHours, 'Working hours retrieved successfully');
   } catch (error) {
     console.error('Error retrieving working hours', { error: error.message, id: req.params.id });
     throw error;
@@ -169,14 +214,16 @@ const updateWorkingHours = asyncHandler(async (req, res) => {
       );
     }
 
-    const workingHours = await populateWorkingHours(query);
+    const workingHours = await query;
 
     if (!workingHours) {
       return sendNotFound(res, 'Working hours not found');
     }
 
+    const populatedWorkingHours = await populateWorkingHours(workingHours);
+
     console.info('Working hours updated successfully', { id: workingHours._id });
-    sendSuccess(res, workingHours, 'Working hours updated successfully');
+    sendSuccess(res, populatedWorkingHours, 'Working hours updated successfully');
   } catch (error) {
     console.error('Error updating working hours', { error: error.message, id: req.params.id });
     throw error;
@@ -253,9 +300,11 @@ const getWorkingHoursByAuth = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [workingHours, total] = await Promise.all([
-      populateWorkingHours(Working_Hours.find(filter).sort(sort).skip(skip).limit(limitNum)),
+      Working_Hours.find(filter).sort(sort).skip(skip).limit(limitNum),
       Working_Hours.countDocuments(filter)
     ]);
+
+    const populatedWorkingHours = await populateWorkingHours(workingHours);
 
     const paginationMeta = {
       page: pageNum,
@@ -264,8 +313,8 @@ const getWorkingHoursByAuth = asyncHandler(async (req, res) => {
       pages: Math.ceil(total / limitNum)
     };
 
-    console.info('Working hours retrieved by auth successfully', { count: workingHours.length, total });
-    sendPaginated(res, workingHours, paginationMeta, 'Working hours retrieved successfully');
+    console.info('Working hours retrieved by auth successfully', { count: populatedWorkingHours.length, total });
+    sendPaginated(res, populatedWorkingHours, paginationMeta, 'Working hours retrieved successfully');
   } catch (error) {
     console.error('Error retrieving working hours by auth', { error: error.message });
     throw error;
@@ -303,9 +352,11 @@ const getWorkingHoursByBranchId = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [workingHours, total] = await Promise.all([
-      populateWorkingHours(Working_Hours.find(filter).sort(sort).skip(skip).limit(limitNum)),
+      Working_Hours.find(filter).sort(sort).skip(skip).limit(limitNum),
       Working_Hours.countDocuments(filter)
     ]);
+
+    const populatedWorkingHours = await populateWorkingHours(workingHours);
 
     const paginationMeta = {
       page: pageNum,
@@ -314,8 +365,8 @@ const getWorkingHoursByBranchId = asyncHandler(async (req, res) => {
       pages: Math.ceil(total / limitNum)
     };
 
-    console.info('Working hours retrieved by branch ID successfully', { count: workingHours.length, total, Branch_id: branchIdNum });
-    sendPaginated(res, workingHours, paginationMeta, 'Working hours retrieved successfully');
+    console.info('Working hours retrieved by branch ID successfully', { count: populatedWorkingHours.length, total, Branch_id: branchIdNum });
+    sendPaginated(res, populatedWorkingHours, paginationMeta, 'Working hours retrieved successfully');
   } catch (error) {
     console.error('Error retrieving working hours by branch ID', { error: error.message, Branch_id: req.params.Branch_id });
     throw error;
