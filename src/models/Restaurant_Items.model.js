@@ -16,6 +16,26 @@ const restaurantItemsSchema = new mongoose.Schema({
     ref: 'Restaurant_item_Category',
     required: [true, 'Restaurant item category ID is required']
   },
+  name: {
+    type: String,
+    trim: true,
+    maxlength: [150, 'Name cannot exceed 150 characters']
+  },
+  service_id: {
+    type: Number,
+    ref: 'Services',
+    default: null
+  },
+  item_Category_id: {
+    type: Number,
+    ref: 'Item_Category',
+    default: null
+  },
+  Description: {
+    type: String,
+    trim: true,
+    maxlength: [1000, 'Description cannot exceed 1000 characters']
+  },
   CurrentStock: {
     type: Number,
     default: 0,
@@ -86,9 +106,12 @@ const restaurantItemsSchema = new mongoose.Schema({
 restaurantItemsSchema.index({ Restaurant_Items_id: 1 });
 restaurantItemsSchema.index({ business_Branch_id: 1 });
 restaurantItemsSchema.index({ Restaurant_item_Category_id: 1 });
+restaurantItemsSchema.index({ service_id: 1 });
+restaurantItemsSchema.index({ item_Category_id: 1 });
 restaurantItemsSchema.index({ item_type_id: 1 });
 restaurantItemsSchema.index({ Status: 1 });
 restaurantItemsSchema.index({ SupplierName: 1 });
+restaurantItemsSchema.index({ name: 1 });
 
 restaurantItemsSchema.pre('save', function (next) {
   if (this.isModified() && !this.isNew) {

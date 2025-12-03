@@ -25,7 +25,7 @@ const {
 router.post('/create', auth, validateBody(createRestaurantItemSchema), createRestaurantItem);
 router.get('/getAll', validateQuery(getAllRestaurantItemsSchema), getAllRestaurantItems);
 router.get('/getById/:id', auth, validateParams(getRestaurantItemByIdSchema), getRestaurantItemById);
-router.put('/update/:id', auth, validateParams(getRestaurantItemByIdSchema), validateBody(updateRestaurantItemSchema), updateRestaurantItem);
+router.put('/update/:id', auth, validateParams(getRestaurantItemByIdSchema), validateBody(createRestaurantItem), updateRestaurantItem);
 router.delete('/delete/:id', auth, validateParams(getRestaurantItemByIdSchema), deleteRestaurantItem);
 router.get('/getByAuth', auth, validateQuery(getRestaurantItemsByAuthSchema), getRestaurantItemsByAuth);
 router.get('/getByRestaurantItemCategory/:Restaurant_item_Category_id', auth, validateQuery(getRestaurantItemsByCategoryQuerySchema), validateParams(getRestaurantItemsByCategoryParamsSchema), getRestaurantItemsByCategory);

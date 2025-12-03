@@ -2,6 +2,8 @@ const RestaurantItems = require('../models/Restaurant_Items.model');
 const Business_Branch = require('../models/business_Branch.model');
 const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
 const ItemType = require('../models/Item_type.model');
+const Services = require('../models/services.model');
+const ItemCategory = require('../models/Item_Category.model');
 const User = require('../models/User.model');
 const RestaurantAlerts = require('../models/Restaurant_Alerts.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
@@ -43,6 +45,26 @@ const populateRestaurantItems = async (items) => {
           .select('Item_type_id name status');
         if (itemType) {
           itemObj.item_type_id = itemType.toObject ? itemType.toObject() : itemType;
+        }
+      }
+      
+      // Populate service_id
+      if (itemObj.service_id) {
+        const serviceId = typeof itemObj.service_id === 'object' ? itemObj.service_id : itemObj.service_id;
+        const service = await Services.findOne({ service_id: serviceId })
+          .select('service_id name description');
+        if (service) {
+          itemObj.service_id = service.toObject ? service.toObject() : service;
+        }
+      }
+      
+      // Populate item_Category_id
+      if (itemObj.item_Category_id) {
+        const categoryId = typeof itemObj.item_Category_id === 'object' ? itemObj.item_Category_id : itemObj.item_Category_id;
+        const category = await ItemCategory.findOne({ item_Category_id: categoryId })
+          .select('item_Category_id CategoryName Description');
+        if (category) {
+          itemObj.item_Category_id = category.toObject ? category.toObject() : category;
         }
       }
       
@@ -173,6 +195,34 @@ const ensureItemTypeExists = async (item_type_id) => {
   return Boolean(itemType);
 };
 
+const ensureServiceExists = async (service_id) => {
+  if (service_id === undefined || service_id === null) {
+    return true;
+  }
+
+  const serviceId = parseInt(service_id, 10);
+  if (Number.isNaN(serviceId)) {
+    return false;
+  }
+
+  const service = await Services.findOne({ service_id: serviceId, status: true });
+  return Boolean(service);
+};
+
+const ensureItemCategoryExists = async (item_Category_id) => {
+  if (item_Category_id === undefined || item_Category_id === null) {
+    return true;
+  }
+
+  const categoryId = parseInt(item_Category_id, 10);
+  if (Number.isNaN(categoryId)) {
+    return false;
+  }
+
+  const category = await ItemCategory.findOne({ item_Category_id: categoryId, Status: true });
+  return Boolean(category);
+};
+
 const paginateMeta = (page, limit, total) => {
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -219,16 +269,26 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
     const {
       business_Branch_id,
       Restaurant_item_Category_id,
-      item_type_id,
+      name,
+      service_id,
+      item_Category_id,
+      Description,
       CurrentStock,
+      unit,
       minStock,
-      unitPrice
+      unitPrice,
+      SupplierName,
+      DeliveryTime,
+      item_image,
+      item_type_id
     } = req.body;
 
-    const [branchExists, categoryExists, itemTypeExists] = await Promise.all([
+    const [branchExists, categoryExists, itemTypeExists, serviceExists, itemCategoryExists] = await Promise.all([
       ensureBusinessBranchExists(business_Branch_id),
       ensureCategoryExists(Restaurant_item_Category_id),
-      ensureItemTypeExists(item_type_id)
+      ensureItemTypeExists(item_type_id),
+      ensureServiceExists(service_id),
+      ensureItemCategoryExists(item_Category_id)
     ]);
 
     if (!branchExists) {
@@ -239,8 +299,16 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
       return sendError(res, 'Restaurant item category not found', 400);
     }
 
-    if (!itemTypeExists) {
+    if (!itemTypeExists && item_type_id !== undefined && item_type_id !== null) {
       return sendError(res, 'Item type not found', 400);
+    }
+
+    if (!serviceExists && service_id !== undefined && service_id !== null) {
+      return sendError(res, 'Service not found', 400);
+    }
+
+    if (!itemCategoryExists && item_Category_id !== undefined && item_Category_id !== null) {
+      return sendError(res, 'Item category not found', 400);
     }
 
     const validations = [
@@ -254,13 +322,31 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
       return sendError(res, invalidField.message, 400);
     }
 
+    // Build payload with all fields from req.body
     const payload = {
-      ...req.body,
-      CurrentStock: validations[0].parsed ?? 0,
-      minStock: validations[1].parsed ?? 0,
+      business_Branch_id: business_Branch_id || req.userIdNumber,
+      Restaurant_item_Category_id: Restaurant_item_Category_id,
       unitPrice: validations[2].parsed,
-      created_by: req.userIdNumber || null
+      created_by: req.userIdNumber || null,
+      Status: req.body.Status !== undefined ? req.body.Status : true
     };
+
+    // Add optional fields only if provided in req.body
+    if (req.body.name !== undefined) payload.name = req.body.name;
+    if (req.body.service_id !== undefined) payload.service_id = req.body.service_id;
+    if (req.body.item_Category_id !== undefined) payload.item_Category_id = req.body.item_Category_id;
+    if (req.body.Description !== undefined) payload.Description = req.body.Description;
+    if (req.body.unit !== undefined) payload.unit = req.body.unit;
+    if (req.body.SupplierName !== undefined) payload.SupplierName = req.body.SupplierName;
+    if (req.body.DeliveryTime !== undefined) payload.DeliveryTime = req.body.DeliveryTime;
+    if (req.body.item_image !== undefined) payload.item_image = req.body.item_image;
+    if (req.body.item_type_id !== undefined) payload.item_type_id = req.body.item_type_id;
+
+    // Set CurrentStock
+    payload.CurrentStock = validations[0].parsed ?? 0;
+    
+    // Set minStock
+    payload.minStock = validations[1].parsed ?? 0;
 
     const restaurantItem = await RestaurantItems.create(payload);
     const populated = await populateRestaurantItems(restaurantItem);
@@ -347,14 +433,26 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
     const {
       business_Branch_id,
       Restaurant_item_Category_id,
+      name,
+      service_id,
+      item_Category_id,
+      Description,
       CurrentStock,
+      unit,
       minStock,
-      unitPrice
+      unitPrice,
+      SupplierName,
+      DeliveryTime,
+      item_image,
+      item_type_id
     } = req.body;
 
-    const [branchExists, categoryExists] = await Promise.all([
+    const [branchExists, categoryExists, itemTypeExists, serviceExists, itemCategoryExists] = await Promise.all([
       ensureBusinessBranchExists(business_Branch_id),
-      ensureCategoryExists(Restaurant_item_Category_id)
+      ensureCategoryExists(Restaurant_item_Category_id),
+      ensureItemTypeExists(item_type_id),
+      ensureServiceExists(service_id),
+      ensureItemCategoryExists(item_Category_id)
     ]);
 
     if (business_Branch_id !== undefined && !branchExists) {
@@ -363,6 +461,18 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
 
     if (Restaurant_item_Category_id !== undefined && !categoryExists) {
       return sendError(res, 'Restaurant item category not found', 400);
+    }
+
+    if (item_type_id !== undefined && item_type_id !== null && !itemTypeExists) {
+      return sendError(res, 'Item type not found', 400);
+    }
+
+    if (service_id !== undefined && service_id !== null && !serviceExists) {
+      return sendError(res, 'Service not found', 400);
+    }
+
+    if (item_Category_id !== undefined && item_Category_id !== null && !itemCategoryExists) {
+      return sendError(res, 'Item category not found', 400);
     }
 
     const validations = {
@@ -376,20 +486,37 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
       return sendError(res, invalidField.message, 400);
     }
 
+    // Build update payload with all fields from req.body
     const updatePayload = {
-      ...req.body,
       updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
 
+    // Add all fields from req.body if provided
+    if (req.body.business_Branch_id !== undefined) updatePayload.business_Branch_id = req.body.business_Branch_id;
+    if (req.body.Restaurant_item_Category_id !== undefined) updatePayload.Restaurant_item_Category_id = req.body.Restaurant_item_Category_id;
+    if (req.body.name !== undefined) updatePayload.name = req.body.name;
+    if (req.body.service_id !== undefined) updatePayload.service_id = req.body.service_id;
+    if (req.body.item_Category_id !== undefined) updatePayload.item_Category_id = req.body.item_Category_id;
+    if (req.body.Description !== undefined) updatePayload.Description = req.body.Description;
+    if (req.body.unit !== undefined) updatePayload.unit = req.body.unit;
+    if (req.body.SupplierName !== undefined) updatePayload.SupplierName = req.body.SupplierName;
+    if (req.body.DeliveryTime !== undefined) updatePayload.DeliveryTime = req.body.DeliveryTime;
+    if (req.body.item_image !== undefined) updatePayload.item_image = req.body.item_image;
+    if (req.body.item_type_id !== undefined) updatePayload.item_type_id = req.body.item_type_id;
+    if (req.body.Status !== undefined) updatePayload.Status = req.body.Status;
+
+    // Handle CurrentStock
     if (validations.CurrentStock.parsed !== undefined) {
       updatePayload.CurrentStock = validations.CurrentStock.parsed;
     }
 
+    // Handle minStock
     if (validations.minStock.parsed !== undefined) {
       updatePayload.minStock = validations.minStock.parsed;
     }
 
+    // Handle unitPrice
     if (validations.unitPrice.parsed !== undefined) {
       updatePayload.unitPrice = validations.unitPrice.parsed;
     }

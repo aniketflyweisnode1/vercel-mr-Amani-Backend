@@ -26,24 +26,36 @@ const paginationBase = {
 const createRestaurantItemSchema = Joi.object({
   business_Branch_id: Joi.number().integer().positive().required(),
   Restaurant_item_Category_id: Joi.number().integer().positive().required(),
+  name: Joi.string().trim().max(150).optional(),
+  service_id: Joi.number().integer().positive().optional(),
+  item_Category_id: Joi.number().integer().positive().optional(),
+  Description: Joi.string().trim().max(1000).optional().allow(''),
   CurrentStock: Joi.number().min(0).optional(),
   unit: Joi.string().trim().max(50).optional(),
   minStock: Joi.number().min(0).optional(),
   unitPrice: Joi.number().min(0).required(),
   SupplierName: Joi.string().trim().max(200).optional(),
   DeliveryTime: Joi.string().trim().max(50).optional().allow(''),
+  item_image: Joi.string().trim().max(500).optional().allow(''),
+  item_type_id: Joi.number().integer().positive().optional(),
   Status: Joi.boolean().optional().default(true)
 });
 
 const updateRestaurantItemSchema = Joi.object({
   business_Branch_id: Joi.number().integer().positive().optional(),
   Restaurant_item_Category_id: Joi.number().integer().positive().optional(),
+  name: Joi.string().trim().max(150).optional(),
+  service_id: Joi.number().integer().positive().optional(),
+  item_Category_id: Joi.number().integer().positive().optional(),
+  Description: Joi.string().trim().max(1000).optional().allow(''),
   CurrentStock: Joi.number().min(0).optional(),
   unit: Joi.string().trim().max(50).optional(),
   minStock: Joi.number().min(0).optional(),
   unitPrice: Joi.number().min(0).optional(),
   SupplierName: Joi.string().trim().max(200).optional(),
   DeliveryTime: Joi.string().trim().max(50).optional().allow(''),
+  item_image: Joi.string().trim().max(500).optional().allow(''),
+  item_type_id: Joi.number().integer().positive().optional(),
   Status: Joi.boolean().optional()
 }).min(1);
 
