@@ -71,6 +71,9 @@ const CateringEventTypeRoutes = require('./routes/User/Order_Food/Catering/Cater
 const CateringEventRoutes = require('./routes/User/Order_Food/Catering/Catering_Event.routes');
 const CateringTypeRoutes = require('./routes/User/Order_Food/Catering/Catering_Type.routes');
 const CateringRoutes = require('./routes/User/Order_Food/Catering/Catering.routes');
+const FoodTruckCateringRoutes = require('./routes/User/Order_Food/Food_Truck_ForEvent/Food_Truck_Catering.routes');
+const FoodTruckVendingRoutes = require('./routes/User/Order_Food/Food_Truck_ForEvent/Food_Truck_Vending.routes');
+const ScheduleMeetingRoutes = require('./routes/User/Order_Food/Food_Truck_ForEvent/Schedule_Meeting.routes');
 // Import Restaurant routes
 const DiscountsTypeRoutes = require('./routes/Restaurant/Discounts_type.routes');
 const DiscountsRoutes = require('./routes/Restaurant/Discounts.routes');
@@ -180,6 +183,9 @@ router.use('/Order_History', OrderHistoryRoutes);
 router.use('/Profile_setting', ProfileSettingRoutes);
 router.use('/Catering_EventType', CateringEventTypeRoutes);
 router.use('/Catering_Event', CateringEventRoutes);
+router.use('/Food_Truck_Catering', FoodTruckCateringRoutes);
+router.use('/Food_Truck_Vending', FoodTruckVendingRoutes);
+router.use('/Schedule_Meeting', ScheduleMeetingRoutes);
 router.use('/Catering_Type', CateringTypeRoutes);
 router.use('/Catering', CateringRoutes);
 router.use('/Reel', ReelRoutes);
