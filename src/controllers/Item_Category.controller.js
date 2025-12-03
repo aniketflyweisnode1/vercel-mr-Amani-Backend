@@ -1,5 +1,6 @@
 const ItemCategory = require('../models/Item_Category.model');
 const ItemType = require('../models/Item_type.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -47,6 +48,52 @@ const paginateMeta = (page, limit, total) => {
     hasNextPage: page < totalPages,
     hasPrevPage: page > 1
   };
+};
+
+// Manual population function for Number refs
+const populateItemCategory = async (categories) => {
+  const categoriesArray = Array.isArray(categories) ? categories : [categories];
+  const populatedCategories = await Promise.all(
+    categoriesArray.map(async (category) => {
+      if (!category) return null;
+      
+      const categoryObj = category.toObject ? category.toObject() : category;
+      
+      // Populate item_type_id
+      if (categoryObj.item_type_id) {
+        const typeId = typeof categoryObj.item_type_id === 'object' ? categoryObj.item_type_id : categoryObj.item_type_id;
+        const itemType = await ItemType.findOne({ Item_type_id: typeId })
+          .select('Item_type_id name status');
+        if (itemType) {
+          categoryObj.item_type_id = itemType.toObject ? itemType.toObject() : itemType;
+        }
+      }
+      
+      // Populate created_by
+      if (categoryObj.created_by) {
+        const createdById = typeof categoryObj.created_by === 'object' ? categoryObj.created_by : categoryObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          categoryObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (categoryObj.updated_by) {
+        const updatedById = typeof categoryObj.updated_by === 'object' ? categoryObj.updated_by : categoryObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          categoryObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return categoryObj;
+    })
+  );
+  
+  return Array.isArray(categories) ? populatedCategories : populatedCategories[0];
 };
 
 const createItemCategory = asyncHandler(async (req, res) => {
@@ -100,14 +147,15 @@ const getAllItemCategories = asyncHandler(async (req, res) => {
       ItemCategory.find(filter)
         .sort(sort)
         .skip(skip)
-        .limit(numericLimit)
-        .populate('item_type_id', 'name'),
+        .limit(numericLimit),
       ItemCategory.countDocuments(filter)
     ]);
 
+    const populatedCategories = await populateItemCategory(categories);
+
     console.info('Item categories retrieved successfully', { total, page: numericPage, limit: numericLimit });
 
-    sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Item categories retrieved successfully');
+    sendPaginated(res, populatedCategories, paginateMeta(numericPage, numericLimit, total), 'Item categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving item categories', { error: error.message, stack: error.stack });
     throw error;
@@ -120,22 +168,24 @@ const getItemCategoryById = asyncHandler(async (req, res) => {
     let itemCategory;
 
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      itemCategory = await ItemCategory.findById(id).populate('item_type_id', 'name');
+      itemCategory = await ItemCategory.findById(id);
     } else {
       const categoryId = parseInt(id, 10);
       if (Number.isNaN(categoryId)) {
         return sendNotFound(res, 'Invalid item category ID format');
       }
-      itemCategory = await ItemCategory.findOne({ item_Category_id: categoryId }).populate('item_type_id', 'name');
+      itemCategory = await ItemCategory.findOne({ item_Category_id: categoryId });
     }
 
     if (!itemCategory) {
       return sendNotFound(res, 'Item category not found');
     }
 
+    const populatedCategory = await populateItemCategory(itemCategory);
+
     console.info('Item category retrieved successfully', { id: itemCategory._id });
 
-    sendSuccess(res, itemCategory, 'Item category retrieved successfully');
+    sendSuccess(res, populatedCategory, 'Item category retrieved successfully');
   } catch (error) {
     console.error('Error retrieving item category', { error: error.message, id: req.params.id });
     throw error;
@@ -160,32 +210,48 @@ const updateItemCategory = asyncHandler(async (req, res) => {
       updated_at: new Date()
     };
 
+    // Remove undefined fields from update object
+    Object.keys(update).forEach(key => {
+      if (update[key] === undefined) {
+        delete update[key];
+      }
+    });
+
     let itemCategory;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       itemCategory = await ItemCategory.findByIdAndUpdate(id, update, {
         new: true,
         runValidators: true
-      }).populate('item_type_id', 'name');
+      });
     } else {
       const categoryId = parseInt(id, 10);
       if (Number.isNaN(categoryId)) {
         return sendNotFound(res, 'Invalid item category ID format');
       }
+      
+      // First check if the record exists
+      const existingCategory = await ItemCategory.findOne({ item_Category_id: categoryId });
+      if (!existingCategory) {
+        return sendNotFound(res, 'Item category not found');
+      }
+      
       itemCategory = await ItemCategory.findOneAndUpdate({ item_Category_id: categoryId }, update, {
         new: true,
         runValidators: true
-      }).populate('item_type_id', 'name');
+      });
     }
 
     if (!itemCategory) {
       return sendNotFound(res, 'Item category not found');
     }
 
-    console.info('Item category updated successfully', { id: itemCategory._id });
+    const populatedCategory = await populateItemCategory(itemCategory);
 
-    sendSuccess(res, itemCategory, 'Item category updated successfully');
+    console.info('Item category updated successfully', { id: itemCategory._id, item_Category_id: itemCategory.item_Category_id });
+
+    sendSuccess(res, populatedCategory, 'Item category updated successfully');
   } catch (error) {
-    console.error('Error updating item category', { error: error.message, id: req.params.id });
+    console.error('Error updating item category', { error: error.message, stack: error.stack, id: req.params.id });
     throw error;
   }
 });
@@ -251,14 +317,15 @@ const getItemCategoriesByAuth = asyncHandler(async (req, res) => {
       ItemCategory.find(filter)
         .sort(sort)
         .skip(skip)
-        .limit(numericLimit)
-        .populate('item_type_id', 'name'),
+        .limit(numericLimit),
       ItemCategory.countDocuments(filter)
     ]);
 
+    const populatedCategories = await populateItemCategory(categories);
+
     console.info('Item categories retrieved for auth user', { total, page: numericPage, limit: numericLimit, user_id: req.userIdNumber });
 
-    sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Item categories retrieved successfully');
+    sendPaginated(res, populatedCategories, paginateMeta(numericPage, numericLimit, total), 'Item categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving item categories for auth user', { error: error.message, user_id: req.userIdNumber });
     throw error;
@@ -303,14 +370,15 @@ const getItemCategoriesByTypeId = asyncHandler(async (req, res) => {
       ItemCategory.find(filter)
         .sort(sort)
         .skip(skip)
-        .limit(numericLimit)
-        .populate('item_type_id', 'name'),
+        .limit(numericLimit),
       ItemCategory.countDocuments(filter)
     ]);
 
+    const populatedCategories = await populateItemCategory(categories);
+
     console.info('Item categories retrieved by item type', { item_type_id: typeId, total, page: numericPage, limit: numericLimit });
 
-    sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Item categories retrieved successfully');
+    sendPaginated(res, populatedCategories, paginateMeta(numericPage, numericLimit, total), 'Item categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving item categories by item type', { error: error.message, item_type_id: req.params.item_type_id });
     throw error;

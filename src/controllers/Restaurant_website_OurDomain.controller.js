@@ -1,14 +1,65 @@
 const OurDomain = require('../models/Restaurant_website_OurDomain.model');
 const Business_Branch = require('../models/business_Branch.model');
 const Template = require('../models/Restaurant_website_Template.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateOurDomain = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('Restaurant_website_Template_id', 'Restaurant_website_Template_id TempleteName')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateOurDomain = async (domains) => {
+  const domainsArray = Array.isArray(domains) ? domains : [domains];
+  const populatedDomains = await Promise.all(
+    domainsArray.map(async (domain) => {
+      if (!domain) return null;
+      
+      const domainObj = domain.toObject ? domain.toObject() : domain;
+      
+      // Populate business_Branch_id
+      if (domainObj.business_Branch_id) {
+        const branchId = typeof domainObj.business_Branch_id === 'object' ? domainObj.business_Branch_id : domainObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          domainObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate Restaurant_website_Template_id
+      if (domainObj.Restaurant_website_Template_id) {
+        const templateId = typeof domainObj.Restaurant_website_Template_id === 'object' ? domainObj.Restaurant_website_Template_id : domainObj.Restaurant_website_Template_id;
+        const template = await Template.findOne({ Restaurant_website_Template_id: templateId })
+          .select('Restaurant_website_Template_id TempleteName');
+        if (template) {
+          domainObj.Restaurant_website_Template_id = template.toObject ? template.toObject() : template;
+        }
+      }
+      
+      // Populate created_by
+      if (domainObj.created_by) {
+        const createdById = typeof domainObj.created_by === 'object' ? domainObj.created_by : domainObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          domainObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (domainObj.updated_by) {
+        const updatedById = typeof domainObj.updated_by === 'object' ? domainObj.updated_by : domainObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          domainObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return domainObj;
+    })
+  );
+  
+  return Array.isArray(domains) ? populatedDomains : populatedDomains[0];
+};
 
 const buildFilter = ({ search, status, business_Branch_id, Restaurant_website_Template_id }) => {
   const filter = {};
@@ -79,17 +130,19 @@ const ensureTemplateExists = async (templateId) => {
   return Boolean(template);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let domain;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateOurDomain(OurDomain.findById(identifier));
+    domain = await OurDomain.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      domain = await OurDomain.findOne({ Restaurant_website_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateOurDomain(OurDomain.findOne({ Restaurant_website_id: numericId }));
-  }
-
-  return null;
+  
+  if (!domain) return null;
+  return await populateOurDomain(domain);
 };
 
 const createOurDomain = asyncHandler(async (req, res) => {
@@ -118,7 +171,7 @@ const createOurDomain = asyncHandler(async (req, res) => {
     };
 
     const website = await OurDomain.create(payload);
-    const populated = await populateOurDomain(OurDomain.findById(website._id));
+    const populated = await populateOurDomain(website);
 
     sendSuccess(res, populated, 'Restaurant website (our domain) created successfully', 201);
   } catch (error) {
@@ -150,14 +203,16 @@ const getAllOurDomains = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [items, total] = await Promise.all([
-      populateOurDomain(OurDomain.find(filter))
+      OurDomain.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       OurDomain.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant websites (our domain) retrieved successfully');
+    const populatedItems = await populateOurDomain(items);
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant websites (our domain) retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant websites (our domain)', { error: error.message });
     throw error;
@@ -167,13 +222,7 @@ const getAllOurDomains = asyncHandler(async (req, res) => {
 const getOurDomainById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const query = findByIdentifier(id);
-
-    if (!query) {
-      return sendError(res, 'Invalid restaurant website identifier', 400);
-    }
-
-    const website = await query;
+    const website = await findByIdentifier(id);
 
     if (!website) {
       return sendNotFound(res, 'Restaurant website (our domain) not found');
@@ -228,7 +277,7 @@ const updateOurDomain = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant website (our domain) not found');
     }
 
-    const populated = await populateOurDomain(OurDomain.findById(website._id));
+    const populated = await populateOurDomain(website);
     sendSuccess(res, populated, 'Restaurant website (our domain) updated successfully');
   } catch (error) {
     console.error('Error updating restaurant website (our domain)', { error: error.message, id: req.params.id });
@@ -296,14 +345,16 @@ const getOurDomainsByAuth = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [items, total] = await Promise.all([
-      populateOurDomain(OurDomain.find(filter))
+      OurDomain.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       OurDomain.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant websites (our domain) retrieved successfully');
+    const populatedItems = await populateOurDomain(items);
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant websites (our domain) retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant websites (our domain) by auth', { error: error.message, userId: req.userIdNumber });
     throw error;
@@ -323,9 +374,10 @@ const getOurDomainsByBranchId = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Business branch not found');
     }
 
-    const websites = await populateOurDomain(OurDomain.find({ business_Branch_id: branchId, Status: true }));
+    const websites = await OurDomain.find({ business_Branch_id: branchId, Status: true });
+    const populatedWebsites = await populateOurDomain(websites);
 
-    sendSuccess(res, websites, 'Restaurant websites (our domain) retrieved successfully');
+    sendSuccess(res, populatedWebsites, 'Restaurant websites (our domain) retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant websites (our domain) by branch ID', { error: error.message, business_Branch_id: req.params.business_Branch_id });
     throw error;
@@ -337,9 +389,10 @@ const getOurDomainsByReviewsStatus = asyncHandler(async (req, res) => {
     const { ReviewsStatus } = req.params;
     const statusValue = ReviewsStatus === 'true' || ReviewsStatus === '1' || ReviewsStatus === 'active';
 
-    const websites = await populateOurDomain(OurDomain.find({ Status: statusValue }));
+    const websites = await OurDomain.find({ Status: statusValue });
+    const populatedWebsites = await populateOurDomain(websites);
 
-    sendSuccess(res, websites, 'Restaurant websites (our domain) retrieved successfully');
+    sendSuccess(res, populatedWebsites, 'Restaurant websites (our domain) retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant websites (our domain) by status', { error: error.message, ReviewsStatus: req.params.ReviewsStatus });
     throw error;

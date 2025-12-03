@@ -1,29 +1,103 @@
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const Business_Branch = require('../models/business_Branch.model');
 const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
+const ItemType = require('../models/Item_type.model');
+const User = require('../models/User.model');
 const RestaurantAlerts = require('../models/Restaurant_Alerts.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateRestaurantItems = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('Restaurant_item_Category_id', 'Restaurant_item_Category_id CategoryName Description')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateRestaurantItems = async (items) => {
+  const itemsArray = Array.isArray(items) ? items : [items];
+  const populatedItems = await Promise.all(
+    itemsArray.map(async (item) => {
+      if (!item) return null;
+      
+      const itemObj = item.toObject ? item.toObject() : item;
+      
+      // Populate business_Branch_id
+      if (itemObj.business_Branch_id) {
+        const branchId = typeof itemObj.business_Branch_id === 'object' ? itemObj.business_Branch_id : itemObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          itemObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate Restaurant_item_Category_id
+      if (itemObj.Restaurant_item_Category_id) {
+        const categoryId = typeof itemObj.Restaurant_item_Category_id === 'object' ? itemObj.Restaurant_item_Category_id : itemObj.Restaurant_item_Category_id;
+        const category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: categoryId })
+          .select('Restaurant_item_Category_id CategoryName Description');
+        if (category) {
+          itemObj.Restaurant_item_Category_id = category.toObject ? category.toObject() : category;
+        }
+      }
+      
+      // Populate item_type_id
+      if (itemObj.item_type_id) {
+        const typeId = typeof itemObj.item_type_id === 'object' ? itemObj.item_type_id : itemObj.item_type_id;
+        const itemType = await ItemType.findOne({ Item_type_id: typeId })
+          .select('Item_type_id name status');
+        if (itemType) {
+          itemObj.item_type_id = itemType.toObject ? itemType.toObject() : itemType;
+        }
+      }
+      
+      // Populate created_by
+      if (itemObj.created_by) {
+        const createdById = typeof itemObj.created_by === 'object' ? itemObj.created_by : itemObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          itemObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (itemObj.updated_by) {
+        const updatedById = typeof itemObj.updated_by === 'object' ? itemObj.updated_by : itemObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          itemObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return itemObj;
+    })
+  );
+  
+  return Array.isArray(items) ? populatedItems : populatedItems[0];
+};
 
-const buildFilter = ({ search, status, business_Branch_id, Restaurant_item_Category_id, unit }) => {
+const buildFilter = ({ search, status, business_Branch_id, Restaurant_item_Category_id, category, item_type_id, unit }) => {
   const filter = {};
 
-  if (search) {
+  if (search && search.trim()) {
+    const searchTerm = search.trim();
     filter.$or = [
-      { SupplierName: { $regex: search, $options: 'i' } },
-      { unit: { $regex: search, $options: 'i' } },
-      { DeliveryTime: { $regex: search, $options: 'i' } }
+      { SupplierName: { $regex: searchTerm, $options: 'i' } },
+      { unit: { $regex: searchTerm, $options: 'i' } },
+      { DeliveryTime: { $regex: searchTerm, $options: 'i' } }
     ];
+
+    // Also search by Restaurant_Items_id if search term is numeric
+    const numericSearch = Number(searchTerm);
+    if (!Number.isNaN(numericSearch) && numericSearch > 0) {
+      filter.$or.push({ Restaurant_Items_id: numericSearch });
+    }
   }
 
   if (status !== undefined) {
-    filter.Status = status === 'true' || status === true;
+    // Handle both string 'true'/'false' and boolean values
+    if (typeof status === 'string') {
+      filter.Status = status === 'true' || status === '1';
+    } else {
+      filter.Status = Boolean(status);
+    }
   }
 
   if (business_Branch_id !== undefined) {
@@ -33,10 +107,19 @@ const buildFilter = ({ search, status, business_Branch_id, Restaurant_item_Categ
     }
   }
 
-  if (Restaurant_item_Category_id !== undefined) {
-    const categoryId = parseInt(Restaurant_item_Category_id, 10);
-    if (!Number.isNaN(categoryId)) {
-      filter.Restaurant_item_Category_id = categoryId;
+  // Support both Restaurant_item_Category_id and category as aliases
+  const categoryId = Restaurant_item_Category_id !== undefined ? Restaurant_item_Category_id : category;
+  if (categoryId !== undefined) {
+    const parsedCategoryId = parseInt(categoryId, 10);
+    if (!Number.isNaN(parsedCategoryId)) {
+      filter.Restaurant_item_Category_id = parsedCategoryId;
+    }
+  }
+
+  if (item_type_id !== undefined) {
+    const typeId = parseInt(item_type_id, 10);
+    if (!Number.isNaN(typeId)) {
+      filter.item_type_id = typeId;
     }
   }
 
@@ -75,6 +158,20 @@ const ensureCategoryExists = async (Restaurant_item_Category_id) => {
   return Boolean(category);
 };
 
+const ensureItemTypeExists = async (item_type_id) => {
+  if (item_type_id === undefined || item_type_id === null) {
+    return true;
+  }
+
+  const typeId = parseInt(item_type_id, 10);
+  if (Number.isNaN(typeId)) {
+    return false;
+  }
+
+  const itemType = await ItemType.findOne({ Item_type_id: typeId, status: true });
+  return Boolean(itemType);
+};
+
 const paginateMeta = (page, limit, total) => {
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -88,17 +185,19 @@ const paginateMeta = (page, limit, total) => {
   };
 };
 
-const findRestaurantItemByIdentifier = (identifier) => {
+const findRestaurantItemByIdentifier = async (identifier) => {
+  let item;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateRestaurantItems(RestaurantItems.findById(identifier));
+    item = await RestaurantItems.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      item = await RestaurantItems.findOne({ Restaurant_Items_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateRestaurantItems(RestaurantItems.findOne({ Restaurant_Items_id: numericId }));
-  }
-
-  return null;
+  
+  if (!item) return null;
+  return await populateRestaurantItems(item);
 };
 
 const validateNumericField = (value, fieldName) => {
@@ -119,14 +218,16 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
     const {
       business_Branch_id,
       Restaurant_item_Category_id,
+      item_type_id,
       CurrentStock,
       minStock,
       unitPrice
     } = req.body;
 
-    const [branchExists, categoryExists] = await Promise.all([
+    const [branchExists, categoryExists, itemTypeExists] = await Promise.all([
       ensureBusinessBranchExists(business_Branch_id),
-      ensureCategoryExists(Restaurant_item_Category_id)
+      ensureCategoryExists(Restaurant_item_Category_id),
+      ensureItemTypeExists(item_type_id)
     ]);
 
     if (!branchExists) {
@@ -135,6 +236,10 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
 
     if (!categoryExists) {
       return sendError(res, 'Restaurant item category not found', 400);
+    }
+
+    if (!itemTypeExists) {
+      return sendError(res, 'Item type not found', 400);
     }
 
     const validations = [
@@ -157,7 +262,7 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
     };
 
     const restaurantItem = await RestaurantItems.create(payload);
-    const populated = await populateRestaurantItems(RestaurantItems.findById(restaurantItem._id));
+    const populated = await populateRestaurantItems(restaurantItem);
 
     sendSuccess(res, populated, 'Restaurant item created successfully', 201);
   } catch (error) {
@@ -175,6 +280,8 @@ const getAllRestaurantItems = asyncHandler(async (req, res) => {
       status,
       business_Branch_id,
       Restaurant_item_Category_id,
+      category,
+      item_type_id,
       unit,
       sortBy = 'created_at',
       sortOrder = 'desc'
@@ -184,20 +291,33 @@ const getAllRestaurantItems = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const filter = buildFilter({ search, status, business_Branch_id, Restaurant_item_Category_id, unit });
+    const filter = buildFilter({ search, status, business_Branch_id, Restaurant_item_Category_id, category, item_type_id, unit });
 
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [items, total] = await Promise.all([
-      populateRestaurantItems(RestaurantItems.find(filter))
+      RestaurantItems.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantItems.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant items retrieved successfully');
+    const populatedItems = await populateRestaurantItems(items);
+
+    console.info('Restaurant items retrieved successfully', { 
+      total, 
+      page: numericPage, 
+      limit: numericLimit, 
+      filters: { 
+        search: search || null,
+        status, 
+        category: category || Restaurant_item_Category_id 
+      } 
+    });
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant items retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant items', { error: error.message });
     throw error;
@@ -207,13 +327,7 @@ const getAllRestaurantItems = asyncHandler(async (req, res) => {
 const getRestaurantItemById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const itemQuery = findRestaurantItemByIdentifier(id);
-
-    if (!itemQuery) {
-      return sendError(res, 'Invalid restaurant item identifier', 400);
-    }
-
-    const item = await itemQuery;
+    const item = await findRestaurantItemByIdentifier(id);
 
     if (!item) {
       return sendNotFound(res, 'Restaurant item not found');
@@ -294,7 +408,7 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant item not found');
     }
 
-    const populated = await populateRestaurantItems(RestaurantItems.findById(item._id));
+    const populated = await populateRestaurantItems(item);
     sendSuccess(res, populated, 'Restaurant item updated successfully');
   } catch (error) {
     console.error('Error updating restaurant item', { error: error.message, id: req.params.id });
@@ -347,6 +461,8 @@ const getRestaurantItemsByAuth = asyncHandler(async (req, res) => {
       status,
       business_Branch_id,
       Restaurant_item_Category_id,
+      category,
+      item_type_id,
       unit,
       sortBy = 'created_at',
       sortOrder = 'desc'
@@ -356,21 +472,23 @@ const getRestaurantItemsByAuth = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const filter = buildFilter({ search, status, business_Branch_id, Restaurant_item_Category_id, unit });
+    const filter = buildFilter({ search, status, business_Branch_id, Restaurant_item_Category_id, category, item_type_id, unit });
     filter.created_by = userId;
 
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [items, total] = await Promise.all([
-      populateRestaurantItems(RestaurantItems.find(filter))
+      RestaurantItems.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantItems.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant items retrieved successfully');
+    const populatedItems = await populateRestaurantItems(items);
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant items retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant items by auth', { error: error.message, userId: req.userIdNumber });
     throw error;
@@ -410,15 +528,17 @@ const getRestaurantItemsByCategory = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-const [items, total] = await Promise.all([
-      populateRestaurantItems(RestaurantItems.find(filter))
+    const [items, total] = await Promise.all([
+      RestaurantItems.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantItems.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant items retrieved successfully');
+    const populatedItems = await populateRestaurantItems(items);
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant items retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant items by category', { error: error.message, Restaurant_item_Category_id: req.params.Restaurant_item_Category_id });
     throw error;

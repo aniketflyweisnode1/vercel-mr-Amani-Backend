@@ -1,10 +1,43 @@
 const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateRestaurantItemCategory = (query) => query
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateRestaurantItemCategory = async (categories) => {
+  const categoriesArray = Array.isArray(categories) ? categories : [categories];
+  const populatedCategories = await Promise.all(
+    categoriesArray.map(async (category) => {
+      if (!category) return null;
+      
+      const categoryObj = category.toObject ? category.toObject() : category;
+      
+      // Populate created_by
+      if (categoryObj.created_by) {
+        const createdById = typeof categoryObj.created_by === 'object' ? categoryObj.created_by : categoryObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          categoryObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (categoryObj.updated_by) {
+        const updatedById = typeof categoryObj.updated_by === 'object' ? categoryObj.updated_by : categoryObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          categoryObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return categoryObj;
+    })
+  );
+  
+  return Array.isArray(categories) ? populatedCategories : populatedCategories[0];
+};
 
 const buildFilter = ({ search, status }) => {
   const filter = {};
@@ -23,17 +56,19 @@ const buildFilter = ({ search, status }) => {
   return filter;
 };
 
-const findCategoryByIdentifier = (identifier) => {
+const findCategoryByIdentifier = async (identifier) => {
+  let category;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateRestaurantItemCategory(RestaurantItemCategory.findById(identifier));
+    category = await RestaurantItemCategory.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateRestaurantItemCategory(RestaurantItemCategory.findOne({ Restaurant_item_Category_id: numericId }));
-  }
-
-  return null;
+  
+  if (!category) return null;
+  return await populateRestaurantItemCategory(category);
 };
 
 const paginateMeta = (page, limit, total) => {
@@ -57,7 +92,7 @@ const createRestaurantItemCategory = asyncHandler(async (req, res) => {
     };
 
     const category = await RestaurantItemCategory.create(payload);
-    const populated = await populateRestaurantItemCategory(RestaurantItemCategory.findById(category._id));
+    const populated = await populateRestaurantItemCategory(category);
 
     sendSuccess(res, populated, 'Restaurant item category created successfully', 201);
   } catch (error) {
@@ -87,14 +122,16 @@ const getAllRestaurantItemCategories = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [categories, total] = await Promise.all([
-      populateRestaurantItemCategory(RestaurantItemCategory.find(filter))
+      RestaurantItemCategory.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantItemCategory.countDocuments(filter)
     ]);
 
-    sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Restaurant item categories retrieved successfully');
+    const populatedCategories = await populateRestaurantItemCategory(categories);
+
+    sendPaginated(res, populatedCategories, paginateMeta(numericPage, numericLimit, total), 'Restaurant item categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant item categories', { error: error.message });
     throw error;
@@ -104,13 +141,7 @@ const getAllRestaurantItemCategories = asyncHandler(async (req, res) => {
 const getRestaurantItemCategoryById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const categoryQuery = findCategoryByIdentifier(id);
-
-    if (!categoryQuery) {
-      return sendError(res, 'Invalid category identifier', 400);
-    }
-
-    const category = await categoryQuery;
+    const category = await findCategoryByIdentifier(id);
 
     if (!category) {
       return sendNotFound(res, 'Restaurant item category not found');
@@ -147,7 +178,7 @@ const updateRestaurantItemCategory = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant item category not found');
     }
 
-    const populated = await populateRestaurantItemCategory(RestaurantItemCategory.findById(category._id));
+    const populated = await populateRestaurantItemCategory(category);
     sendSuccess(res, populated, 'Restaurant item category updated successfully');
   } catch (error) {
     console.error('Error updating restaurant item category', { error: error.message, id: req.params.id });
@@ -213,14 +244,16 @@ const getRestaurantItemCategoriesByAuth = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [categories, total] = await Promise.all([
-      populateRestaurantItemCategory(RestaurantItemCategory.find(filter))
+      RestaurantItemCategory.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantItemCategory.countDocuments(filter)
     ]);
 
-    sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Restaurant item categories retrieved successfully');
+    const populatedCategories = await populateRestaurantItemCategory(categories);
+
+    sendPaginated(res, populatedCategories, paginateMeta(numericPage, numericLimit, total), 'Restaurant item categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant item categories by auth', { error: error.message, userId: req.userIdNumber });
     throw error;
@@ -236,15 +269,14 @@ const getRestaurantItemCategoryByTypeId = asyncHandler(async (req, res) => {
       return sendError(res, 'Invalid restaurant item category ID format', 400);
     }
 
-    const category = await populateRestaurantItemCategory(
-      RestaurantItemCategory.findOne({ Restaurant_item_Category_id: numericId })
-    );
-
+    const category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: numericId });
+    
     if (!category) {
       return sendNotFound(res, 'Restaurant item category not found');
     }
 
-    sendSuccess(res, category, 'Restaurant item category retrieved successfully');
+    const populated = await populateRestaurantItemCategory(category);
+    sendSuccess(res, populated, 'Restaurant item category retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant item category by type ID', { error: error.message, Restaurant_item_Category_id: req.params.Restaurant_item_Category_id });
     throw error;

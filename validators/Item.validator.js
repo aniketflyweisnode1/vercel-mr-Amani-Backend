@@ -231,6 +231,15 @@ const listQueryBase = {
       'number.integer': 'Item category ID must be an integer',
       'number.positive': 'Item category ID must be a positive number'
     }),
+  category: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'Category ID must be a number',
+      'number.integer': 'Category ID must be an integer',
+      'number.positive': 'Category ID must be a positive number'
+    }),
   business_Branch_id: Joi.number()
     .integer()
     .positive()

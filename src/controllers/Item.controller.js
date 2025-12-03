@@ -103,18 +103,32 @@ const createItem = asyncHandler(async (req, res) => {
   }
 });
 
-const buildItemFilter = ({ search, status, service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count }) => {
+const buildItemFilter = ({ search, status, service_id, item_type_id, item_Category_id, category, business_Branch_id, Stock_count }) => {
   const filter = {};
 
-  if (search) {
-    filter.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { Description: { $regex: search, $options: 'i' } }
+  if (search && search.trim()) {
+    const searchTerm = search.trim();
+    const searchConditions = [
+      { name: { $regex: searchTerm, $options: 'i' } },
+      { Description: { $regex: searchTerm, $options: 'i' } }
     ];
+
+    // Also search by Item_id if search term is numeric
+    const numericSearch = Number(searchTerm);
+    if (!Number.isNaN(numericSearch) && numericSearch > 0) {
+      searchConditions.push({ Item_id: numericSearch });
+    }
+
+    filter.$or = searchConditions;
   }
 
   if (status !== undefined) {
-    filter.status = status === 'true';
+    // Handle both string 'true'/'false' and boolean values
+    if (typeof status === 'string') {
+      filter.status = status === 'true' || status === '1';
+    } else {
+      filter.status = Boolean(status);
+    }
   }
 
   if (service_id !== undefined) {
@@ -131,8 +145,10 @@ const buildItemFilter = ({ search, status, service_id, item_type_id, item_Catego
     }
   }
 
-  if (item_Category_id !== undefined) {
-    const categoryIdNum = Number(item_Category_id);
+  // Support both item_Category_id and category as aliases
+  const categoryId = item_Category_id !== undefined ? item_Category_id : category;
+  if (categoryId !== undefined) {
+    const categoryIdNum = Number(categoryId);
     if (!Number.isNaN(categoryIdNum)) {
       filter.item_Category_id = categoryIdNum;
     }
@@ -192,6 +208,7 @@ const getAllItems = asyncHandler(async (req, res) => {
       service_id,
       item_type_id,
       item_Category_id,
+      category,
       business_Branch_id,
       Stock_count,
       sortBy = 'created_at',
@@ -201,7 +218,7 @@ const getAllItems = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
 
-    const filter = buildItemFilter({ search, status, service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count });
+    const filter = buildItemFilter({ search, status, service_id, item_type_id, item_Category_id, category, business_Branch_id, Stock_count });
 
     const sort = applyItemSort(sortBy, sortOrder);
     const skip = (numericPage - 1) * numericLimit;
@@ -214,7 +231,16 @@ const getAllItems = asyncHandler(async (req, res) => {
       Item.countDocuments(filter)
     ]);
 
-    console.info('Items retrieved successfully', { total, page: numericPage, limit: numericLimit });
+    console.info('Items retrieved successfully', { 
+      total, 
+      page: numericPage, 
+      limit: numericLimit, 
+      filters: { 
+        search: search || null,
+        status, 
+        category: category || item_Category_id 
+      } 
+    });
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Items retrieved successfully');
   } catch (error) {
@@ -233,6 +259,7 @@ const getItemsByAuthUser = asyncHandler(async (req, res) => {
       service_id,
       item_type_id,
       item_Category_id,
+      category,
       business_Branch_id,
       Stock_count,
       sortBy = 'created_at',
@@ -242,7 +269,7 @@ const getItemsByAuthUser = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
 
-    const filter = buildItemFilter({ search, status, service_id, item_type_id, item_Category_id, business_Branch_id, Stock_count });
+    const filter = buildItemFilter({ search, status, service_id, item_type_id, item_Category_id, category, business_Branch_id, Stock_count });
     filter.created_by = req.userIdNumber;
 
     const sort = applyItemSort(sortBy, sortOrder);
@@ -256,7 +283,17 @@ const getItemsByAuthUser = asyncHandler(async (req, res) => {
       Item.countDocuments(filter)
     ]);
 
-    console.info('Items retrieved for auth user', { total, page: numericPage, limit: numericLimit, user_id: req.userIdNumber });
+    console.info('Items retrieved for auth user', { 
+      total, 
+      page: numericPage, 
+      limit: numericLimit, 
+      user_id: req.userIdNumber, 
+      filters: { 
+        search: search || null,
+        status, 
+        category: category || item_Category_id 
+      } 
+    });
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Items retrieved successfully');
   } catch (error) {

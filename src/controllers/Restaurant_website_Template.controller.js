@@ -1,10 +1,43 @@
 const Template = require('../models/Restaurant_website_Template.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateTemplate = (query) => query
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateTemplate = async (templates) => {
+  const templatesArray = Array.isArray(templates) ? templates : [templates];
+  const populatedTemplates = await Promise.all(
+    templatesArray.map(async (template) => {
+      if (!template) return null;
+      
+      const templateObj = template.toObject ? template.toObject() : template;
+      
+      // Populate created_by
+      if (templateObj.created_by) {
+        const createdById = typeof templateObj.created_by === 'object' ? templateObj.created_by : templateObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          templateObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (templateObj.updated_by) {
+        const updatedById = typeof templateObj.updated_by === 'object' ? templateObj.updated_by : templateObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          templateObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return templateObj;
+    })
+  );
+  
+  return Array.isArray(templates) ? populatedTemplates : populatedTemplates[0];
+};
 
 const buildFilter = ({ search, status }) => {
   const filter = {};
@@ -36,17 +69,19 @@ const paginateMeta = (page, limit, total) => {
   };
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let template;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateTemplate(Template.findById(identifier));
+    template = await Template.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      template = await Template.findOne({ Restaurant_website_Template_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateTemplate(Template.findOne({ Restaurant_website_Template_id: numericId }));
-  }
-
-  return null;
+  
+  if (!template) return null;
+  return await populateTemplate(template);
 };
 
 const createTemplate = asyncHandler(async (req, res) => {
@@ -57,7 +92,7 @@ const createTemplate = asyncHandler(async (req, res) => {
     };
 
     const template = await Template.create(payload);
-    const populated = await populateTemplate(Template.findById(template._id));
+    const populated = await populateTemplate(template);
 
     sendSuccess(res, populated, 'Restaurant website template created successfully', 201);
   } catch (error) {
@@ -87,14 +122,16 @@ const getAllTemplates = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [items, total] = await Promise.all([
-      populateTemplate(Template.find(filter))
+      Template.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Template.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant website templates retrieved successfully');
+    const populatedItems = await populateTemplate(items);
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant website templates retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant website templates', { error: error.message });
     throw error;
@@ -104,13 +141,7 @@ const getAllTemplates = asyncHandler(async (req, res) => {
 const getTemplateById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const query = findByIdentifier(id);
-
-    if (!query) {
-      return sendError(res, 'Invalid template identifier', 400);
-    }
-
-    const template = await query;
+    const template = await findByIdentifier(id);
 
     if (!template) {
       return sendNotFound(res, 'Restaurant website template not found');
@@ -147,7 +178,7 @@ const updateTemplate = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant website template not found');
     }
 
-    const populated = await populateTemplate(Template.findById(template._id));
+    const populated = await populateTemplate(template);
     sendSuccess(res, populated, 'Restaurant website template updated successfully');
   } catch (error) {
     console.error('Error updating restaurant website template', { error: error.message, id: req.params.id });
@@ -213,14 +244,16 @@ const getTemplatesByAuth = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const [items, total] = await Promise.all([
-      populateTemplate(Template.find(filter))
+      Template.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Template.countDocuments(filter)
     ]);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant website templates retrieved successfully');
+    const populatedItems = await populateTemplate(items);
+
+    sendPaginated(res, populatedItems, paginateMeta(numericPage, numericLimit, total), 'Restaurant website templates retrieved successfully');
   } catch (error) {
     console.error('Error retrieving restaurant website templates by auth', { error: error.message, userId: req.userIdNumber });
     throw error;

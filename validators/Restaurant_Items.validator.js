@@ -10,9 +10,14 @@ const paginationBase = {
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
   search: Joi.string().trim().max(200).optional(),
-  status: Joi.boolean().optional(),
+  status: Joi.alternatives().try(
+    Joi.boolean(),
+    Joi.string().valid('true', 'false', '1', '0')
+  ).optional(),
   business_Branch_id: Joi.number().integer().positive().optional(),
   Restaurant_item_Category_id: Joi.number().integer().positive().optional(),
+  category: Joi.number().integer().positive().optional(),
+  item_type_id: Joi.number().integer().positive().optional(),
   unit: Joi.string().trim().max(50).optional(),
   sortBy: Joi.string().valid('created_at', 'updated_at', 'unitPrice', 'CurrentStock', 'Restaurant_Items_id').default('created_at'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')

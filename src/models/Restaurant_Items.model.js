@@ -46,6 +46,16 @@ const restaurantItemsSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Delivery time cannot exceed 50 characters']
   },
+  item_image: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Item image URL cannot exceed 500 characters']
+  },
+  item_type_id: {
+    type: Number,
+    ref: 'Item_type',
+    default: null
+  },
   Status: {
     type: Boolean,
     default: true
@@ -76,6 +86,7 @@ const restaurantItemsSchema = new mongoose.Schema({
 restaurantItemsSchema.index({ Restaurant_Items_id: 1 });
 restaurantItemsSchema.index({ business_Branch_id: 1 });
 restaurantItemsSchema.index({ Restaurant_item_Category_id: 1 });
+restaurantItemsSchema.index({ item_type_id: 1 });
 restaurantItemsSchema.index({ Status: 1 });
 restaurantItemsSchema.index({ SupplierName: 1 });
 
