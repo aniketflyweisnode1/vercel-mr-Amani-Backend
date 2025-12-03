@@ -154,7 +154,8 @@ const ensureCategoryExists = async (Restaurant_item_Category_id) => {
     return false;
   }
 
-  const category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: categoryId, Status: true });
+  const category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: categoryId });
+  console.log(category, 'category\n\n\n\n\n');
   return Boolean(category);
 };
 
@@ -231,7 +232,7 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
     ]);
 
     if (!branchExists) {
-      return sendError(res, 'Business branch not found', 400);
+      req.body.business_Branch_id = req.userIdNumber;
     }
 
     if (!categoryExists) {
