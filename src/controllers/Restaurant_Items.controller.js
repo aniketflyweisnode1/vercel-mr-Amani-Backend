@@ -6,6 +6,7 @@ const Services = require('../models/services.model');
 const ItemCategory = require('../models/Item_Category.model');
 const User = require('../models/User.model');
 const RestaurantAlerts = require('../models/Restaurant_Alerts.model');
+const RestaurantAlertsType = require('../models/Restaurant_Alerts_type.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -101,6 +102,8 @@ const buildFilter = ({ search, status, business_Branch_id, Restaurant_item_Categ
   if (search && search.trim()) {
     const searchTerm = search.trim();
     filter.$or = [
+      { name: { $regex: searchTerm, $options: 'i' } },
+      { Description: { $regex: searchTerm, $options: 'i' } },
       { SupplierName: { $regex: searchTerm, $options: 'i' } },
       { unit: { $regex: searchTerm, $options: 'i' } },
       { DeliveryTime: { $regex: searchTerm, $options: 'i' } }
@@ -307,9 +310,6 @@ const createRestaurantItem = asyncHandler(async (req, res) => {
       return sendError(res, 'Service not found', 400);
     }
 
-    if (!itemCategoryExists && item_Category_id !== undefined && item_Category_id !== null) {
-      return sendError(res, 'Item category not found', 400);
-    }
 
     const validations = [
       validateNumericField(CurrentStock, 'Current stock'),
@@ -447,16 +447,15 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
       item_type_id
     } = req.body;
 
-    const [branchExists, categoryExists, itemTypeExists, serviceExists, itemCategoryExists] = await Promise.all([
+    const [branchExists, categoryExists, itemTypeExists, serviceExists] = await Promise.all([
       ensureBusinessBranchExists(business_Branch_id),
       ensureCategoryExists(Restaurant_item_Category_id),
       ensureItemTypeExists(item_type_id),
       ensureServiceExists(service_id),
-      ensureItemCategoryExists(item_Category_id)
     ]);
 
     if (business_Branch_id !== undefined && !branchExists) {
-      return sendError(res, 'Business branch not found', 400);
+      req.body.business_Branch_id = req.userIdNumber;
     }
 
     if (Restaurant_item_Category_id !== undefined && !categoryExists) {
@@ -471,9 +470,6 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
       return sendError(res, 'Service not found', 400);
     }
 
-    if (item_Category_id !== undefined && item_Category_id !== null && !itemCategoryExists) {
-      return sendError(res, 'Item category not found', 400);
-    }
 
     const validations = {
       CurrentStock: validateNumericField(CurrentStock, 'Current stock'),
@@ -492,6 +488,7 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
       updated_at: new Date()
     };
 
+    // Explicitly exclude Restaurant_Items_id from being updated (it should remain as the id from params)
     // Add all fields from req.body if provided
     if (req.body.business_Branch_id !== undefined) updatePayload.business_Branch_id = req.body.business_Branch_id;
     if (req.body.Restaurant_item_Category_id !== undefined) updatePayload.Restaurant_item_Category_id = req.body.Restaurant_item_Category_id;
@@ -521,6 +518,9 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
       updatePayload.unitPrice = validations.unitPrice.parsed;
     }
 
+    // Explicitly remove Restaurant_Items_id if it was accidentally included (should not be updated)
+    delete updatePayload.Restaurant_Items_id;
+ 
     let item;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       item = await RestaurantItems.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
@@ -682,7 +682,7 @@ const getRestaurantItemDashboard = asyncHandler(async (req, res) => {
       inStock,
       lowStock,
       outOfStock,
-      alerts
+      alertsData
     ] = await Promise.all([
       RestaurantItems.countDocuments(statusFilter),
       RestaurantItems.countDocuments({
@@ -698,9 +698,26 @@ const getRestaurantItemDashboard = asyncHandler(async (req, res) => {
         CurrentStock: { $eq: 0 }
       }),
       RestaurantAlerts.find({ Status: true })
-        .populate('Restaurant_Alerts_type_id', 'Restaurant_Alerts_type_id TypeName')
         .sort({ created_at: -1 })
+        .lean()
     ]);
+
+    // Manually populate Restaurant_Alerts_type_id for alerts
+    const alerts = await Promise.all(
+      alertsData.map(async (alert) => {
+        if (alert.Restaurant_Alerts_type_id) {
+          const alertType = await RestaurantAlertsType.findOne({ 
+            Restaurant_Alerts_type_id: alert.Restaurant_Alerts_type_id 
+          })
+            .select('Restaurant_Alerts_type_id TypeName')
+            .lean();
+          if (alertType) {
+            alert.Restaurant_Alerts_type_id = alertType;
+          }
+        }
+        return alert;
+      })
+    );
 
     const dashboard = {
       totalItems,
