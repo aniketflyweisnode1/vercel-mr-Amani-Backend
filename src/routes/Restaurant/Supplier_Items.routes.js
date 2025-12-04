@@ -32,4 +32,3 @@ router.get('/getByRestaurantItemCategory/:Restaurant_item_Category_id', auth, va
 router.get('/dashboard', auth, getSupplierDashboard);
 
 module.exports = router;
-
