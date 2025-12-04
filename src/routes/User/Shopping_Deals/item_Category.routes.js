@@ -9,10 +9,10 @@ const {
   deleteItemCategory,
   getItemCategoriesByAuth,
   getItemCategoriesByTypeId
-} = require('../../controllers/Item_Category.controller');
+} = require('../../../controllers/Item_Category.controller.js');
 
-const { auth } = require('../../../middleware/auth.js');
-const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
+const { auth } = require('../../../../middleware/auth.js');
+const { validateBody, validateQuery, validateParams } = require('../../../../middleware/validation.js');
 
 const {
   createItemCategorySchema,
@@ -22,7 +22,7 @@ const {
   getItemCategoriesByAuthSchema,
   getItemCategoriesByTypeIdParamsSchema,
   getItemCategoriesByTypeIdQuerySchema
-} = require('../../../validators/Item_Category.validator');
+} = require('../../../../validators/Item_Category.validator.js');
 
 router.post('/create', auth, validateBody(createItemCategorySchema), createItemCategory);
 router.get('/getAll', validateQuery(getAllItemCategoriesSchema), getAllItemCategories);

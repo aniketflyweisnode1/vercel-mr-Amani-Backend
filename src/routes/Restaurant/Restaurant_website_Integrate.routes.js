@@ -30,4 +30,3 @@ router.get('/getByBranchId/:business_Branch_id', auth, validateParams(getIntegra
 
 module.exports = router;
 
-

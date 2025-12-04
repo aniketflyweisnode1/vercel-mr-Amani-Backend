@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../../../../middleware/auth');
-const { validateBody, validateQuery, validateParams } = require('../../../../middleware/validation');
+const { auth } = require('../../../middleware/auth');
+const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
 const {
   createOrderNow,
   getAllOrderNows,
@@ -11,7 +11,7 @@ const {
   getOrderNowsByAuth,
   getOrderNowsByDate,
   processPayment
-} = require('../../../controllers/Order_Now.controller');
+} = require('../../controllers/Order_Now.controller');
 const {
   createOrderNowSchema,
   updateOrderNowSchema,
@@ -20,7 +20,7 @@ const {
   getOrderNowsByAuthSchema,
   getOrderNowsByDateQuerySchema,
   processPaymentSchema
-} = require('../../../../validators/Order_Now.validator');
+} = require('../../../validators/Order_Now.validator');
 
 router.post('/create', auth, validateBody(createOrderNowSchema), createOrderNow);
 router.post('/processPayment', auth, validateBody(processPaymentSchema), processPayment);

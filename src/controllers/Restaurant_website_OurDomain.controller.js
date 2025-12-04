@@ -135,12 +135,12 @@ const findByIdentifier = async (identifier) => {
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
     domain = await OurDomain.findById(identifier);
   } else {
-    const numericId = parseInt(identifier, 10);
-    if (!Number.isNaN(numericId)) {
+  const numericId = parseInt(identifier, 10);
+  if (!Number.isNaN(numericId)) {
       domain = await OurDomain.findOne({ Restaurant_website_id: numericId });
     }
   }
-  
+
   if (!domain) return null;
   return await populateOurDomain(domain);
 };

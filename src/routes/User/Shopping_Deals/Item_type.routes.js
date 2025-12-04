@@ -8,10 +8,10 @@ const {
   getItemTypeById,
   updateItemType,
   deleteItemType
-} = require('../../controllers/Item_type.controller.js');
+} = require('../../../controllers/Item_type.controller.js');
 
-const { auth } = require('../../../middleware/auth.js');
-const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
+const { auth } = require('../../../../middleware/auth.js');
+const { validateBody, validateQuery, validateParams } = require('../../../../middleware/validation.js');
 
 const {
   createItemTypeSchema,
@@ -19,7 +19,7 @@ const {
   getItemTypeByIdSchema,
   getAllItemTypesSchema,
   getItemTypesByAuthSchema
-} = require('../../../validators/Item_type.validator');
+} = require('../../../../validators/Item_type.validator.js');
 
 router.post('/create', auth, validateBody(createItemTypeSchema), createItemType);
 router.get('/getAll', validateQuery(getAllItemTypesSchema), getAllItemTypes);

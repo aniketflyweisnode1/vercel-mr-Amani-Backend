@@ -244,12 +244,12 @@ const findRestaurantItemByIdentifier = async (identifier) => {
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
     item = await RestaurantItems.findById(identifier);
   } else {
-    const numericId = parseInt(identifier, 10);
-    if (!Number.isNaN(numericId)) {
+  const numericId = parseInt(identifier, 10);
+  if (!Number.isNaN(numericId)) {
       item = await RestaurantItems.findOne({ Restaurant_Items_id: numericId });
     }
   }
-  
+
   if (!item) return null;
   return await populateRestaurantItems(item);
 };
@@ -520,7 +520,7 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
 
     // Explicitly remove Restaurant_Items_id if it was accidentally included (should not be updated)
     delete updatePayload.Restaurant_Items_id;
- 
+
     let item;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       item = await RestaurantItems.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
@@ -656,7 +656,7 @@ const getRestaurantItemsByCategory = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
+const [items, total] = await Promise.all([
       RestaurantItems.find(filter)
         .sort(sort)
         .skip(skip)

@@ -11,6 +11,7 @@ const productSchema = Joi.object({
 const createOrderNowSchema = Joi.object({
   Product: Joi.array().items(productSchema).min(1).optional(), // Optional - will use cart if not provided
   applyDiscount_id: Joi.number().integer().positive().optional().allow(null),
+  service_id: Joi.number().integer().positive().optional().allow(null),
   payment_method_id: Joi.number().integer().positive().required(),
   paymentStatus: Joi.string().trim().max(100).optional().allow(''),
   Delivery_address_id: Joi.number().integer().positive().optional().allow(null),
@@ -21,6 +22,7 @@ const createOrderNowSchema = Joi.object({
 const updateOrderNowSchema = Joi.object({
   Product: Joi.array().items(productSchema).min(1).optional(),
   applyDiscount_id: Joi.number().integer().positive().optional().allow(null),
+  service_id: Joi.number().integer().positive().optional().allow(null),
   Order: Joi.string().valid('Picup', 'Delivery').optional(),
   payment_method_id: Joi.number().integer().positive().optional(),
   paymentStatus: Joi.string().trim().max(100).optional().allow(''),
@@ -47,6 +49,7 @@ const getAllOrderNowsSchema = Joi.object({
   Order: Joi.string().valid('Picup', 'Delivery').optional(),
   OrderStatus: Joi.string().valid('Pending', 'Preparing', 'Confirmed', 'Out for Delivery', 'Cancelled', 'Un-Delivered', 'Placed', 'Return').optional(),
   applyDiscount_id: Joi.number().integer().positive().optional(),
+  service_id: Joi.number().integer().positive().optional(),
   payment_method_id: Joi.number().integer().positive().optional(),
   sortBy: Joi.string().valid('created_at', 'updated_at', 'Order_Now_id').default('created_at'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
@@ -60,6 +63,7 @@ const getOrderNowsByAuthSchema = Joi.object({
   Order: Joi.string().valid('Picup', 'Delivery').optional(),
   OrderStatus: Joi.string().valid('Pending', 'Preparing', 'Confirmed', 'Out for Delivery', 'Cancelled', 'Un-Delivered', 'Placed', 'Return').optional(),
   applyDiscount_id: Joi.number().integer().positive().optional(),
+  service_id: Joi.number().integer().positive().optional(),
   payment_method_id: Joi.number().integer().positive().optional(),
   sortBy: Joi.string().valid('created_at', 'updated_at', 'Order_Now_id').default('created_at'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
@@ -74,6 +78,7 @@ const getOrderNowsByDateQuerySchema = Joi.object({
   Order: Joi.string().valid('Picup', 'Delivery').optional(),
   OrderStatus: Joi.string().valid('Pending', 'Preparing', 'Confirmed', 'Out for Delivery', 'Cancelled', 'Un-Delivered', 'Placed', 'Return').optional(),
   applyDiscount_id: Joi.number().integer().positive().optional(),
+  service_id: Joi.number().integer().positive().optional(),
   payment_method_id: Joi.number().integer().positive().optional(),
   date: Joi.date().required(),
   sortBy: Joi.string().valid('created_at', 'updated_at', 'Order_Now_id').default('created_at'),

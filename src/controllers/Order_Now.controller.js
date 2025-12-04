@@ -1,7 +1,8 @@
 const OrderNow = require('../models/Order_Now.model');
-const CartOrderFood = require('../models/Cart_Order_Food.model');
+const Cart = require('../models/Cart.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const Discounts = require('../models/Discounts.model');
+const Services = require('../models/services.model');
 const PaymentMethods = require('../models/payment_method.model');
 const UserAddress = require('../models/User_Address.model');
 const Transaction = require('../models/transaction.model');
@@ -59,6 +60,16 @@ const populateOrderNowData = async (orders) => {
         const discount = await Discounts.findOne({ Discounts_id: orderObj.applyDiscount_id });
         if (discount) {
           orderObj.applyDiscount_id = discount.toObject ? discount.toObject() : discount;
+        }
+      }
+      
+      // Populate service_id
+      if (orderObj.service_id) {
+        const serviceId = typeof orderObj.service_id === 'object' ? orderObj.service_id : orderObj.service_id;
+        const service = await Services.findOne({ service_id: serviceId })
+          .select('service_id name description emozji status');
+        if (service) {
+          orderObj.service_id = service.toObject ? service.toObject() : service;
         }
       }
       
@@ -120,7 +131,7 @@ const populateOrderNowData = async (orders) => {
   return Array.isArray(orders) ? populatedOrders : populatedOrders[0];
 };
 
-const buildFilter = ({ search, status, User_Id, Order, OrderStatus, applyDiscount_id, payment_method_id }) => {
+const buildFilter = ({ search, status, User_Id, Order, OrderStatus, applyDiscount_id, service_id, payment_method_id }) => {
   const filter = {};
 
   if (status !== undefined) {
@@ -146,6 +157,13 @@ const buildFilter = ({ search, status, User_Id, Order, OrderStatus, applyDiscoun
     const discountId = parseInt(applyDiscount_id, 10);
     if (!Number.isNaN(discountId)) {
       filter.applyDiscount_id = discountId;
+    }
+  }
+
+  if (service_id !== undefined) {
+    const serviceId = parseInt(service_id, 10);
+    if (!Number.isNaN(serviceId)) {
+      filter.service_id = serviceId;
     }
   }
 
@@ -204,6 +222,18 @@ const ensureDiscountExists = async (applyDiscount_id) => {
   return Boolean(discount);
 };
 
+const ensureServiceExists = async (service_id) => {
+  if (service_id === undefined || service_id === null) {
+    return true;
+  }
+  const serviceId = parseInt(service_id, 10);
+  if (Number.isNaN(serviceId)) {
+    return false;
+  }
+  const service = await Services.findOne({ service_id: serviceId, status: true });
+  return Boolean(service);
+};
+
 const ensurePaymentMethodExists = async (payment_method_id) => {
   if (payment_method_id === undefined) {
     return true;
@@ -243,7 +273,7 @@ const ensureTransactionExists = async (Trangection_Id) => {
 const deleteCartItemsByProductIds = async (userId, productItemIds) => {
   try {
     // Find all cart orders for this user
-    const cartOrders = await CartOrderFood.find({
+    const cartOrders = await Cart.find({
       User_Id: userId,
       Status: true
     });
@@ -257,13 +287,13 @@ const deleteCartItemsByProductIds = async (userId, productItemIds) => {
         
         // If cart becomes empty, mark as deleted, otherwise update
         if (updatedProducts.length === 0) {
-          await CartOrderFood.findOneAndUpdate(
-            { Cart_Order_Food_id: cartOrder.Cart_Order_Food_id },
+          await Cart.findOneAndUpdate(
+            { Cart_id: cartOrder.Cart_id },
             { Status: false, updated_at: new Date() }
           );
         } else if (updatedProducts.length !== cartOrder.Product.length) {
-          await CartOrderFood.findOneAndUpdate(
-            { Cart_Order_Food_id: cartOrder.Cart_Order_Food_id },
+          await Cart.findOneAndUpdate(
+            { Cart_id: cartOrder.Cart_id },
             { Product: updatedProducts, updated_at: new Date() }
           );
         }
@@ -288,10 +318,10 @@ const findByIdentifier = (identifier) => {
 
 const createOrderNow = asyncHandler(async (req, res) => {
   try {
-    const {  applyDiscount_id, payment_method_id, Delivery_address_id } = req.body;
+    const {  applyDiscount_id, service_id, payment_method_id, Delivery_address_id } = req.body;
     
     // Get cart items for the user
-    const cartItems = await CartOrderFood.find({
+    const cartItems = await Cart.find({
       User_Id: req.userIdNumber,
       Status: true
     });
@@ -303,6 +333,7 @@ const createOrderNow = asyncHandler(async (req, res) => {
     // Combine all products from all cart items
     let productsFromCart = [];
     let cartDiscountId = null;
+    let cartServiceId = null;
     
     for (const cartItem of cartItems) {
       if (cartItem.Product && cartItem.Product.length > 0) {
@@ -311,6 +342,10 @@ const createOrderNow = asyncHandler(async (req, res) => {
       // Use discount from first cart item if available
       if (cartItem.applyDiscount_id && !cartDiscountId) {
         cartDiscountId = cartItem.applyDiscount_id;
+      }
+      // Use service_id from first cart item if available
+      if (cartItem.service_id && !cartServiceId) {
+        cartServiceId = cartItem.service_id;
       }
     }
     
@@ -324,12 +359,19 @@ const createOrderNow = asyncHandler(async (req, res) => {
     // Use discount from cart if not provided in request
     const finalDiscountId = applyDiscount_id !== undefined && applyDiscount_id !== null ? applyDiscount_id : cartDiscountId;
     
+    // Use service_id from cart if not provided in request
+    const finalServiceId = service_id !== undefined && service_id !== null ? service_id : cartServiceId;
+    
     if (!(await ensureItemsExist(finalProducts))) {
       return sendError(res, 'One or more restaurant items not found or inactive', 400);
     }
     
     if (finalDiscountId !== undefined && finalDiscountId !== null && !(await ensureDiscountExists(finalDiscountId))) {
       return sendError(res, 'Discount not found or inactive', 400);
+    }
+    
+    if (finalServiceId !== undefined && finalServiceId !== null && !(await ensureServiceExists(finalServiceId))) {
+      return sendError(res, 'Service not found or inactive', 400);
     }
     
     if (!(await ensurePaymentMethodExists(payment_method_id))) {
@@ -343,6 +385,7 @@ const createOrderNow = asyncHandler(async (req, res) => {
     const payload = {
       Product: finalProducts,
       applyDiscount_id: finalDiscountId,
+      service_id: finalServiceId,
       payment_method_id: payment_method_id,
       Delivery_address_id: Delivery_address_id,
       User_Id: req.userIdNumber || null,
@@ -361,7 +404,7 @@ const createOrderNow = asyncHandler(async (req, res) => {
     const orderItemIds = finalProducts.map(product => product.Item_id);
     
     // Find cart items that belong to the user and contain the items used in the order
-    const cartItemsToDelete = await CartOrderFood.find({
+    const cartItemsToDelete = await Cart.find({
       User_Id: userId,
       Status: true
     });
@@ -396,13 +439,13 @@ const createOrderNow = asyncHandler(async (req, res) => {
           
           if (remainingProducts.length === 0) {
             // All products in this cart item were used, mark cart item as inactive
-            await CartOrderFood.findByIdAndUpdate(
+            await Cart.findByIdAndUpdate(
               cartItem._id,
               { Status: false, updated_at: new Date() }
             );
           } else {
             // Some products remain, update the cart item with remaining products
-            await CartOrderFood.findByIdAndUpdate(
+            await Cart.findByIdAndUpdate(
               cartItem._id,
               { Product: remainingProducts, updated_at: new Date() }
             );
@@ -429,6 +472,7 @@ const getAllOrderNows = asyncHandler(async (req, res) => {
       Order,
       OrderStatus,
       applyDiscount_id,
+      service_id,
       payment_method_id,
       sortBy = 'created_at',
       sortOrder = 'desc'
@@ -436,7 +480,7 @@ const getAllOrderNows = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
-    const filter = buildFilter({ status, User_Id, Order, OrderStatus, applyDiscount_id, payment_method_id });
+    const filter = buildFilter({ status, User_Id, Order, OrderStatus, applyDiscount_id, service_id, payment_method_id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
     const [orders, total] = await Promise.all([
@@ -476,7 +520,7 @@ const getOrderNowById = asyncHandler(async (req, res) => {
 const updateOrderNow = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { Product, applyDiscount_id, payment_method_id, Delivery_address_id, Trangection_Id, Order } = req.body;
+    const { Product, applyDiscount_id, service_id, payment_method_id, Delivery_address_id, Trangection_Id, Order } = req.body;
     
     if (Product !== undefined) {
       if (!Array.isArray(Product) || Product.length === 0) {
@@ -489,6 +533,10 @@ const updateOrderNow = asyncHandler(async (req, res) => {
     
     if (applyDiscount_id !== undefined && applyDiscount_id !== null && !(await ensureDiscountExists(applyDiscount_id))) {
       return sendError(res, 'Discount not found or inactive', 400);
+    }
+    
+    if (service_id !== undefined && service_id !== null && !(await ensureServiceExists(service_id))) {
+      return sendError(res, 'Service not found or inactive', 400);
     }
     
     if (payment_method_id !== undefined && !(await ensurePaymentMethodExists(payment_method_id))) {
@@ -570,6 +618,7 @@ const getOrderNowsByAuth = asyncHandler(async (req, res) => {
       Order,
       OrderStatus,
       applyDiscount_id,
+      service_id,
       payment_method_id,
       sortBy = 'created_at',
       sortOrder = 'desc'
@@ -577,7 +626,7 @@ const getOrderNowsByAuth = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
-    const filter = buildFilter({ status, Order, OrderStatus, applyDiscount_id, payment_method_id });
+    const filter = buildFilter({ status, Order, OrderStatus, applyDiscount_id, service_id, payment_method_id });
     filter.User_Id = req.userIdNumber || null;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
@@ -606,6 +655,7 @@ const getOrderNowsByDate = asyncHandler(async (req, res) => {
       Order,
       OrderStatus,
       applyDiscount_id,
+      service_id,
       payment_method_id,
       date,
       sortBy = 'created_at',
@@ -629,7 +679,7 @@ const getOrderNowsByDate = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
-    const filter = buildFilter({ status, User_Id, Order, OrderStatus, applyDiscount_id, payment_method_id });
+    const filter = buildFilter({ status, User_Id, Order, OrderStatus, applyDiscount_id, service_id, payment_method_id });
     filter.created_at = {
       $gte: startOfDay,
       $lte: endOfDay

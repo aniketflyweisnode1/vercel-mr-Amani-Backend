@@ -49,6 +49,11 @@ const orderNowSchema = new mongoose.Schema({
     ref: 'Discounts',
     default: null
   },
+  service_id: {
+    type: Number,
+    ref: 'Services',
+    default: null
+  },
   User_Id: {
     type: Number,
     ref: 'User',
@@ -117,6 +122,7 @@ const orderNowSchema = new mongoose.Schema({
 orderNowSchema.index({ Order_Now_id: 1 });
 orderNowSchema.index({ User_Id: 1 });
 orderNowSchema.index({ applyDiscount_id: 1 });
+orderNowSchema.index({ service_id: 1 });
 orderNowSchema.index({ payment_method_id: 1 });
 orderNowSchema.index({ Delivery_address_id: 1 });
 orderNowSchema.index({ Trangection_Id: 1 });

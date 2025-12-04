@@ -29,8 +29,8 @@ const productSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-const cartOrderFoodSchema = new mongoose.Schema({
-  Cart_Order_Food_id: {
+const cartSchema = new mongoose.Schema({
+  Cart_id: {
     type: Number,
     unique: true
   },
@@ -47,6 +47,11 @@ const cartOrderFoodSchema = new mongoose.Schema({
   applyDiscount_id: {
     type: Number,
     ref: 'Discounts',
+    default: null
+  },
+  service_id: {
+    type: Number,
+    ref: 'Services',
     default: null
   },
   User_Id: {
@@ -82,28 +87,29 @@ const cartOrderFoodSchema = new mongoose.Schema({
 });
 
 // Index for better query performance
-cartOrderFoodSchema.index({ Cart_Order_Food_id: 1 });
-cartOrderFoodSchema.index({ User_Id: 1 });
-cartOrderFoodSchema.index({ applyDiscount_id: 1 });
-cartOrderFoodSchema.index({ Status: 1 });
-cartOrderFoodSchema.index({ created_at: 1 });
+cartSchema.index({ Cart_id: 1 });
+cartSchema.index({ User_Id: 1 });
+cartSchema.index({ applyDiscount_id: 1 });
+cartSchema.index({ service_id: 1 });
+cartSchema.index({ Status: 1 });
+cartSchema.index({ created_at: 1 });
 
 // Pre-save middleware to update updated_at timestamp
-cartOrderFoodSchema.pre('save', function (next) {
+cartSchema.pre('save', function (next) {
   if (this.isModified() && !this.isNew) {
     this.updated_at = new Date();
   }
   next();
 });
 
-// Auto-increment plugin for Cart_Order_Food_id
-let CartOrderFoodModel;
+// Auto-increment plugin for Cart_id
+let CartModel;
 try {
-  CartOrderFoodModel = mongoose.model('Cart_Order_Food');
+  CartModel = mongoose.model('Cart');
 } catch (error) {
-  cartOrderFoodSchema.plugin(AutoIncrement, { inc_field: 'Cart_Order_Food_id', start_seq: 1 });
-  CartOrderFoodModel = mongoose.model('Cart_Order_Food', cartOrderFoodSchema);
+  cartSchema.plugin(AutoIncrement, { inc_field: 'Cart_id', start_seq: 1 });
+  CartModel = mongoose.model('Cart', cartSchema);
 }
 
-module.exports = CartOrderFoodModel;
+module.exports = CartModel;
 

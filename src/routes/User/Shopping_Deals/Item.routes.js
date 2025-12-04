@@ -9,10 +9,10 @@ const {
   updateItem,
   deleteItem,
   updateStockCount
-} = require('../../controllers/Item.controller.js');
+} = require('../../../controllers/Item.controller.js');
 
-const { auth } = require('../../../middleware/auth.js');
-const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
+const { auth } = require('../../../../middleware/auth.js');
+const { validateBody, validateQuery, validateParams } = require('../../../../middleware/validation.js');
 
 const {
   createItemSchema,
@@ -21,7 +21,7 @@ const {
   getAllItemsSchema,
   getItemsByAuthSchema,
   updateStockCountSchema
-} = require('../../../validators/Item.validator');
+} = require('../../../../validators/Item.validator.js');
 
 router.post('/create', auth, validateBody(createItemSchema), createItem);
 router.get('/getAll', validateQuery(getAllItemsSchema), getAllItems);

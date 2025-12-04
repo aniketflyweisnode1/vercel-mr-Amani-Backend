@@ -24,4 +24,3 @@ router.delete('/delete/:id', auth, validateParams(getWebsiteDashboardByIdSchema)
 
 module.exports = router;
 
-

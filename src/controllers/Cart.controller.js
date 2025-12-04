@@ -1,6 +1,7 @@
-const CartOrderFood = require('../models/Cart_Order_Food.model.js');
+const Cart = require('../models/Cart.model.js');
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const Discounts = require('../models/Discounts.model.js');
+const Services = require('../models/services.model');
 const User = require('../models/User.model');
 const BusinessBranch = require('../models/business_Branch.model.js');
 const RestaurantItemCategory = require('../models/Restaurant_item_Category.model.js');
@@ -8,16 +9,16 @@ const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../u
 const { asyncHandler } = require('../../middleware/errorHandler');
 
 // Manual population function for Number refs
-const populateCartOrderFoodData = async (cartOrders) => {
-  const cartOrdersArray = Array.isArray(cartOrders) ? cartOrders : [cartOrders];
-  const populatedCartOrders = await Promise.all(
-    cartOrdersArray.map(async (cartOrder) => {
-      const cartOrderObj = cartOrder.toObject ? cartOrder.toObject() : cartOrder;
+const populateCartData = async (carts) => {
+  const cartsArray = Array.isArray(carts) ? carts : [carts];
+  const populatedCarts = await Promise.all(
+    cartsArray.map(async (cart) => {
+      const cartObj = cart.toObject ? cart.toObject() : cart;
       
       // Populate Product array items
-      if (cartOrderObj.Product && cartOrderObj.Product.length > 0) {
-        cartOrderObj.Product = await Promise.all(
-          cartOrderObj.Product.map(async (product) => {
+      if (cartObj.Product && cartObj.Product.length > 0) {
+        cartObj.Product = await Promise.all(
+          cartObj.Product.map(async (product) => {
             if (product.Item_id) {
               const item = await RestaurantItems.findOne({ Restaurant_Items_id: product.Item_id });
               if (item) {
@@ -51,48 +52,58 @@ const populateCartOrderFoodData = async (cartOrders) => {
       }
       
       // Populate applyDiscount_id
-      if (cartOrderObj.applyDiscount_id) {
-        const discount = await Discounts.findOne({ Discounts_id: cartOrderObj.applyDiscount_id });
+      if (cartObj.applyDiscount_id) {
+        const discount = await Discounts.findOne({ Discounts_id: cartObj.applyDiscount_id });
         if (discount) {
-          cartOrderObj.applyDiscount_id = discount.toObject ? discount.toObject() : discount;
+          cartObj.applyDiscount_id = discount.toObject ? discount.toObject() : discount;
+        }
+      }
+      
+      // Populate service_id
+      if (cartObj.service_id) {
+        const serviceId = typeof cartObj.service_id === 'object' ? cartObj.service_id : cartObj.service_id;
+        const service = await Services.findOne({ service_id: serviceId })
+          .select('service_id name description emozji status');
+        if (service) {
+          cartObj.service_id = service.toObject ? service.toObject() : service;
         }
       }
       
       // Populate User_Id
-      if (cartOrderObj.User_Id) {
-        const userId = typeof cartOrderObj.User_Id === 'object' ? cartOrderObj.User_Id : cartOrderObj.User_Id;
+      if (cartObj.User_Id) {
+        const userId = typeof cartObj.User_Id === 'object' ? cartObj.User_Id : cartObj.User_Id;
         const user = await User.findOne({ user_id: userId });
         if (user) {
-          cartOrderObj.User_Id = user.toObject ? user.toObject() : user;
+          cartObj.User_Id = user.toObject ? user.toObject() : user;
         }
       }
       
       // Populate created_by
-      if (cartOrderObj.created_by) {
-        const createdById = typeof cartOrderObj.created_by === 'object' ? cartOrderObj.created_by : cartOrderObj.created_by;
+      if (cartObj.created_by) {
+        const createdById = typeof cartObj.created_by === 'object' ? cartObj.created_by : cartObj.created_by;
         const createdBy = await User.findOne({ user_id: createdById });
         if (createdBy) {
-          cartOrderObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+          cartObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
         }
       }
       
       // Populate updated_by
-      if (cartOrderObj.updated_by) {
-        const updatedById = typeof cartOrderObj.updated_by === 'object' ? cartOrderObj.updated_by : cartOrderObj.updated_by;
+      if (cartObj.updated_by) {
+        const updatedById = typeof cartObj.updated_by === 'object' ? cartObj.updated_by : cartObj.updated_by;
         const updatedBy = await User.findOne({ user_id: updatedById });
         if (updatedBy) {
-          cartOrderObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+          cartObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
         }
       }
       
-      return cartOrderObj;
+      return cartObj;
     })
   );
   
-  return Array.isArray(cartOrders) ? populatedCartOrders : populatedCartOrders[0];
+  return Array.isArray(carts) ? populatedCarts : populatedCarts[0];
 };
 
-const buildFilter = ({ search, status, User_Id, applyDiscount_id }) => {
+const buildFilter = ({ search, status, User_Id, applyDiscount_id, service_id }) => {
   const filter = {};
 
   if (status !== undefined) {
@@ -110,6 +121,13 @@ const buildFilter = ({ search, status, User_Id, applyDiscount_id }) => {
     const discountId = parseInt(applyDiscount_id, 10);
     if (!Number.isNaN(discountId)) {
       filter.applyDiscount_id = discountId;
+    }
+  }
+
+  if (service_id !== undefined) {
+    const serviceId = parseInt(service_id, 10);
+    if (!Number.isNaN(serviceId)) {
+      filter.service_id = serviceId;
     }
   }
 
@@ -161,20 +179,32 @@ const ensureDiscountExists = async (applyDiscount_id) => {
   return Boolean(discount);
 };
 
+const ensureServiceExists = async (service_id) => {
+  if (service_id === undefined || service_id === null) {
+    return true;
+  }
+  const serviceId = parseInt(service_id, 10);
+  if (Number.isNaN(serviceId)) {
+    return false;
+  }
+  const service = await Services.findOne({ service_id: serviceId, status: true });
+  return Boolean(service);
+};
+
 const findByIdentifier = (identifier) => {
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return CartOrderFood.findById(identifier);
+    return Cart.findById(identifier);
   }
   const numericId = parseInt(identifier, 10);
   if (!Number.isNaN(numericId)) {
-    return CartOrderFood.findOne({ Cart_Order_Food_id: numericId });
+    return Cart.findOne({ Cart_id: numericId });
   }
   return null;
 };
 
-const createCartOrderFood = asyncHandler(async (req, res) => {
+const createCart = asyncHandler(async (req, res) => {
   try {
-    const { Product, applyDiscount_id } = req.body;
+    const { Product, applyDiscount_id, service_id } = req.body;
     
     if (!Product || !Array.isArray(Product) || Product.length === 0) {
       return sendError(res, 'Product array is required and must contain at least one item', 400);
@@ -188,21 +218,25 @@ const createCartOrderFood = asyncHandler(async (req, res) => {
       return sendError(res, 'Discount not found or inactive', 400);
     }
     
+    if (service_id !== undefined && service_id !== null && !(await ensureServiceExists(service_id))) {
+      return sendError(res, 'Service not found or inactive', 400);
+    }
+    
     const payload = {
       ...req.body,
       User_Id: req.userIdNumber || null, // Set from login user id
       created_by: req.userIdNumber || null
     };
-    const cartOrder = await CartOrderFood.create(payload);
-    const populated = await populateCartOrderFoodData(cartOrder);
-    sendSuccess(res, populated, 'Cart order created successfully', 201);
+    const cart = await Cart.create(payload);
+    const populated = await populateCartData(cart);
+    sendSuccess(res, populated, 'Cart created successfully', 201);
   } catch (error) {
-    console.error('Error creating cart order', { error: error.message });
+    console.error('Error creating cart', { error: error.message });
     throw error;
   }
 });
 
-const getAllCartOrderFoods = asyncHandler(async (req, res) => {
+const getAllCarts = asyncHandler(async (req, res) => {
   try {
     const {
       page = 1,
@@ -210,53 +244,54 @@ const getAllCartOrderFoods = asyncHandler(async (req, res) => {
       status,
       User_Id,
       applyDiscount_id,
+      service_id,
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
-    const filter = buildFilter({ status, User_Id, applyDiscount_id });
+    const filter = buildFilter({ status, User_Id, applyDiscount_id, service_id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [cartOrders, total] = await Promise.all([
-      CartOrderFood.find(filter)
+    const [carts, total] = await Promise.all([
+      Cart.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
-      CartOrderFood.countDocuments(filter)
+      Cart.countDocuments(filter)
     ]);
-    const populatedCartOrders = await populateCartOrderFoodData(cartOrders);
-    sendPaginated(res, populatedCartOrders, paginateMeta(numericPage, numericLimit, total), 'Cart orders retrieved successfully');
+    const populatedCarts = await populateCartData(carts);
+    sendPaginated(res, populatedCarts, paginateMeta(numericPage, numericLimit, total), 'Carts retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving cart orders', { error: error.message });
+    console.error('Error retrieving carts', { error: error.message });
     throw error;
   }
 });
 
-const getCartOrderFoodById = asyncHandler(async (req, res) => {
+const getCartById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const cartOrderQuery = findByIdentifier(id);
-    if (!cartOrderQuery) {
-      return sendError(res, 'Invalid cart order identifier', 400);
+    const cartQuery = findByIdentifier(id);
+    if (!cartQuery) {
+      return sendError(res, 'Invalid cart identifier', 400);
     }
-    const cartOrder = await cartOrderQuery;
-    if (!cartOrder) {
-      return sendNotFound(res, 'Cart order not found');
+    const cart = await cartQuery;
+    if (!cart) {
+      return sendNotFound(res, 'Cart not found');
     }
-    const populated = await populateCartOrderFoodData(cartOrder);
-    sendSuccess(res, populated, 'Cart order retrieved successfully');
+    const populated = await populateCartData(cart);
+    sendSuccess(res, populated, 'Cart retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving cart order', { error: error.message, id: req.params.id });
+    console.error('Error retrieving cart', { error: error.message, id: req.params.id });
     throw error;
   }
 });
 
-const updateCartOrderFood = asyncHandler(async (req, res) => {
+const updateCart = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { Product, applyDiscount_id } = req.body;
+    const { Product, applyDiscount_id, service_id } = req.body;
     
     if (Product !== undefined) {
       if (!Array.isArray(Product) || Product.length === 0) {
@@ -271,33 +306,37 @@ const updateCartOrderFood = asyncHandler(async (req, res) => {
       return sendError(res, 'Discount not found or inactive', 400);
     }
     
+    if (service_id !== undefined && service_id !== null && !(await ensureServiceExists(service_id))) {
+      return sendError(res, 'Service not found or inactive', 400);
+    }
+    
     const updatePayload = {
       ...req.body,
       updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
-    let cartOrder;
+    let cart;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      cartOrder = await CartOrderFood.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
+      cart = await Cart.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
     } else {
       const numericId = parseInt(id, 10);
       if (Number.isNaN(numericId)) {
-        return sendError(res, 'Invalid cart order ID format', 400);
+        return sendError(res, 'Invalid cart ID format', 400);
       }
-      cartOrder = await CartOrderFood.findOneAndUpdate({ Cart_Order_Food_id: numericId }, updatePayload, { new: true, runValidators: true });
+      cart = await Cart.findOneAndUpdate({ Cart_id: numericId }, updatePayload, { new: true, runValidators: true });
     }
-    if (!cartOrder) {
-      return sendNotFound(res, 'Cart order not found');
+    if (!cart) {
+      return sendNotFound(res, 'Cart not found');
     }
-    const populated = await populateCartOrderFoodData(cartOrder);
-    sendSuccess(res, populated, 'Cart order updated successfully');
+    const populated = await populateCartData(cart);
+    sendSuccess(res, populated, 'Cart updated successfully');
   } catch (error) {
-    console.error('Error updating cart order', { error: error.message, id: req.params.id });
+    console.error('Error updating cart', { error: error.message, id: req.params.id });
     throw error;
   }
 });
 
-const deleteCartOrderFood = asyncHandler(async (req, res) => {
+const deleteCart = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const updatePayload = {
@@ -305,59 +344,60 @@ const deleteCartOrderFood = asyncHandler(async (req, res) => {
       updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
-    let cartOrder;
+    let cart;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      cartOrder = await CartOrderFood.findByIdAndUpdate(id, updatePayload, { new: true });
+      cart = await Cart.findByIdAndUpdate(id, updatePayload, { new: true });
     } else {
       const numericId = parseInt(id, 10);
       if (Number.isNaN(numericId)) {
-        return sendError(res, 'Invalid cart order ID format', 400);
+        return sendError(res, 'Invalid cart ID format', 400);
       }
-      cartOrder = await CartOrderFood.findOneAndUpdate({ Cart_Order_Food_id: numericId }, updatePayload, { new: true });
+      cart = await Cart.findOneAndUpdate({ Cart_id: numericId }, updatePayload, { new: true });
     }
-    if (!cartOrder) {
-      return sendNotFound(res, 'Cart order not found');
+    if (!cart) {
+      return sendNotFound(res, 'Cart not found');
     }
-    sendSuccess(res, cartOrder, 'Cart order deleted successfully');
+    sendSuccess(res, cart, 'Cart deleted successfully');
   } catch (error) {
-    console.error('Error deleting cart order', { error: error.message, id: req.params.id });
+    console.error('Error deleting cart', { error: error.message, id: req.params.id });
     throw error;
   }
 });
 
-const getCartOrderFoodsByAuth = asyncHandler(async (req, res) => {
+const getCartsByAuth = asyncHandler(async (req, res) => {
   try {
     const {
       page = 1,
       limit = 10,
       status,
       applyDiscount_id,
+      service_id,
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
-    const filter = buildFilter({ status, applyDiscount_id });
+    const filter = buildFilter({ status, applyDiscount_id, service_id });
     filter.User_Id = req.userIdNumber || null;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [cartOrders, total] = await Promise.all([
-      CartOrderFood.find(filter)
+    const [carts, total] = await Promise.all([
+      Cart.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
-      CartOrderFood.countDocuments(filter)
+      Cart.countDocuments(filter)
     ]);
-    const populatedCartOrders = await populateCartOrderFoodData(cartOrders);
-    sendPaginated(res, populatedCartOrders, paginateMeta(numericPage, numericLimit, total), 'Cart orders retrieved successfully');
+    const populatedCarts = await populateCartData(carts);
+    sendPaginated(res, populatedCarts, paginateMeta(numericPage, numericLimit, total), 'Carts retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving cart orders by auth', { error: error.message });
+    console.error('Error retrieving carts by auth', { error: error.message });
     throw error;
   }
 });
 
-const getCartOrderFoodsByDate = asyncHandler(async (req, res) => {
+const getCartsByDate = asyncHandler(async (req, res) => {
   try {
     const {
       page = 1,
@@ -365,6 +405,7 @@ const getCartOrderFoodsByDate = asyncHandler(async (req, res) => {
       status,
       User_Id,
       applyDiscount_id,
+      service_id,
       date,
       sortBy = 'created_at',
       sortOrder = 'desc'
@@ -387,35 +428,35 @@ const getCartOrderFoodsByDate = asyncHandler(async (req, res) => {
     const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
-    const filter = buildFilter({ status, User_Id, applyDiscount_id });
+    const filter = buildFilter({ status, User_Id, applyDiscount_id, service_id });
     filter.created_at = {
       $gte: startOfDay,
       $lte: endOfDay
     };
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [cartOrders, total] = await Promise.all([
-      CartOrderFood.find(filter)
+    const [carts, total] = await Promise.all([
+      Cart.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
-      CartOrderFood.countDocuments(filter)
+      Cart.countDocuments(filter)
     ]);
-    const populatedCartOrders = await populateCartOrderFoodData(cartOrders);
-    sendPaginated(res, populatedCartOrders, paginateMeta(numericPage, numericLimit, total), 'Cart orders retrieved successfully');
+    const populatedCarts = await populateCartData(carts);
+    sendPaginated(res, populatedCarts, paginateMeta(numericPage, numericLimit, total), 'Carts retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving cart orders by date', { error: error.message });
+    console.error('Error retrieving carts by date', { error: error.message });
     throw error;
   }
 });
 
 module.exports = {
-  createCartOrderFood,
-  getAllCartOrderFoods,
-  getCartOrderFoodById,
-  updateCartOrderFood,
-  deleteCartOrderFood,
-  getCartOrderFoodsByAuth,
-  getCartOrderFoodsByDate
+  createCart,
+  getAllCarts,
+  getCartById,
+  updateCart,
+  deleteCart,
+  getCartsByAuth,
+  getCartsByDate
 };
 

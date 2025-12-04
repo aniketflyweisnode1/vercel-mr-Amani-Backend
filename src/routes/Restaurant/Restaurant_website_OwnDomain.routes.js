@@ -27,4 +27,3 @@ router.get('/getByAuth', auth, validateQuery(getOwnDomainsByAuthSchema), getOwnD
 
 module.exports = router;
 
-
