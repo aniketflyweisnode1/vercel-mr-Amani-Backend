@@ -145,39 +145,62 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-// Start server
-const PORT = 3030;
-const server = app.listen(PORT, () => {
-  logger.info(`Server running in ${'development'} mode on port ${PORT}`);
-  logger.info(`API Documentation: http://localhost:${PORT}/api/v2`);
-  logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
-});
+// Check if running on Vercel (serverless)
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
 
-// Initialize Socket.io
-const { initializeSocket } = require('./src/routes/Chat/SocketChat.routes');
-const io = initializeSocket(server);
-logger.info('Socket.io initialized successfully');
+// Start server only if not on Vercel
+let server = null;
+let io = null;
 
-// Handle server errors
-server.on('error', (error) => {
-  if (error.syscall !== 'listen') {
-    throw error;
+if (!isVercel) {
+  // Start server for local development
+  const PORT = process.env.PORT || 3030;
+  server = app.listen(PORT, () => {
+    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    logger.info(`API Documentation: http://localhost:${PORT}/api/v2`);
+    logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
+  });
+
+  // Initialize Socket.io only in non-serverless environment
+  try {
+    const { initializeSocket } = require('./src/routes/Chat/SocketChat.routes');
+    io = initializeSocket(server);
+    logger.info('Socket.io initialized successfully');
+  } catch (error) {
+    logger.warn('Socket.io initialization skipped', { error: error.message });
   }
 
-  const bind = typeof PORT === 'string' ? 'Pipe ' + PORT : 'Port ' + PORT;
-
-  switch (error.code) {
-    case 'EACCES':
-      logger.error(`${bind} requires elevated privileges`);
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      logger.error(`${bind} is already in use`);
-      process.exit(1);
-      break;
-    default:
+  // Handle server errors
+  server.on('error', (error) => {
+    if (error.syscall !== 'listen') {
       throw error;
-  }
-});
+    }
 
-module.exports = { app, server, io };
+    const bind = typeof PORT === 'string' ? 'Pipe ' + PORT : 'Port ' + PORT;
+
+    switch (error.code) {
+      case 'EACCES':
+        logger.error(`${bind} requires elevated privileges`);
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        logger.error(`${bind} is already in use`);
+        process.exit(1);
+        break;
+      default:
+        throw error;
+    }
+  });
+} else {
+  logger.info('Running on Vercel - serverless mode');
+}
+
+// Export for Vercel (default export must be the app or handler function)
+// Vercel requires the default export to be the Express app
+module.exports = app;
+
+// Also export server and io for local development if needed
+if (!isVercel && server) {
+  module.exports.server = server;
+  module.exports.io = io;
+}
