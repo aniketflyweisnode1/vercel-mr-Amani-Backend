@@ -22,6 +22,15 @@ const {
   getSupplierItemsByCategoryQuerySchema
 } = require('../../../validators/Supplier_Items.validator');
 
+// Test route to verify routes are accessible
+router.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Supplier_Items routes are working',
+    timestamp: new Date().toISOString()
+  });
+});
+
 router.post('/create', auth, validateBody(createSupplierItemSchema), createSupplierItem);
 router.get('/getAll', validateQuery(getAllSupplierItemsSchema), getAllSupplierItems);
 router.get('/getById/:id', auth, validateParams(getSupplierItemByIdSchema), getSupplierItemById);

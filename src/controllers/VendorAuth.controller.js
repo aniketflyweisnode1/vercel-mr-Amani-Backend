@@ -2,7 +2,7 @@
 const { generateOTPWithExpiry } = require('../../utils/otp');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
-const { ensureRoleMatch } = require('../utils/role');
+const { ensureRoleMatch } = require('../../utils/role.js');
 
 const buildRoleBasedLoginHandler = (allowedRoleNames = [], successMessage = 'OTP sent successfully') => asyncHandler(async (req, res) => {
   const { email, phoneNo } = req.body;

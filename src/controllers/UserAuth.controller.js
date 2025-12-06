@@ -4,7 +4,7 @@ const { generateToken } = require('../../utils/jwt');
 const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const { ensureRoleMatch } = require('../utils/role');
+const { ensureRoleMatch } = require('../../utils/role.js');
 
 const normalizeRolesInput = (roleInput) => {
   if (!roleInput) return [];

@@ -153,6 +153,11 @@ const server = app.listen(PORT, () => {
   logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
 });
 
+// Initialize Socket.io
+const { initializeSocket } = require('./src/routes/Chat/SocketChat.routes');
+const io = initializeSocket(server);
+logger.info('Socket.io initialized successfully');
+
 // Handle server errors
 server.on('error', (error) => {
   if (error.syscall !== 'listen') {
@@ -175,4 +180,4 @@ server.on('error', (error) => {
   }
 });
 
-module.exports = app;
+module.exports = { app, server, io };
