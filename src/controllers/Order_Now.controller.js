@@ -725,7 +725,7 @@ const processPayment = asyncHandler(async (req, res) => {
     // Find the order
     let order;
     if (order_id.match(/^[0-9a-fA-F]{24}$/)) {
-      order = await OrderNow.findById(order_id);
+      order = await OrderNow.findOne({ Order_Now_id: order_id });
     } else {
       const numericId = parseInt(order_id, 10);
       if (Number.isNaN(numericId)) {
