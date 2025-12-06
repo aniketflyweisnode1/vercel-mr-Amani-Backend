@@ -240,18 +240,28 @@ const paginateMeta = (page, limit, total) => {
 };
 
 const findRestaurantItemByIdentifier = async (identifier) => {
-  let item;
-  if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    item = await RestaurantItems.findById(identifier);
-  } else {
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-      item = await RestaurantItems.findOne({ Restaurant_Items_id: numericId });
+  if (!identifier) return null;
+  
+  try {
+    let item;
+    if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      item = await RestaurantItems.findById(identifier);
+    } else {
+      const numericId = parseInt(identifier, 10);
+      if (!Number.isNaN(numericId)) {
+        item = await RestaurantItems.findOne({ Restaurant_Items_id: numericId });
+      }
     }
-  }
 
-  if (!item) return null;
-  return await populateRestaurantItems(item);
+    if (!item) return null;
+    return await populateRestaurantItems(item);
+  } catch (error) {
+    // Handle CastError and other MongoDB errors
+    if (error.name === 'CastError') {
+      return null;
+    }
+    throw error;
+  }
 };
 
 const validateNumericField = (value, fieldName) => {
@@ -414,6 +424,11 @@ const getAllRestaurantItems = asyncHandler(async (req, res) => {
 const getRestaurantItemById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return sendError(res, 'Restaurant item ID is required', 400);
+    }
+
     const item = await findRestaurantItemByIdentifier(id);
 
     if (!item) {
@@ -422,7 +437,11 @@ const getRestaurantItemById = asyncHandler(async (req, res) => {
 
     sendSuccess(res, item, 'Restaurant item retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving restaurant item', { error: error.message, id: req.params.id });
+    console.error('Error retrieving restaurant item', { error: error.message, id: req.params.id, stack: error.stack });
+    // If it's a CastError, return a more specific message
+    if (error.name === 'CastError') {
+      return sendNotFound(res, 'Invalid restaurant item ID format');
+    }
     throw error;
   }
 });
@@ -521,15 +540,26 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
     // Explicitly remove Restaurant_Items_id if it was accidentally included (should not be updated)
     delete updatePayload.Restaurant_Items_id;
 
+    if (!id) {
+      return sendError(res, 'Restaurant item ID is required', 400);
+    }
+
     let item;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      item = await RestaurantItems.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
-    } else {
-      const numericId = parseInt(id, 10);
-      if (Number.isNaN(numericId)) {
-        return sendError(res, 'Invalid restaurant item ID format', 400);
+    try {
+      if (id.match(/^[0-9a-fA-F]{24}$/)) {
+        item = await RestaurantItems.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
+      } else {
+        const numericId = parseInt(id, 10);
+        if (Number.isNaN(numericId)) {
+          return sendError(res, 'Invalid restaurant item ID format', 400);
+        }
+        item = await RestaurantItems.findOneAndUpdate({ Restaurant_Items_id: numericId }, updatePayload, { new: true, runValidators: true });
       }
-      item = await RestaurantItems.findOneAndUpdate({ Restaurant_Items_id: numericId }, updatePayload, { new: true, runValidators: true });
+    } catch (error) {
+      if (error.name === 'CastError') {
+        return sendNotFound(res, 'Invalid restaurant item ID format');
+      }
+      throw error;
     }
 
     if (!item) {
@@ -547,6 +577,11 @@ const updateRestaurantItem = asyncHandler(async (req, res) => {
 const deleteRestaurantItem = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return sendError(res, 'Restaurant item ID is required', 400);
+    }
+
     const updatePayload = {
       Status: false,
       updated_by: req.userIdNumber || null,
@@ -554,14 +589,21 @@ const deleteRestaurantItem = asyncHandler(async (req, res) => {
     };
 
     let item;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      item = await RestaurantItems.findByIdAndUpdate(id, updatePayload, { new: true });
-    } else {
-      const numericId = parseInt(id, 10);
-      if (Number.isNaN(numericId)) {
-        return sendError(res, 'Invalid restaurant item ID format', 400);
+    try {
+      if (id.match(/^[0-9a-fA-F]{24}$/)) {
+        item = await RestaurantItems.findByIdAndUpdate(id, updatePayload, { new: true });
+      } else {
+        const numericId = parseInt(id, 10);
+        if (Number.isNaN(numericId)) {
+          return sendError(res, 'Invalid restaurant item ID format', 400);
+        }
+        item = await RestaurantItems.findOneAndUpdate({ Restaurant_Items_id: numericId }, updatePayload, { new: true });
       }
-      item = await RestaurantItems.findOneAndUpdate({ Restaurant_Items_id: numericId }, updatePayload, { new: true });
+    } catch (error) {
+      if (error.name === 'CastError') {
+        return sendNotFound(res, 'Invalid restaurant item ID format');
+      }
+      throw error;
     }
 
     if (!item) {
@@ -734,6 +776,77 @@ const getRestaurantItemDashboard = asyncHandler(async (req, res) => {
   }
 });
 
+const getRestaurantItemDashboardBySupplier = asyncHandler(async (req, res) => {
+  try {
+    const { SupplierName } = req.query;
+
+    if (!SupplierName) {
+      return sendError(res, 'SupplierName is required', 400);
+    }
+
+    const statusFilter = { 
+      Status: true,
+      SupplierName: { $regex: SupplierName, $options: 'i' } // Case-insensitive search
+    };
+
+    const [
+      totalItems,
+      inStock,
+      lowStock,
+      outOfStock,
+      alertsData
+    ] = await Promise.all([
+      RestaurantItems.countDocuments(statusFilter),
+      RestaurantItems.countDocuments({
+        ...statusFilter,
+        CurrentStock: { $gt: 5 }
+      }),
+      RestaurantItems.countDocuments({
+        ...statusFilter,
+        CurrentStock: { $gt: 0, $lt: 5 }
+      }),
+      RestaurantItems.countDocuments({
+        ...statusFilter,
+        CurrentStock: { $eq: 0 }
+      }),
+      RestaurantAlerts.find({ Status: true })
+        .sort({ created_at: -1 })
+        .lean()
+    ]);
+
+    // Manually populate Restaurant_Alerts_type_id for alerts
+    const alerts = await Promise.all(
+      alertsData.map(async (alert) => {
+        if (alert.Restaurant_Alerts_type_id) {
+          const alertType = await RestaurantAlertsType.findOne({ 
+            Restaurant_Alerts_type_id: alert.Restaurant_Alerts_type_id 
+          })
+            .select('Restaurant_Alerts_type_id TypeName')
+            .lean();
+          if (alertType) {
+            alert.Restaurant_Alerts_type_id = alertType;
+          }
+        }
+        return alert;
+      })
+    );
+
+    const dashboard = {
+      SupplierName,
+      totalItems,
+      alerts,
+      inStock,
+      lowStock,
+      outOfStock
+    };
+
+    sendSuccess(res, dashboard, 'Restaurant item dashboard by supplier retrieved successfully');
+  } catch (error) {
+    console.error('Error retrieving restaurant item dashboard by supplier', { error: error.message });
+    throw error;
+  }
+});
+
 module.exports = {
   createRestaurantItem,
   getAllRestaurantItems,
@@ -742,7 +855,8 @@ module.exports = {
   deleteRestaurantItem,
   getRestaurantItemsByAuth,
   getRestaurantItemsByCategory,
-  getRestaurantItemDashboard
+  getRestaurantItemDashboard,
+  getRestaurantItemDashboardBySupplier
 };
 
 

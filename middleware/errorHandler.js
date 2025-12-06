@@ -22,10 +22,16 @@ const errorHandler = (err, req, res, next) => {
     userAgent: req.get('User-Agent')
   });
 
+  // Route not found
+  if (err.name === 'RouteNotFound' || (err.message && err.message.includes('Route') && err.message.includes('not found'))) {
+    const message = `Route ${req.method} ${req.originalUrl} not found. Please check the endpoint URL and HTTP method.`;
+    error = { message, statusCode: 404 };
+  }
+
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
-    const message = 'Resource not found';
-    error = { message, statusCode: 404 };
+    const message = 'Invalid ID format. Please provide a valid MongoDB ObjectId (24 hex characters) or numeric ID.';
+    error = { message, statusCode: 400 }; // Changed to 400 as it's a bad request, not necessarily not found
   }
 
   // Mongoose duplicate key

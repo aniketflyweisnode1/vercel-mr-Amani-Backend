@@ -80,6 +80,10 @@ const getRestaurantItemsByCategoryQuerySchema = Joi.object({
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
 });
 
+const getDashboardBySupplierSchema = Joi.object({
+  SupplierName: Joi.string().trim().min(1).max(200).required()
+});
+
 module.exports = {
   createRestaurantItemSchema,
   updateRestaurantItemSchema,
@@ -87,7 +91,8 @@ module.exports = {
   getAllRestaurantItemsSchema,
   getRestaurantItemsByAuthSchema,
   getRestaurantItemsByCategoryParamsSchema,
-  getRestaurantItemsByCategoryQuerySchema
+  getRestaurantItemsByCategoryQuerySchema,
+  getDashboardBySupplierSchema
 };
 
 

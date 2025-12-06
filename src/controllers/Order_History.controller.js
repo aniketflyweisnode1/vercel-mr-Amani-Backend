@@ -225,8 +225,116 @@ const getCompletedOrders = asyncHandler(async (req, res) => {
   }
 });
 
+const getOrders = asyncHandler(async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      serviceId,
+      status = 'all', // all, true, Scheduled, Completed
+      time = 'all', // Today, ThisWeek, ThisMonth, all
+      sortBy = 'created_at',
+      sortOrder = 'desc'
+    } = req.query;
+    
+    const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
+    const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (numericPage - 1) * numericLimit;
+    
+    // Build filter
+    const filter = {
+      Status: true
+    };
+    
+    // Filter by serviceId
+    if (serviceId) {
+      const serviceIdNum = parseInt(serviceId, 10);
+      if (!Number.isNaN(serviceIdNum)) {
+        filter.service_id = serviceIdNum;
+      }
+    }
+    
+    // Filter by status
+    if (status && status !== 'all') {
+      if (status === 'true') {
+        // Active orders (Status: true is already in filter)
+        // No additional filter needed
+      } else if (status === 'Scheduled') {
+        // Scheduled orders: Pending, Preparing, Confirmed, Placed (not yet completed)
+        filter.OrderStatus = { $in: ['Pending', 'Preparing', 'Confirmed', 'Placed'] };
+        // Exclude orders with transactions (completed orders)
+        filter.Trangection_Id = { $exists: false };
+      } else if (status === 'Completed') {
+        // Completed orders: Orders with transaction (payment completed)
+        filter.Trangection_Id = { $exists: true, $ne: null };
+      } else {
+        // Specific status from enum: Pending, Preparing, Confirmed, Out for Delivery, Cancelled, Un-Delivered, Placed, Return
+        filter.OrderStatus = status;
+      }
+    }
+    
+    // Filter by time
+    if (time && time !== 'all') {
+      const now = new Date();
+      let startDate;
+      
+      switch (time) {
+        case 'Today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'ThisWeek':
+          const dayOfWeek = now.getDay();
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - dayOfWeek);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'ThisMonth':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          startDate = null;
+      }
+      
+      if (startDate) {
+        filter.created_at = { $gte: startDate };
+      }
+    }
+    
+    // Add user filter if authenticated
+    if (req.userIdNumber) {
+      filter.User_Id = req.userIdNumber;
+    }
+    
+    // Build sort
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
+    // Execute query
+    const [orders, total] = await Promise.all([
+      OrderNow.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(numericLimit),
+      OrderNow.countDocuments(filter)
+    ]);
+    
+    const populatedOrders = await populateOrderNowData(orders);
+    
+    sendPaginated(
+      res,
+      populatedOrders,
+      paginateMeta(numericPage, numericLimit, total),
+      'Orders retrieved successfully'
+    );
+  } catch (error) {
+    console.error('Error retrieving orders', { error: error.message, stack: error.stack });
+    throw error;
+  }
+});
+
 module.exports = {
   getOngoingOrders,
-  getCompletedOrders
+  getCompletedOrders,
+  getOrders
 };
 

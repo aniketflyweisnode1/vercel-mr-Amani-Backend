@@ -84,14 +84,21 @@ const sendForbidden = (res, message = 'Forbidden access') => {
  * Send not found response
  * @param {Object} res - Express response object
  * @param {string} message - Error message
+ * @param {Object} details - Additional details (optional)
  * @returns {Object} JSON response
  */
-const sendNotFound = (res, message = 'Resource not found') => {
-  return res.status(404).json({
+const sendNotFound = (res, message = 'Resource not found', details = null) => {
+  const response = {
     success: false,
     message,
     timestamp: new Date().toISOString()
-  });
+  };
+  
+  if (details) {
+    response.details = details;
+  }
+  
+  return res.status(404).json(response);
 };
 
 /**

@@ -23,7 +23,7 @@ const transactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'completed', 'failed', 'requires_payment_method'],
+    enum: ['pending', 'completed', 'failed', 'requires_payment_method', 'processing'],
     default: 'pending'
   },
   payment_method_id: {
@@ -33,7 +33,7 @@ const transactionSchema = new mongoose.Schema({
   },
   transactionType: {
     type: String,
-    enum: ['Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund'],
+    enum: ['Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack'],
     required: [true, 'Transaction type is required']
   },
   transaction_date: {
