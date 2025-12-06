@@ -33,7 +33,7 @@ const transactionSchema = new mongoose.Schema({
   },
   transactionType: {
     type: String,
-    enum: ['Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack'],
+    enum: ['Registration_fee', 'deposit', 'withdraw', 'Order_Now_Payment', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack'],
     required: [true, 'Transaction type is required']
   },
   transaction_date: {

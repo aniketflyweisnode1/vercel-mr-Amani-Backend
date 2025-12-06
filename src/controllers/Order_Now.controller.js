@@ -306,11 +306,17 @@ const deleteCartItemsByProductIds = async (userId, productItemIds) => {
 };
 
 const findByIdentifier = (identifier) => {
-  if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
+  if (!identifier) return null;
+  
+  // Convert to string for pattern matching
+  const idStr = String(identifier);
+  if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
     return OrderNow.findById(identifier);
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
+  
+  // Try numeric ID
+  const numericId = typeof identifier === 'number' ? identifier : parseInt(identifier, 10);
+  if (!Number.isNaN(numericId) && numericId > 0) {
     return OrderNow.findOne({ Order_Now_id: numericId });
   }
   return null;
@@ -566,7 +572,8 @@ const updateOrderNow = asyncHandler(async (req, res) => {
       updated_at: new Date()
     };
     let order;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    const idStr = String(id);
+    if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
       order = await OrderNow.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
     } else {
       const numericId = parseInt(id, 10);
@@ -595,7 +602,8 @@ const deleteOrderNow = asyncHandler(async (req, res) => {
       updated_at: new Date()
     };
     let order;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    const idStr = String(id);
+    if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
       order = await OrderNow.findByIdAndUpdate(id, updatePayload, { new: true });
     } else {
       const numericId = parseInt(id, 10);
@@ -708,7 +716,7 @@ const getOrderNowsByDate = asyncHandler(async (req, res) => {
 
 const processPayment = asyncHandler(async (req, res) => {
   try {
-    const { order_id, payment_method_id, amount, reference_number, metadata } = req.body;
+    const { order_id, payment_method_id, amount, reference_number, metadata, status, transactionType } = req.body;
     
     if (!order_id) {
       return sendError(res, 'Order ID is required', 400);
@@ -722,17 +730,12 @@ const processPayment = asyncHandler(async (req, res) => {
       return sendError(res, 'Valid amount is required', 400);
     }
     
-    // Find the order
-    let order;
-    if (order_id.match(/^[0-9a-fA-F]{24}$/)) {
-      order = await OrderNow.findOne({ Order_Now_id: order_id });
-    } else {
-      const numericId = parseInt(order_id, 10);
-      if (Number.isNaN(numericId)) {
-        return sendError(res, 'Invalid order ID format', 400);
-      }
-      order = await OrderNow.findOne({ Order_Now_id: numericId });
+    // Find the order - handle both MongoDB ObjectId and numeric ID
+    const orderQuery = findByIdentifier(order_id);
+    if (!orderQuery) {
+      return sendError(res, 'Invalid order ID format', 400);
     }
+    const order = await orderQuery;
     
     if (!order) {
       return sendNotFound(res, 'Order not found');
@@ -754,11 +757,14 @@ const processPayment = asyncHandler(async (req, res) => {
     }
     
     // Create transaction
+    // Default to 'Order_Now_Payment' if transactionType is not provided
+    const finalTransactionType = transactionType || 'Order_Now_Payment';
+    
     const transactionData = {
       user_id: req.userIdNumber,
       amount: amount,
       payment_method_id: payment_method_id,
-      transactionType: 'Recharge', // You can change this based on your business logic
+      transactionType: finalTransactionType,
       status: 'completed', // Set to 'pending' if you need to verify payment first
       reference_number: reference_number || null,
       metadata: metadata || null,
@@ -777,11 +783,15 @@ const processPayment = asyncHandler(async (req, res) => {
     };
     
     let updatedOrder;
-    if (order_id.match(/^[0-9a-fA-F]{24}$/)) {
+    const orderIdStr = String(order_id);
+    if (orderIdStr.match(/^[0-9a-fA-F]{24}$/)) {
+      // MongoDB ObjectId
       updatedOrder = await OrderNow.findByIdAndUpdate(order_id, updatePayload, { new: true, runValidators: true });
     } else {
+      // Numeric ID - use the order's _id or Order_Now_id
+      const numericId = typeof order_id === 'number' ? order_id : parseInt(order_id, 10);
       updatedOrder = await OrderNow.findOneAndUpdate(
-        { Order_Now_id: parseInt(order_id, 10) },
+        { Order_Now_id: numericId },
         updatePayload,
         { new: true, runValidators: true }
       );

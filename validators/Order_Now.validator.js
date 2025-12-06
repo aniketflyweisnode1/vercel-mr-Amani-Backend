@@ -94,6 +94,7 @@ const processPaymentSchema = Joi.object({
   ).required(),
   payment_method_id: Joi.number().integer().positive().required(),
   amount: Joi.number().positive().required(),
+  transactionType: Joi.string().valid('Registration_fee', 'deposit', 'withdraw', 'Order_Now_Payment', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack').default('Order_Now_Payment').optional(),
   reference_number: Joi.string().trim().max(100).optional().allow(null, ''),
   metadata: Joi.string().trim().optional().allow(null, '')
 });
