@@ -1,6 +1,60 @@
 const Transaction = require('../models/transaction.model');
+const Plan = require('../models/Plan.model');
+const User = require('../models/User.model');
+const PaymentMethods = require('../models/payment_method.model');
+const BusinessBranch = require('../models/business_Branch.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
+
+// Manual population function for Number refs
+const populateTransactionData = async (transactions) => {
+  const transactionsArray = Array.isArray(transactions) ? transactions : [transactions];
+  const populatedTransactions = await Promise.all(
+    transactionsArray.map(async (transaction) => {
+      const transactionObj = transaction.toObject ? transaction.toObject() : transaction;
+      
+      // Populate Plan_id
+      if (transactionObj.Plan_id) {
+        const plan = await Plan.findOne({ Plan_id: transactionObj.Plan_id })
+          .select('Plan_id name Price');
+        if (plan) {
+          transactionObj.Plan_id = plan.toObject ? plan.toObject() : plan;
+        }
+      }
+      
+      // Populate user_id
+      if (transactionObj.user_id) {
+        const user = await User.findOne({ user_id: transactionObj.user_id })
+          .select('user_id firstName lastName phoneNo');
+        if (user) {
+          transactionObj.user_id = user.toObject ? user.toObject() : user;
+        }
+      }
+      
+      // Populate payment_method_id
+      if (transactionObj.payment_method_id) {
+        const paymentMethod = await PaymentMethods.findOne({ payment_method_id: transactionObj.payment_method_id })
+          .select('payment_method_id payment_method emoji');
+        if (paymentMethod) {
+          transactionObj.payment_method_id = paymentMethod.toObject ? paymentMethod.toObject() : paymentMethod;
+        }
+      }
+      
+      // Populate business_Branch_id
+      if (transactionObj.business_Branch_id) {
+        const branch = await BusinessBranch.findOne({ business_Branch_id: transactionObj.business_Branch_id })
+          .select('business_Branch_id BusinessName firstName lastName Address');
+        if (branch) {
+          transactionObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      return transactionObj;
+    })
+  );
+  
+  return Array.isArray(transactions) ? populatedTransactions : populatedTransactions[0];
+};
 
 const createTransaction = asyncHandler(async (req, res) => {
   try {
@@ -64,15 +118,13 @@ const getAllTransactions = asyncHandler(async (req, res) => {
     
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
-        .populate('Plan_id', 'name Price')
-        .populate('user_id', 'firstName lastName phoneNo')
-        .populate('payment_method_id', 'payment_method emoji')
-        .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address')
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Transaction.countDocuments(filter)
     ]);
+    
+    const populatedTransactions = await populateTransactionData(transactions);
     
     const totalPages = Math.ceil(total / numericLimit);
     const pagination = {
@@ -85,7 +137,7 @@ const getAllTransactions = asyncHandler(async (req, res) => {
     };
     
     console.info('Transactions retrieved successfully', { total, page: numericPage, limit: numericLimit });
-    sendPaginated(res, transactions, pagination, 'Transactions retrieved successfully');
+    sendPaginated(res, populatedTransactions, pagination, 'Transactions retrieved successfully');
   } catch (error) {
     console.error('Error retrieving transactions', { error: error.message, stack: error.stack });
     throw error;
@@ -98,25 +150,19 @@ const getTransactionById = asyncHandler(async (req, res) => {
     let transaction;
     const idStr = String(id);
     if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
-      transaction = await Transaction.findById(id)
-        .populate('Plan_id', 'name Price')
-        .populate('user_id', 'firstName lastName phoneNo')
-        .populate('payment_method_id', 'payment_method emoji')
-        .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address');
+      transaction = await Transaction.findById(id);
     } else {
       const transactionId = parseInt(id, 10);
       if (Number.isNaN(transactionId) || transactionId <= 0) {
         return sendError(res, 'Invalid transaction ID format', 400);
       }
-      transaction = await Transaction.findOne({ transaction_id: transactionId })
-        .populate('Plan_id', 'name Price')
-        .populate('user_id', 'firstName lastName phoneNo')
-        .populate('payment_method_id', 'payment_method emoji')
-        .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address');
+      transaction = await Transaction.findOne({ transaction_id: transactionId });
     }
     if (!transaction) return sendNotFound(res, 'Transaction not found');
+    
+    const populated = await populateTransactionData(transaction);
     console.info('Transaction retrieved successfully', { transactionId: transaction._id });
-    sendSuccess(res, transaction, 'Transaction retrieved successfully');
+    sendSuccess(res, populated, 'Transaction retrieved successfully');
   } catch (error) {
     console.error('Error retrieving transaction', { error: error.message, transactionId: req.params.id });
     throw error;
@@ -203,14 +249,13 @@ const getTransactionsByAuth = asyncHandler(async (req, res) => {
     
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
-        .populate('Plan_id', 'name Price')
-        .populate('payment_method_id', 'payment_method emoji')
-        .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address')
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Transaction.countDocuments(filter)
     ]);
+    
+    const populatedTransactions = await populateTransactionData(transactions);
     
     const totalPages = Math.ceil(total / numericLimit);
     const pagination = {
@@ -223,7 +268,7 @@ const getTransactionsByAuth = asyncHandler(async (req, res) => {
     };
     
     console.info('Transactions by authenticated user retrieved successfully', { total, page: numericPage, limit: numericLimit, userId: req.userIdNumber });
-    sendPaginated(res, transactions, pagination, 'Transactions retrieved successfully');
+    sendPaginated(res, populatedTransactions, pagination, 'Transactions retrieved successfully');
   } catch (error) {
     console.error('Error retrieving transactions by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
