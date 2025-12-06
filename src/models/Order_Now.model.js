@@ -62,7 +62,7 @@ const orderNowSchema = new mongoose.Schema({
   Order: {
     type: String,
     enum: ['Picup', 'Delivery'],
-    required: [true, 'Order type is required'],
+    default: null,
     trim: true
   },
   payment_method_id: {

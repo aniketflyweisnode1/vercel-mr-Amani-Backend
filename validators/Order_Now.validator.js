@@ -15,6 +15,7 @@ const createOrderNowSchema = Joi.object({
   payment_method_id: Joi.number().integer().positive().required(),
   paymentStatus: Joi.string().trim().max(100).optional().allow(''),
   Delivery_address_id: Joi.number().integer().positive().optional().allow(null),
+  Order: Joi.string().valid('Picup', 'Delivery').optional().allow(null, ''),
   OrderStatus: Joi.string().valid('Pending', 'Preparing', 'Confirmed', 'Out for Delivery', 'Cancelled', 'Un-Delivered', 'Placed', 'Return').default('Pending').optional(),
   Status: Joi.boolean().optional().default(true)
 });

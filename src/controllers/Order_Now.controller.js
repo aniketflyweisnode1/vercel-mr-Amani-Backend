@@ -318,7 +318,7 @@ const findByIdentifier = (identifier) => {
 
 const createOrderNow = asyncHandler(async (req, res) => {
   try {
-    const {  applyDiscount_id, service_id, payment_method_id, Delivery_address_id } = req.body;
+    const { Order, applyDiscount_id, service_id, payment_method_id, Delivery_address_id } = req.body;
     
     // Get cart items for the user
     const cartItems = await Cart.find({
@@ -391,6 +391,11 @@ const createOrderNow = asyncHandler(async (req, res) => {
       User_Id: req.userIdNumber || null,
       created_by: req.userIdNumber || null
     };
+    
+    // Add Order field if provided
+    if (Order !== undefined && Order !== null && Order !== '') {
+      payload.Order = Order;
+    }
     
     const order = await OrderNow.create(payload);
     

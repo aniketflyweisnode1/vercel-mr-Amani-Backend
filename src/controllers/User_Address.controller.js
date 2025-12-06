@@ -135,39 +135,57 @@ const paginateMeta = (page, limit, total) => {
 };
 
 const ensureCityExists = async (cityIdValue) => {
-  if (cityIdValue === undefined || cityIdValue === null) {
-    return true;
+  if (cityIdValue === undefined || cityIdValue === null || cityIdValue === '') {
+    return { exists: true, city: null };
   }
+  
   const cityId = parseInt(cityIdValue, 10);
-  if (Number.isNaN(cityId)) {
-    return false;
+  if (Number.isNaN(cityId) || cityId <= 0) {
+    return { exists: false, city: null, message: `Invalid city ID format: ${cityIdValue}` };
   }
-  const city = await City.findOne({ city_id: cityId });
-  return Boolean(city);
+  
+  const city = await City.findOne({ city_id: cityId, status: true });
+  if (!city) {
+    return { exists: false, city: null, message: `City with ID ${cityId} not found or inactive` };
+  }
+  
+  return { exists: true, city };
 };
 
 const ensureStateExists = async (stateIdValue) => {
-  if (stateIdValue === undefined || stateIdValue === null) {
-    return true;
+  if (stateIdValue === undefined || stateIdValue === null || stateIdValue === '') {
+    return { exists: true, state: null };
   }
+  
   const stateId = parseInt(stateIdValue, 10);
-  if (Number.isNaN(stateId)) {
-    return false;
+  if (Number.isNaN(stateId) || stateId <= 0) {
+    return { exists: false, state: null, message: `Invalid state ID format: ${stateIdValue}` };
   }
-  const state = await State.findOne({ state_id: stateId });
-  return Boolean(state);
+  
+  const state = await State.findOne({ state_id: stateId, status: true });
+  if (!state) {
+    return { exists: false, state: null, message: `State with ID ${stateId} not found or inactive` };
+  }
+  
+  return { exists: true, state };
 };
 
 const ensureCountryExists = async (countryIdValue) => {
-  if (countryIdValue === undefined || countryIdValue === null) {
-    return true;
+  if (countryIdValue === undefined || countryIdValue === null || countryIdValue === '') {
+    return { exists: true, country: null };
   }
+  
   const countryId = parseInt(countryIdValue, 10);
-  if (Number.isNaN(countryId)) {
-    return false;
+  if (Number.isNaN(countryId) || countryId <= 0) {
+    return { exists: false, country: null, message: `Invalid country ID format: ${countryIdValue}` };
   }
-  const country = await Country.findOne({ country_id: countryId });
-  return Boolean(country);
+  
+  const country = await Country.findOne({ country_id: countryId, status: true });
+  if (!country) {
+    return { exists: false, country: null, message: `Country with ID ${countryId} not found or inactive` };
+  }
+  
+  return { exists: true, country };
 };
 
 const findByIdentifier = (identifier) => {
@@ -185,16 +203,28 @@ const createUserAddress = asyncHandler(async (req, res) => {
   try {
     const { City, State, Country, setDefult } = req.body;
     
-    if (City !== undefined && City !== null && !(await ensureCityExists(City))) {
-      return sendError(res, 'City not found', 400);
+    // Validate City
+    if (City !== undefined && City !== null && City !== '') {
+      const cityCheck = await ensureCityExists(City);
+      if (!cityCheck.exists) {
+        return sendError(res, cityCheck.message || 'City not found', 400);
+      }
     }
     
-    if (State !== undefined && State !== null && !(await ensureStateExists(State))) {
-      return sendError(res, 'State not found', 400);
+    // Validate State
+    if (State !== undefined && State !== null && State !== '') {
+      const stateCheck = await ensureStateExists(State);
+      if (!stateCheck.exists) {
+        return sendError(res, stateCheck.message || 'State not found', 400);
+      }
     }
     
-    if (Country !== undefined && Country !== null && !(await ensureCountryExists(Country))) {
-      return sendError(res, 'Country not found', 400);
+    // Validate Country
+    if (Country !== undefined && Country !== null && Country !== '') {
+      const countryCheck = await ensureCountryExists(Country);
+      if (!countryCheck.exists) {
+        return sendError(res, countryCheck.message || 'Country not found', 400);
+      }
     }
     
     // If setting as default, unset other default addresses for this user
@@ -279,16 +309,28 @@ const updateUserAddress = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { City, State, Country, setDefult } = req.body;
     
-    if (City !== undefined && City !== null && !(await ensureCityExists(City))) {
-      return sendError(res, 'City not found', 400);
+    // Validate City
+    if (City !== undefined && City !== null && City !== '') {
+      const cityCheck = await ensureCityExists(City);
+      if (!cityCheck.exists) {
+        return sendError(res, cityCheck.message || 'City not found', 400);
+      }
     }
     
-    if (State !== undefined && State !== null && !(await ensureStateExists(State))) {
-      return sendError(res, 'State not found', 400);
+    // Validate State
+    if (State !== undefined && State !== null && State !== '') {
+      const stateCheck = await ensureStateExists(State);
+      if (!stateCheck.exists) {
+        return sendError(res, stateCheck.message || 'State not found', 400);
+      }
     }
     
-    if (Country !== undefined && Country !== null && !(await ensureCountryExists(Country))) {
-      return sendError(res, 'Country not found', 400);
+    // Validate Country
+    if (Country !== undefined && Country !== null && Country !== '') {
+      const countryCheck = await ensureCountryExists(Country);
+      if (!countryCheck.exists) {
+        return sendError(res, countryCheck.message || 'Country not found', 400);
+      }
     }
     
     // If setting as default, unset other default addresses for this user
