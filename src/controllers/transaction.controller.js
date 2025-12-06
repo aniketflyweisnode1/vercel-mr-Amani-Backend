@@ -30,6 +30,12 @@ const getAllTransactions = asyncHandler(async (req, res) => {
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
+    
+    // Parse pagination parameters
+    const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
+    const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (numericPage - 1) * numericLimit;
+    
     const filter = {};
     if (search) {
       filter.$or = [
@@ -39,26 +45,46 @@ const getAllTransactions = asyncHandler(async (req, res) => {
     }
     if (status !== undefined) filter.status = status;
     if (transactionType) filter.transactionType = transactionType;
-    if (user_id) filter.user_id = parseInt(user_id, 10);
-    if (business_Branch_id) filter.business_Branch_id = parseInt(business_Branch_id, 10);
+    if (user_id) {
+      const userId = parseInt(user_id, 10);
+      if (!Number.isNaN(userId) && userId > 0) {
+        filter.user_id = userId;
+      }
+    }
+    if (business_Branch_id) {
+      const branchId = parseInt(business_Branch_id, 10);
+      if (!Number.isNaN(branchId) && branchId > 0) {
+        filter.business_Branch_id = branchId;
+      }
+    }
     if (req.query.Status !== undefined) filter.Status = req.query.Status === 'true';
-    const sort = {}; sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const skip = (page - 1) * limit;
+    
+    const sort = {}; 
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
         .populate('Plan_id', 'name Price')
         .populate('user_id', 'firstName lastName phoneNo')
         .populate('payment_method_id', 'payment_method emoji')
         .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address')
-        .sort(sort).skip(skip).limit(parseInt(limit)),
+        .sort(sort)
+        .skip(skip)
+        .limit(numericLimit),
       Transaction.countDocuments(filter)
     ]);
-    const totalPages = Math.ceil(total / limit);
+    
+    const totalPages = Math.ceil(total / numericLimit);
     const pagination = {
-      currentPage: parseInt(page), totalPages, totalItems: total,
-      itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
+      currentPage: numericPage,
+      totalPages,
+      totalItems: total,
+      itemsPerPage: numericLimit,
+      hasNextPage: numericPage < totalPages,
+      hasPrevPage: numericPage > 1
     };
-    console.info('Transactions retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit) });
+    
+    console.info('Transactions retrieved successfully', { total, page: numericPage, limit: numericLimit });
     sendPaginated(res, transactions, pagination, 'Transactions retrieved successfully');
   } catch (error) {
     console.error('Error retrieving transactions', { error: error.message, stack: error.stack });
@@ -70,7 +96,8 @@ const getTransactionById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     let transaction;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    const idStr = String(id);
+    if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
       transaction = await Transaction.findById(id)
         .populate('Plan_id', 'name Price')
         .populate('user_id', 'firstName lastName phoneNo')
@@ -78,7 +105,9 @@ const getTransactionById = asyncHandler(async (req, res) => {
         .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address');
     } else {
       const transactionId = parseInt(id, 10);
-      if (isNaN(transactionId)) return sendNotFound(res, 'Invalid transaction ID format');
+      if (Number.isNaN(transactionId) || transactionId <= 0) {
+        return sendError(res, 'Invalid transaction ID format', 400);
+      }
       transaction = await Transaction.findOne({ transaction_id: transactionId })
         .populate('Plan_id', 'name Price')
         .populate('user_id', 'firstName lastName phoneNo')
@@ -99,11 +128,14 @@ const updateTransaction = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body, updated_by: req.userIdNumber || null, updated_at: new Date() };
     let transaction;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    const idStr = String(id);
+    if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
       transaction = await Transaction.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     } else {
       const transactionId = parseInt(id, 10);
-      if (isNaN(transactionId)) return sendNotFound(res, 'Invalid transaction ID format');
+      if (Number.isNaN(transactionId) || transactionId <= 0) {
+        return sendError(res, 'Invalid transaction ID format', 400);
+      }
       transaction = await Transaction.findOneAndUpdate({ transaction_id: transactionId }, updateData, { new: true, runValidators: true });
     }
     if (!transaction) return sendNotFound(res, 'Transaction not found');
@@ -119,11 +151,14 @@ const deleteTransaction = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     let transaction;
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    const idStr = String(id);
+    if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
       transaction = await Transaction.findByIdAndUpdate(id, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     } else {
       const transactionId = parseInt(id, 10);
-      if (isNaN(transactionId)) return sendNotFound(res, 'Invalid transaction ID format');
+      if (Number.isNaN(transactionId) || transactionId <= 0) {
+        return sendError(res, 'Invalid transaction ID format', 400);
+      }
       transaction = await Transaction.findOneAndUpdate({ transaction_id: transactionId }, { Status: false, updated_by: req.userIdNumber || null, updated_at: new Date() }, { new: true });
     }
     if (!transaction) return sendNotFound(res, 'Transaction not found');
@@ -146,27 +181,48 @@ const getTransactionsByAuth = asyncHandler(async (req, res) => {
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
+    
+    // Parse pagination parameters
+    const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
+    const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (numericPage - 1) * numericLimit;
+    
     const filter = { user_id: req.userIdNumber };
     if (status !== undefined) filter.status = status;
     if (transactionType) filter.transactionType = transactionType;
-    if (business_Branch_id) filter.business_Branch_id = parseInt(business_Branch_id, 10);
+    if (business_Branch_id) {
+      const branchId = parseInt(business_Branch_id, 10);
+      if (!Number.isNaN(branchId) && branchId > 0) {
+        filter.business_Branch_id = branchId;
+      }
+    }
     if (req.query.Status !== undefined) filter.Status = req.query.Status === 'true';
-    const sort = {}; sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const skip = (page - 1) * limit;
+    
+    const sort = {}; 
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
         .populate('Plan_id', 'name Price')
         .populate('payment_method_id', 'payment_method emoji')
         .populate('business_Branch_id', 'business_Branch_id BusinessName firstName lastName Address')
-        .sort(sort).skip(skip).limit(parseInt(limit)),
+        .sort(sort)
+        .skip(skip)
+        .limit(numericLimit),
       Transaction.countDocuments(filter)
     ]);
-    const totalPages = Math.ceil(total / limit);
+    
+    const totalPages = Math.ceil(total / numericLimit);
     const pagination = {
-      currentPage: parseInt(page), totalPages, totalItems: total,
-      itemsPerPage: parseInt(limit), hasNextPage: page < totalPages, hasPrevPage: page > 1
+      currentPage: numericPage,
+      totalPages,
+      totalItems: total,
+      itemsPerPage: numericLimit,
+      hasNextPage: numericPage < totalPages,
+      hasPrevPage: numericPage > 1
     };
-    console.info('Transactions by authenticated user retrieved successfully', { total, page: parseInt(page), limit: parseInt(limit), userId: req.userIdNumber });
+    
+    console.info('Transactions by authenticated user retrieved successfully', { total, page: numericPage, limit: numericLimit, userId: req.userIdNumber });
     sendPaginated(res, transactions, pagination, 'Transactions retrieved successfully');
   } catch (error) {
     console.error('Error retrieving transactions by authenticated user', { error: error.message, userId: req.userIdNumber });
