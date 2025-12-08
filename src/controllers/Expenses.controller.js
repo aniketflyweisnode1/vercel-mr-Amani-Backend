@@ -1,5 +1,6 @@
 const Expenses = require('../models/Expenses.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -73,10 +74,51 @@ const buildFilterFromQuery = ({ search, status, Branch_id, minAmount, maxAmount,
   return filter;
 };
 
-const populateExpenses = (query) => query
-  .populate('Branch_id', 'business_Branch_id firstName lastName Address BusinessName')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateExpenses = async (expenses) => {
+  const expensesArray = Array.isArray(expenses) ? expenses : [expenses];
+  const populatedExpenses = await Promise.all(
+    expensesArray.map(async (expense) => {
+      if (!expense) return null;
+      
+      const expenseObj = expense.toObject ? expense.toObject() : expense;
+      
+      // Populate Branch_id
+      if (expenseObj.Branch_id) {
+        const branchId = typeof expenseObj.Branch_id === 'object' ? expenseObj.Branch_id : expenseObj.Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName Address BusinessName');
+        if (branch) {
+          expenseObj.Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (expenseObj.created_by) {
+        const createdById = typeof expenseObj.created_by === 'object' ? expenseObj.created_by : expenseObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          expenseObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (expenseObj.updated_by) {
+        const updatedById = typeof expenseObj.updated_by === 'object' ? expenseObj.updated_by : expenseObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          expenseObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return expenseObj;
+    })
+  );
+  
+  return Array.isArray(expenses) ? populatedExpenses : populatedExpenses[0];
+};
 
 const createExpense = asyncHandler(async (req, res) => {
   try {
@@ -134,13 +176,15 @@ const getAllExpenses = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [expenses, total] = await Promise.all([
-      populateExpenses(Expenses.find(filter))
+    const [expensesData, total] = await Promise.all([
+      Expenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Expenses.countDocuments(filter)
     ]);
+    
+    const expenses = await populateExpenses(expensesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -163,23 +207,24 @@ const getAllExpenses = asyncHandler(async (req, res) => {
 const getExpenseById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    let expense;
+    let expenseData;
 
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      expense = await populateExpenses(Expenses.findById(id));
+      expenseData = await Expenses.findById(id);
     } else {
       const expenseId = parseInt(id, 10);
       if (isNaN(expenseId)) {
         return sendNotFound(res, 'Invalid expense ID format');
       }
-      expense = await populateExpenses(Expenses.findOne({ Expense_id: expenseId }));
+      expenseData = await Expenses.findOne({ Expense_id: expenseId });
     }
 
-    if (!expense) {
+    if (!expenseData) {
       return sendNotFound(res, 'Expense not found');
     }
 
-    console.info('Expense retrieved successfully', { id: expense._id });
+    const expense = await populateExpenses(expenseData);
+    console.info('Expense retrieved successfully', { id: expenseData._id });
     sendSuccess(res, expense, 'Expense retrieved successfully');
   } catch (error) {
     console.error('Error retrieving expense', { error: error.message, id: req.params.id });
@@ -226,7 +271,7 @@ const updateExpense = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Expense not found');
     }
 
-    const populated = await populateExpenses(Expenses.findById(expense._id));
+    const populated = await populateExpenses(expense);
     console.info('Expense updated successfully', { id: expense._id });
     sendSuccess(res, populated, 'Expense updated successfully');
   } catch (error) {
@@ -292,13 +337,15 @@ const getExpensesByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [expenses, total] = await Promise.all([
-      populateExpenses(Expenses.find(filter))
+    const [expensesData, total] = await Promise.all([
+      Expenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Expenses.countDocuments(filter)
     ]);
+    
+    const expenses = await populateExpenses(expensesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -355,13 +402,15 @@ const getExpensesByBranchId = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [expenses, total] = await Promise.all([
-      populateExpenses(Expenses.find(filter))
+    const [expensesData, total] = await Promise.all([
+      Expenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Expenses.countDocuments(filter)
     ]);
+    
+    const expenses = await populateExpenses(expensesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
