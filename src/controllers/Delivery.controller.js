@@ -47,7 +47,7 @@ const populateDeliveryData = async (deliveries) => {
   return Array.isArray(deliveries) ? populatedDeliveries : populatedDeliveries[0];
 };
 
-const buildFilter = ({ search, status, order_id }) => {
+const buildFilter = ({ search, status, deliveryStatus, order_id, startDate, endDate }) => {
   const filter = {};
 
   if (search) {
@@ -59,13 +59,41 @@ const buildFilter = ({ search, status, order_id }) => {
   }
 
   if (status !== undefined) {
-    filter.Status = status === 'true' || status === true;
+    // Handle both string and boolean values from query parameters
+    if (typeof status === 'string') {
+      filter.Status = status === 'true' || status === '1';
+    } else {
+      filter.Status = Boolean(status);
+    }
+  }
+
+  if (deliveryStatus) {
+    filter.DliveryStatus = deliveryStatus;
   }
 
   if (order_id !== undefined) {
     const orderId = parseInt(order_id, 10);
     if (!Number.isNaN(orderId)) {
       filter.order_id = orderId;
+    }
+  }
+
+  // Time filter for created_at
+  if (startDate || endDate) {
+    filter.created_at = {};
+    if (startDate) {
+      const parsedStart = new Date(startDate);
+      if (!isNaN(parsedStart.getTime())) {
+        filter.created_at.$gte = parsedStart;
+      }
+    }
+    if (endDate) {
+      const parsedEnd = new Date(endDate);
+      if (!isNaN(parsedEnd.getTime())) {
+        // Set to end of day for inclusive end date
+        parsedEnd.setHours(23, 59, 59, 999);
+        filter.created_at.$lte = parsedEnd;
+      }
     }
   }
 
@@ -136,7 +164,10 @@ const getAllDeliveries = asyncHandler(async (req, res) => {
       limit = 10,
       search = '',
       status,
+      deliveryStatus,
       order_id,
+      startDate,
+      endDate,
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
@@ -145,7 +176,7 @@ const getAllDeliveries = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
     
-    const filter = buildFilter({ search, status, order_id });
+    const filter = buildFilter({ search, status, deliveryStatus, order_id, startDate, endDate });
     
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;

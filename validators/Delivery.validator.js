@@ -34,8 +34,20 @@ const getAllDeliveriesSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
   search: Joi.string().trim().max(200).optional(),
-  status: Joi.boolean().optional(),
+  status: Joi.alternatives().try(
+    Joi.boolean(),
+    Joi.string().valid('true', 'false', '1', '0').optional()
+  ).optional(),
+  deliveryStatus: Joi.string().valid('Order Placed', 'Order Confirmed', 'Order Need to be Packed', 'Order Shipped', 'Out for Delivery', 'Delivered').optional(),
   order_id: Joi.number().integer().positive().optional(),
+  startDate: Joi.alternatives().try(
+    Joi.date(),
+    Joi.string().isoDate().optional()
+  ).optional(),
+  endDate: Joi.alternatives().try(
+    Joi.date(),
+    Joi.string().isoDate().optional()
+  ).optional(),
   sortBy: Joi.string().valid('created_at', 'updated_at', 'Delivery_id', 'DeliveryDay').default('created_at'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
 });
