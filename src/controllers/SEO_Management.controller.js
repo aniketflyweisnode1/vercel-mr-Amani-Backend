@@ -1,5 +1,6 @@
 const SEOManagement = require('../models/SEO_Management.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -19,10 +20,51 @@ const ensureBusinessBranchExists = async (business_Branch_id) => {
   return !!branch;
 };
 
-const populateSEO = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateSEO = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({ search, status, business_Branch_id }) => {
   const filter = {};
@@ -70,13 +112,15 @@ const listSEORecords = async ({ query, res, successMessage, filterOverrides = {}
   const sort = {};
   sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-  const [records, total] = await Promise.all([
-    populateSEO(SEOManagement.find(filter))
+  const [recordsData, total] = await Promise.all([
+    SEOManagement.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(numericLimit),
     SEOManagement.countDocuments(filter)
   ]);
+
+  const records = await populateSEO(recordsData);
 
   const totalPages = Math.ceil(total / numericLimit) || 1;
   const pagination = {
@@ -127,7 +171,7 @@ const createSEOManagement = asyncHandler(async (req, res) => {
     };
 
     const record = await SEOManagement.create(payload);
-    const populated = await populateSEO(SEOManagement.findById(record._id));
+    const populated = await populateSEO(record);
 
     sendSuccess(res, populated, 'SEO management record created successfully', 201);
   } catch (error) {
@@ -152,13 +196,8 @@ const getAllSEOManagements = asyncHandler(async (req, res) => {
 const getSEOManagementById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const recordQuery = await findSEOByIdentifier(id);
+    const record = await findSEOByIdentifier(id);
 
-    if (!recordQuery) {
-      return sendNotFound(res, 'SEO management record not found');
-    }
-
-    const record = await recordQuery;
     if (!record) {
       return sendNotFound(res, 'SEO management record not found');
     }
@@ -205,7 +244,7 @@ const updateSEOManagement = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'SEO management record not found');
     }
 
-    const populated = await populateSEO(SEOManagement.findById(record._id));
+    const populated = await populateSEO(record);
     sendSuccess(res, populated, 'SEO management record updated successfully');
   } catch (error) {
     console.error('Error updating SEO management record', { error: error.message, id: req.params.id });
