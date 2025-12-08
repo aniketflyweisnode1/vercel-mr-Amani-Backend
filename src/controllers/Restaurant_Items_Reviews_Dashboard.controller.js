@@ -1,12 +1,54 @@
 const ReviewsDashboard = require('../models/Restaurant_Items_Reviews_Dashboard.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateDashboard = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateDashboard = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, business_Branch_id }) => {
   const filter = {};
@@ -59,17 +101,23 @@ const ensureBranchExists = async (business_Branch_id) => {
   return Boolean(branch);
 };
 
-const findDashboardByIdentifier = (identifier) => {
+const findDashboardByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateDashboard(ReviewsDashboard.findById(identifier));
+    recordData = await ReviewsDashboard.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await ReviewsDashboard.findOne({ Restaurant_Items_Reviews_Dashboard_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateDashboard(ReviewsDashboard.findOne({ Restaurant_Items_Reviews_Dashboard_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateDashboard(recordData);
 };
 
 const createDashboard = asyncHandler(async (req, res) => {
@@ -86,7 +134,7 @@ const createDashboard = asyncHandler(async (req, res) => {
     };
 
     const dashboard = await ReviewsDashboard.create(payload);
-    const populated = await populateDashboard(ReviewsDashboard.findById(dashboard._id));
+    const populated = await populateDashboard(dashboard);
 
     sendSuccess(res, populated, 'Restaurant item reviews dashboard created successfully', 201);
   } catch (error) {
@@ -116,13 +164,15 @@ const getAllDashboards = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateDashboard(ReviewsDashboard.find(filter))
+    const [itemsData, total] = await Promise.all([
+      ReviewsDashboard.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       ReviewsDashboard.countDocuments(filter)
     ]);
+    
+    const items = await populateDashboard(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews dashboards retrieved successfully');
   } catch (error) {
@@ -134,13 +184,7 @@ const getAllDashboards = asyncHandler(async (req, res) => {
 const getDashboardById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const query = findDashboardByIdentifier(id);
-
-    if (!query) {
-      return sendError(res, 'Invalid dashboard identifier', 400);
-    }
-
-    const dashboard = await query;
+    const dashboard = await findDashboardByIdentifier(id);
 
     if (!dashboard) {
       return sendNotFound(res, 'Restaurant item reviews dashboard not found');
@@ -183,7 +227,7 @@ const updateDashboard = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant item reviews dashboard not found');
     }
 
-    const populated = await populateDashboard(ReviewsDashboard.findById(dashboard._id));
+    const populated = await populateDashboard(dashboard);
     sendSuccess(res, populated, 'Restaurant item reviews dashboard updated successfully');
   } catch (error) {
     console.error('Error updating restaurant item reviews dashboard', { error: error.message, id: req.params.id });
@@ -249,13 +293,15 @@ const getDashboardsByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateDashboard(ReviewsDashboard.find(filter))
+    const [itemsData, total] = await Promise.all([
+      ReviewsDashboard.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       ReviewsDashboard.countDocuments(filter)
     ]);
+    
+    const items = await populateDashboard(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews dashboards retrieved successfully');
   } catch (error) {
@@ -277,11 +323,13 @@ const getDashboardByBranchId = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Business branch not found');
     }
 
-    const dashboard = await populateDashboard(ReviewsDashboard.findOne({ business_Branch_id: branchId, Status: true }));
-
-    if (!dashboard) {
+    const dashboardData = await ReviewsDashboard.findOne({ business_Branch_id: branchId, Status: true });
+    
+    if (!dashboardData) {
       return sendNotFound(res, 'Restaurant item reviews dashboard not found');
     }
+    
+    const dashboard = await populateDashboard(dashboardData);
 
     sendSuccess(res, dashboard, 'Restaurant item reviews dashboard retrieved successfully');
   } catch (error) {

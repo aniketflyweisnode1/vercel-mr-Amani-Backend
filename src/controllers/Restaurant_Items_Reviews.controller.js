@@ -2,16 +2,85 @@ const Reviews = require('../models/Restaurant_Items_Reviews.model');
 const Business_Branch = require('../models/business_Branch.model');
 const ReviewsType = require('../models/Restaurant_Items_ReviewsType.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateReviews = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('Restaurant_Items_ReviewsType_id', 'Restaurant_Items_ReviewsType_id ReviewsType')
-  .populate('Restaurant_Items_id', 'Restaurant_Items_id name')
-  .populate('User_id', 'firstName lastName phoneNo')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateReviews = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate Restaurant_Items_ReviewsType_id
+      if (recordObj.Restaurant_Items_ReviewsType_id) {
+        const typeId = typeof recordObj.Restaurant_Items_ReviewsType_id === 'object' ? recordObj.Restaurant_Items_ReviewsType_id : recordObj.Restaurant_Items_ReviewsType_id;
+        const type = await ReviewsType.findOne({ Restaurant_Items_ReviewsType_id: typeId })
+          .select('Restaurant_Items_ReviewsType_id ReviewsType');
+        if (type) {
+          recordObj.Restaurant_Items_ReviewsType_id = type.toObject ? type.toObject() : type;
+        }
+      }
+      
+      // Populate Restaurant_Items_id
+      if (recordObj.Restaurant_Items_id) {
+        const itemId = typeof recordObj.Restaurant_Items_id === 'object' ? recordObj.Restaurant_Items_id : recordObj.Restaurant_Items_id;
+        const item = await RestaurantItems.findOne({ Restaurant_Items_id: itemId })
+          .select('Restaurant_Items_id name');
+        if (item) {
+          recordObj.Restaurant_Items_id = item.toObject ? item.toObject() : item;
+        }
+      }
+      
+      // Populate User_id
+      if (recordObj.User_id) {
+        const userId = typeof recordObj.User_id === 'object' ? recordObj.User_id : recordObj.User_id;
+        const user = await User.findOne({ user_id: userId })
+          .select('user_id firstName lastName phoneNo');
+        if (user) {
+          recordObj.User_id = user.toObject ? user.toObject() : user;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({
   search,
@@ -124,17 +193,23 @@ const ensureRestaurantItemExists = async (Restaurant_Items_id) => {
   return Boolean(item);
 };
 
-const findReviewByIdentifier = (identifier) => {
+const findReviewByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateReviews(Reviews.findById(identifier));
+    recordData = await Reviews.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await Reviews.findOne({ Restaurant_Items_Reviews_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateReviews(Reviews.findOne({ Restaurant_Items_Reviews_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateReviews(recordData);
 };
 
 const validateRating = (rating) => {
@@ -190,7 +265,7 @@ const createReview = asyncHandler(async (req, res) => {
     };
 
     const review = await Reviews.create(payload);
-    const populated = await populateReviews(Reviews.findById(review._id));
+    const populated = await populateReviews(review);
 
     sendSuccess(res, populated, 'Restaurant item review created successfully', 201);
   } catch (error) {
@@ -232,13 +307,15 @@ const getAllReviews = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateReviews(Reviews.find(filter))
+    const [itemsData, total] = await Promise.all([
+      Reviews.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reviews.countDocuments(filter)
     ]);
+    
+    const items = await populateReviews(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews retrieved successfully');
   } catch (error) {
@@ -250,13 +327,7 @@ const getAllReviews = asyncHandler(async (req, res) => {
 const getReviewById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const query = findReviewByIdentifier(id);
-
-    if (!query) {
-      return sendError(res, 'Invalid restaurant item review identifier', 400);
-    }
-
-    const review = await query;
+    const review = await findReviewByIdentifier(id);
 
     if (!review) {
       return sendNotFound(res, 'Restaurant item review not found');
@@ -327,7 +398,7 @@ const updateReview = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant item review not found');
     }
 
-    const populated = await populateReviews(Reviews.findById(review._id));
+    const populated = await populateReviews(review);
     sendSuccess(res, populated, 'Restaurant item review updated successfully');
   } catch (error) {
     console.error('Error updating restaurant item review', { error: error.message, id: req.params.id });
@@ -404,13 +475,15 @@ const getReviewsByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateReviews(Reviews.find(filter))
+    const [itemsData, total] = await Promise.all([
+      Reviews.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reviews.countDocuments(filter)
     ]);
+    
+    const items = await populateReviews(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews retrieved successfully');
   } catch (error) {
@@ -450,13 +523,15 @@ const getReviewsByBranchId = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateReviews(Reviews.find(filter))
+    const [itemsData, total] = await Promise.all([
+      Reviews.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reviews.countDocuments(filter)
     ]);
+    
+    const items = await populateReviews(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews retrieved successfully');
   } catch (error) {
@@ -497,13 +572,15 @@ const getReviewsByStatus = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateReviews(Reviews.find(filter))
+    const [itemsData, total] = await Promise.all([
+      Reviews.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reviews.countDocuments(filter)
     ]);
+    
+    const items = await populateReviews(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews retrieved successfully');
   } catch (error) {

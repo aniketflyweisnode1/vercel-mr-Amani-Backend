@@ -851,6 +851,20 @@ const getRestaurantInventory = asyncHandler(async (req, res) => {
   try {
     const { business_Branch_id } = req.query;
     
+    // Validate business_Branch_id if provided
+    if (business_Branch_id) {
+      const branchId = parseInt(business_Branch_id, 10);
+      if (isNaN(branchId)) {
+        return sendError(res, 'Invalid business_Branch_id format', 400);
+      }
+      
+      // Verify branch exists
+      const branchExists = await Business_Branch.findOne({ business_Branch_id: branchId, Status: true });
+      if (!branchExists) {
+        return sendError(res, 'Business branch not found or inactive', 404);
+      }
+    }
+    
     const filter = { Status: true };
     if (business_Branch_id) {
       const branchId = parseInt(business_Branch_id, 10);
@@ -858,6 +872,8 @@ const getRestaurantInventory = asyncHandler(async (req, res) => {
         filter.business_Branch_id = branchId;
       }
     }
+    
+    console.info('Querying restaurant inventory', { filter });
     
     // Get all counts in parallel
     const [
@@ -902,10 +918,18 @@ const getRestaurantInventory = asyncHandler(async (req, res) => {
       RestaurantItemOutStockcount
     };
     
-    console.info('Restaurant inventory retrieved successfully', { business_Branch_id });
+    console.info('Restaurant inventory retrieved successfully', { 
+      business_Branch_id, 
+      filter,
+      counts: inventoryData 
+    });
     sendSuccess(res, inventoryData, 'Restaurant inventory retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving restaurant inventory', { error: error.message, business_Branch_id: req.query.business_Branch_id });
+    console.error('Error retrieving restaurant inventory', { 
+      error: error.message, 
+      stack: error.stack,
+      business_Branch_id: req.query.business_Branch_id 
+    });
     throw error;
   }
 });
