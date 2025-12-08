@@ -847,6 +847,69 @@ const getRestaurantItemDashboardBySupplier = asyncHandler(async (req, res) => {
   }
 });
 
+const getRestaurantInventory = asyncHandler(async (req, res) => {
+  try {
+    const { business_Branch_id } = req.query;
+    
+    const filter = { Status: true };
+    if (business_Branch_id) {
+      const branchId = parseInt(business_Branch_id, 10);
+      if (!isNaN(branchId)) {
+        filter.business_Branch_id = branchId;
+      }
+    }
+    
+    // Get all counts in parallel
+    const [
+      RestaurantTotalItemsCount,
+      RestaurantiteminStockcount,
+      RestaurantitemLowStockcount,
+      RestaurantItemOutStockcount
+    ] = await Promise.all([
+      // Total items count
+      RestaurantItems.countDocuments(filter),
+      // Items in stock (CurrentStock > 0)
+      RestaurantItems.countDocuments({
+        ...filter,
+        CurrentStock: { $gt: 0 }
+      }),
+      // Items with low stock (CurrentStock < 5)
+      RestaurantItems.countDocuments({
+        ...filter,
+        CurrentStock: { $gt: 0, $lt: 5 }
+      }),
+      // Items out of stock (CurrentStock = 0)
+      RestaurantItems.countDocuments({
+        ...filter,
+        CurrentStock: { $eq: 0 }
+      })
+    ]);
+    
+    // Items that need alert (CurrentStock < minStock OR CurrentStock = 0)
+    const RestaurantItemsAltercount = await RestaurantItems.countDocuments({
+      ...filter,
+      $or: [
+        { CurrentStock: { $eq: 0 } },
+        { $expr: { $lt: ['$CurrentStock', '$minStock'] } }
+      ]
+    });
+    
+    const inventoryData = {
+      RestaurantTotalItemsCount,
+      RestaurantItemsAltercount,
+      RestaurantiteminStockcount,
+      RestaurantitemLowStockcount,
+      RestaurantItemOutStockcount
+    };
+    
+    console.info('Restaurant inventory retrieved successfully', { business_Branch_id });
+    sendSuccess(res, inventoryData, 'Restaurant inventory retrieved successfully');
+  } catch (error) {
+    console.error('Error retrieving restaurant inventory', { error: error.message, business_Branch_id: req.query.business_Branch_id });
+    throw error;
+  }
+});
+
 module.exports = {
   createRestaurantItem,
   getAllRestaurantItems,
@@ -856,7 +919,8 @@ module.exports = {
   getRestaurantItemsByAuth,
   getRestaurantItemsByCategory,
   getRestaurantItemDashboard,
-  getRestaurantItemDashboardBySupplier
+  getRestaurantItemDashboardBySupplier,
+  getRestaurantInventory
 };
 
 

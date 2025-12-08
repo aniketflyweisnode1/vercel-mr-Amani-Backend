@@ -371,11 +371,29 @@ const getBusinessBranchesByAuthSchema = Joi.object({
     .default('desc')
 });
 
+const getBranchTrackRanksCompetitorsSchema = Joi.object({
+  sortBy: Joi.string()
+    .valid('OrderCount', 'ReviewCount', 'Earning')
+    .optional()
+    .default('OrderCount')
+    .messages({
+      'any.only': 'Sort by must be one of: OrderCount, ReviewCount, Earning'
+    }),
+  sortOrder: Joi.string()
+    .valid('asc', 'desc')
+    .optional()
+    .default('desc')
+    .messages({
+      'any.only': 'Sort order must be either asc or desc'
+    })
+});
+
 module.exports = {
   createBusinessBranchSchema,
   updateBusinessBranchSchema,
   getBusinessBranchByIdSchema,
   getAllBusinessBranchesSchema,
-  getBusinessBranchesByAuthSchema
+  getBusinessBranchesByAuthSchema,
+  getBranchTrackRanksCompetitorsSchema
 };
 

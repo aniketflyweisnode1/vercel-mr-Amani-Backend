@@ -11,7 +11,8 @@ const {
   getRestaurantItemsByAuth,
   getRestaurantItemsByCategory,
   getRestaurantItemDashboard,
-  getRestaurantItemDashboardBySupplier
+  getRestaurantItemDashboardBySupplier,
+  getRestaurantInventory
 } = require('../../controllers/Restaurant_Items.controller');
 const {
   createRestaurantItemSchema,
@@ -21,7 +22,8 @@ const {
   getRestaurantItemsByAuthSchema,
   getRestaurantItemsByCategoryParamsSchema,
   getRestaurantItemsByCategoryQuerySchema,
-  getDashboardBySupplierSchema
+  getDashboardBySupplierSchema,
+  getRestaurantInventorySchema
 } = require('../../../validators/Restaurant_Items.validator');
 
 router.post('/create', auth, validateBody(createRestaurantItemSchema), createRestaurantItem);
@@ -33,6 +35,7 @@ router.get('/getByAuth', auth, validateQuery(getRestaurantItemsByAuthSchema), ge
 router.get('/getByRestaurantItemCategory/:Restaurant_item_Category_id', auth, validateQuery(getRestaurantItemsByCategoryQuerySchema), validateParams(getRestaurantItemsByCategoryParamsSchema), getRestaurantItemsByCategory);
 router.get('/dashboard', auth, getRestaurantItemDashboard);
 router.get('/dashboard/SupplierName', auth, validateQuery(getDashboardBySupplierSchema), getRestaurantItemDashboardBySupplier);
+router.get('/inventory', auth, validateQuery(getRestaurantInventorySchema), getRestaurantInventory);
 
 module.exports = router;
 

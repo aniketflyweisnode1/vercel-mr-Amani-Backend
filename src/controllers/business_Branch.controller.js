@@ -4,6 +4,10 @@ const State = require('../models/state.model');
 const Country = require('../models/country.model');
 const Subscription = require('../models/subscription.model');
 const Business_Details = require('../models/Business_Details.model');
+const Order_Now = require('../models/Order_Now.model');
+const Restaurant_Items_Reviews = require('../models/Restaurant_Items_Reviews.model');
+const Transaction = require('../models/transaction.model');
+const Restaurant_Items = require('../models/Restaurant_Items.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -685,7 +689,115 @@ const getBusinessBranchesByAuth = asyncHandler(async (req, res) => {
   }
 });
 
+const getBranchTrackRanksCompetitors = asyncHandler(async (req, res) => {
+  try {
+    const { sortBy = 'OrderCount', sortOrder = 'desc' } = req.query;
+    
+    // Get all active branches
+    const branches = await Business_Branch.find({ Status: true })
+      .select('business_Branch_id firstName lastName BusinessName Address City_id State_id Country_id Status')
+      .lean();
+    
+    // Get all restaurant items with branch mapping for order counting
+    const restaurantItems = await Restaurant_Items.find({ Status: true })
+      .select('Restaurant_Items_id business_Branch_id')
+      .lean();
+    
+    // Create a map of item_id to branch_id for quick lookup
+    const itemToBranchMap = {};
+    restaurantItems.forEach(item => {
+      itemToBranchMap[item.Restaurant_Items_id] = item.business_Branch_id;
+    });
+    
+    // Get all orders
+    const allOrders = await Order_Now.find({ Status: true })
+      .select('Order_Now_id Product OrderStatus')
+      .lean();
+    
+    // Calculate metrics for each branch
+    const branchMetrics = await Promise.all(
+      branches.map(async (branch) => {
+        const branchId = branch.business_Branch_id;
+        
+        // Count orders: Orders where at least one product item belongs to this branch
+        const orderCount = allOrders.filter(order => {
+          return order.Product && order.Product.some(product => {
+            const itemId = product.Item_id;
+            return itemToBranchMap[itemId] === branchId;
+          });
+        }).length;
+        
+        // Count reviews
+        const reviewCount = await Restaurant_Items_Reviews.countDocuments({
+          business_Branch_id: branchId,
+          Status: true
+        });
+        
+        // Calculate earnings: Sum of completed transactions
+        const earningsResult = await Transaction.aggregate([
+          {
+            $match: {
+              business_Branch_id: branchId,
+              Status: true,
+              status: 'completed',
+              transactionType: { $in: ['Order_Now_Payment', 'deposit', 'Recharge'] }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: '$amount' }
+            }
+          }
+        ]);
+        const earning = earningsResult[0]?.total || 0;
+        
+        return {
+          BranchId: branchId,
+          BranchName: branch.BusinessName || `${branch.firstName || ''} ${branch.lastName || ''}`.trim() || 'Unnamed Branch',
+          Address: branch.Address || '',
+          City_id: branch.City_id || null,
+          State_id: branch.State_id || null,
+          Country_id: branch.Country_id || null,
+          OrderCount: orderCount,
+          ReviewCount: reviewCount,
+          Earning: earning
+        };
+      })
+    );
+    
+    // Sort the results
+    const sortField = sortBy === 'OrderCount' ? 'OrderCount' : 
+                     sortBy === 'ReviewCount' ? 'ReviewCount' : 
+                     sortBy === 'Earning' ? 'Earning' : 'OrderCount';
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+    
+    branchMetrics.sort((a, b) => {
+      if (sortField === 'Earning') {
+        return (b.Earning - a.Earning) * sortDirection;
+      }
+      return (b[sortField] - a[sortField]) * sortDirection;
+    });
+    
+    const responseData = {
+      getBranchlist: branchMetrics
+    };
+    
+    console.info('Branch track ranks competitors retrieved successfully', { totalBranches: branchMetrics.length });
+    sendSuccess(res, responseData, 'Branch track ranks competitors retrieved successfully');
+  } catch (error) {
+    console.error('Error retrieving branch track ranks competitors', { error: error.message, stack: error.stack });
+    throw error;
+  }
+});
+
 module.exports = {
-  createBusinessBranch, getAllBusinessBranches, getBusinessBranchById, updateBusinessBranch, deleteBusinessBranch, getBusinessBranchesByAuth
+  createBusinessBranch, 
+  getAllBusinessBranches, 
+  getBusinessBranchById, 
+  updateBusinessBranch, 
+  deleteBusinessBranch, 
+  getBusinessBranchesByAuth,
+  getBranchTrackRanksCompetitors
 };
 

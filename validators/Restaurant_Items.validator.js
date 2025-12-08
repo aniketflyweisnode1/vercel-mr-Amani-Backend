@@ -84,6 +84,18 @@ const getDashboardBySupplierSchema = Joi.object({
   SupplierName: Joi.string().trim().min(1).max(200).required()
 });
 
+const getRestaurantInventorySchema = Joi.object({
+  business_Branch_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'Business Branch ID must be a number',
+      'number.integer': 'Business Branch ID must be an integer',
+      'number.positive': 'Business Branch ID must be positive'
+    })
+});
+
 module.exports = {
   createRestaurantItemSchema,
   updateRestaurantItemSchema,
@@ -92,7 +104,8 @@ module.exports = {
   getRestaurantItemsByAuthSchema,
   getRestaurantItemsByCategoryParamsSchema,
   getRestaurantItemsByCategoryQuerySchema,
-  getDashboardBySupplierSchema
+  getDashboardBySupplierSchema,
+  getRestaurantInventorySchema
 };
 
 
