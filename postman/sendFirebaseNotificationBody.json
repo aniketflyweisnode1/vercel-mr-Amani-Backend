@@ -1,0 +1,10 @@
+{
+  "token": "device-fcm-token-here",
+  "title": "Notification Title",
+  "body": "Notification body message",
+  "imageUrl": "https://example.com/image.jpg",
+  "data": {
+    "key1": "value1",
+    "key2": "value2"
+  }
+}

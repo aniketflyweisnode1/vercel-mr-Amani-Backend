@@ -164,6 +164,26 @@ const getAllDashboards = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
+    // Get all dashboards matching the filter (not just paginated ones) for aggregation
+    const allDashboardsForAggregation = await ReviewsDashboard.find(filter).lean();
+
+    // Calculate aggregate counts from all matching dashboards
+    const RestaurantReviews = allDashboardsForAggregation.reduce((acc, dashboard) => {
+      acc.OverallRating = (acc.OverallRating || 0) + (dashboard.OverallRating || 0);
+      acc.ExcellentCount = (acc.ExcellentCount || 0) + (dashboard.ExcellentCount || 0);
+      acc.GoodCount = (acc.GoodCount || 0) + (dashboard.GoodCount || 0);
+      acc.AverageCount = (acc.AverageCount || 0) + (dashboard.AverageCount || 0);
+      acc.PoorCount = (acc.PoorCount || 0) + (dashboard.PoorCount || 0);
+      return acc;
+    }, {
+      OverallRating: 0,
+      ExcellentCount: 0,
+      GoodCount: 0,
+      AverageCount: 0,
+      PoorCount: 0
+    });
+
+    // Get paginated dashboards
     const [itemsData, total] = await Promise.all([
       ReviewsDashboard.find(filter)
         .sort(sort)
@@ -174,9 +194,29 @@ const getAllDashboards = asyncHandler(async (req, res) => {
     
     const items = await populateDashboard(itemsData);
 
-    sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Restaurant item reviews dashboards retrieved successfully');
+    // Prepare response with RestaurantReviews aggregate and dashboard list
+    const responseData = {
+      RestaurantReviews: {
+        OverallRating: RestaurantReviews.OverallRating,
+        ExcellentCount: RestaurantReviews.ExcellentCount,
+        GoodCount: RestaurantReviews.GoodCount,
+        AverageCount: RestaurantReviews.AverageCount,
+        PoorCount: RestaurantReviews.PoorCount
+      },
+      dashboards: items
+    };
+
+    const pagination = paginateMeta(numericPage, numericLimit, total);
+    
+    console.info('Restaurant item reviews dashboards retrieved successfully', { 
+      total, 
+      page: numericPage,
+      RestaurantReviews 
+    });
+    
+    sendPaginated(res, responseData, pagination, 'Restaurant item reviews dashboards retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving restaurant item reviews dashboards', { error: error.message });
+    console.error('Error retrieving restaurant item reviews dashboards', { error: error.message, stack: error.stack });
     throw error;
   }
 });

@@ -5,6 +5,14 @@ const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
+const getBusinessBranchIdByAuth = async (userIdNumber) => {
+  if (!userIdNumber) {
+    return null;
+  }
+  const branch = await Business_Branch.findOne({ created_by: userIdNumber, Status: true });
+  return branch ? branch.business_Branch_id : null;
+};
+
 const ensureBusinessBranchExists = async (Branch_id) => {
   // console.log('Branch_id', Branch_id);
   if (Branch_id === undefined || Branch_id === null) {
@@ -105,28 +113,37 @@ const populateBranchMapBank = async (mappings) => {
 
 const createBranchMapBank = asyncHandler(async (req, res) => {
   try {
-    const { Branch_id, Bank_id } = req.body;
+    let { Branch_id, Bank_id } = req.body;
 
-    const [branchExists, bankExists] = await Promise.all([
-      ensureBusinessBranchExists(Branch_id),
-      ensureBankExists(Bank_id)
-    ]);
-
-    if (!branchExists) {
-      return sendError(res, 'Associated business branch not found or inactive', 400);
+    // If Branch_id is not provided or doesn't exist, try to get it from authenticated user
+    if (!Branch_id || !(await ensureBusinessBranchExists(Branch_id))) {
+      if (req.userIdNumber) {
+        const authBranchId = await getBusinessBranchIdByAuth(req.userIdNumber);
+        if (authBranchId) {
+          Branch_id = authBranchId;
+          console.info('Using authenticated user branch ID', { Branch_id: authBranchId, userId: req.userIdNumber });
+        } else {
+          return sendError(res, 'No business branch found for authenticated user. Please provide a valid Branch_id.', 400);
+        }
+      } else {
+        return sendError(res, 'Branch_id is required or user must be authenticated', 400);
+      }
     }
 
+    // Verify bank exists
+    const bankExists = await ensureBankExists(Bank_id);
     if (!bankExists) {
       return sendError(res, 'Associated bank not found or inactive', 400);
     }
 
     const payload = {
       ...req.body,
+      Branch_id,
       created_by: req.userIdNumber || null
     };
 
     const mapping = await BranchMapBank.create(payload);
-    console.info('Branch map bank created successfully', { Branch_map_Bank_id: mapping.Branch_map_Bank_id });
+    console.info('Branch map bank created successfully', { Branch_map_Bank_id: mapping.Branch_map_Bank_id, Branch_id });
 
     const populated = await populateBranchMapBank(mapping);
     sendSuccess(res, populated, 'Branch map bank created successfully', 201);

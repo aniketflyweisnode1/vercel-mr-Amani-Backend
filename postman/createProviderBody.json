@@ -1,0 +1,20 @@
+{
+  "ProviderName": "Food Delivery Provider",
+  "ProviderStatus": "Active",
+  "ProviderPricing": false,
+  "PreparationTime": "30 minutes",
+  "StoreId": 1,
+  "PickUp": [
+    {
+      "AutoPuckup": false,
+      "EnableServiceFee": false
+    }
+  ],
+  "Delivery": [
+    {
+      "AutoDelivery": false,
+      "EnableServiceFee": false
+    }
+  ],
+  "Status": true
+}
