@@ -1,10 +1,43 @@
 const ContentCreator = require('../models/Restaurant_Items_ReviewsForm_ContentCreator.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateContentCreator = (query) => query
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateContentCreator = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Country }) => {
   const filter = {};
@@ -41,17 +74,23 @@ const paginateMeta = (page, limit, total) => {
   };
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateContentCreator(ContentCreator.findById(identifier));
+    recordData = await ContentCreator.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await ContentCreator.findOne({ ReviewsForm_ContentCreator_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateContentCreator(ContentCreator.findOne({ ReviewsForm_ContentCreator_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateContentCreator(recordData);
 };
 
 const createContentCreator = asyncHandler(async (req, res) => {
@@ -62,11 +101,11 @@ const createContentCreator = asyncHandler(async (req, res) => {
     };
 
     const record = await ContentCreator.create(payload);
-    const populated = await populateContentCreator(ContentCreator.findById(record._id));
+    const populated = await populateContentCreator(record);
 
     sendSuccess(res, populated, 'Content creator entry created successfully', 201);
   } catch (error) {
-    console.error('Error creating content creator entry', { error: error.message });
+    console.error('Error creating content creator entry', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -92,17 +131,19 @@ const getAllContentCreators = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateContentCreator(ContentCreator.find(filter))
+    const [itemsData, total] = await Promise.all([
+      ContentCreator.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       ContentCreator.countDocuments(filter)
     ]);
+    
+    const items = await populateContentCreator(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Content creator entries retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving content creator entries', { error: error.message });
+    console.error('Error retrieving content creator entries', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -110,13 +151,7 @@ const getAllContentCreators = asyncHandler(async (req, res) => {
 const getContentCreatorById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const query = findByIdentifier(id);
-
-    if (!query) {
-      return sendError(res, 'Invalid content creator identifier', 400);
-    }
-
-    const record = await query;
+    const record = await findByIdentifier(id);
 
     if (!record) {
       return sendNotFound(res, 'Content creator entry not found');
@@ -124,7 +159,7 @@ const getContentCreatorById = asyncHandler(async (req, res) => {
 
     sendSuccess(res, record, 'Content creator entry retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving content creator entry', { error: error.message, id: req.params.id });
+    console.error('Error retrieving content creator entry', { error: error.message, id: req.params.id, stack: error.stack });
     throw error;
   }
 });
@@ -153,7 +188,7 @@ const updateContentCreator = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Content creator entry not found');
     }
 
-    const populated = await populateContentCreator(ContentCreator.findById(record._id));
+    const populated = await populateContentCreator(record);
     sendSuccess(res, populated, 'Content creator entry updated successfully');
   } catch (error) {
     console.error('Error updating content creator entry', { error: error.message, id: req.params.id });
@@ -219,17 +254,19 @@ const getContentCreatorsByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [items, total] = await Promise.all([
-      populateContentCreator(ContentCreator.find(filter))
+    const [itemsData, total] = await Promise.all([
+      ContentCreator.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       ContentCreator.countDocuments(filter)
     ]);
+    
+    const items = await populateContentCreator(itemsData);
 
     sendPaginated(res, items, paginateMeta(numericPage, numericLimit, total), 'Content creator entries retrieved successfully');
   } catch (error) {
-    console.error('Error retrieving content creator entries by auth', { error: error.message, userId: req.userIdNumber });
+    console.error('Error retrieving content creator entries by auth', { error: error.message, userId: req.userIdNumber, stack: error.stack });
     throw error;
   }
 });

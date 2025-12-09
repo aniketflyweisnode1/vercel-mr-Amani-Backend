@@ -700,7 +700,7 @@ const getBranchTrackRanksCompetitors = asyncHandler(async (req, res) => {
     
     // Get all restaurant items with branch mapping for order counting
     const restaurantItems = await Restaurant_Items.find({ Status: true })
-      .select('Restaurant_Items_id business_Branch_id')
+      .select('Restaurant_Items_id business_Branch_id unitPrice DeliveryTime name')
       .lean();
     
     // Create a map of item_id to branch_id for quick lookup
@@ -709,29 +709,121 @@ const getBranchTrackRanksCompetitors = asyncHandler(async (req, res) => {
       itemToBranchMap[item.Restaurant_Items_id] = item.business_Branch_id;
     });
     
-    // Get all orders
+    // Get all orders with created_at for trend calculation
     const allOrders = await Order_Now.find({ Status: true })
-      .select('Order_Now_id Product OrderStatus')
+      .select('Order_Now_id Product OrderStatus created_at')
       .lean();
+    
+    // Get current date for trend calculation
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
     
     // Calculate metrics for each branch
     const branchMetrics = await Promise.all(
       branches.map(async (branch) => {
         const branchId = branch.business_Branch_id;
         
+        // Get branch items
+        const branchItems = restaurantItems.filter(item => item.business_Branch_id === branchId);
+        
         // Count orders: Orders where at least one product item belongs to this branch
-        const orderCount = allOrders.filter(order => {
+        const branchOrders = allOrders.filter(order => {
           return order.Product && order.Product.some(product => {
             const itemId = product.Item_id;
             return itemToBranchMap[itemId] === branchId;
           });
+        });
+        const orderCount = branchOrders.length;
+        
+        // Calculate trend percentage: Compare current month vs previous month
+        const currentMonthOrders = branchOrders.filter(order => {
+          const orderDate = new Date(order.created_at);
+          return orderDate >= currentMonthStart;
         }).length;
         
-        // Count reviews
-        const reviewCount = await Restaurant_Items_Reviews.countDocuments({
+        const previousMonthOrders = branchOrders.filter(order => {
+          const orderDate = new Date(order.created_at);
+          return orderDate >= previousMonthStart && orderDate <= previousMonthEnd;
+        }).length;
+        
+        let trendPercentage = 0;
+        if (previousMonthOrders > 0) {
+          trendPercentage = ((currentMonthOrders - previousMonthOrders) / previousMonthOrders) * 100;
+        } else if (currentMonthOrders > 0) {
+          trendPercentage = 100; // 100% growth if no previous orders
+        }
+        
+        // Count reviews and calculate average rating
+        const reviews = await Restaurant_Items_Reviews.find({
           business_Branch_id: branchId,
           Status: true
+        }).select('Reating').lean();
+        
+        const reviewCount = reviews.length;
+        let rating = 0;
+        if (reviewCount > 0) {
+          const totalRating = reviews.reduce((sum, review) => sum + (review.Reating || 0), 0);
+          rating = parseFloat((totalRating / reviewCount).toFixed(2));
+        }
+        
+        // Calculate price range from branch items
+        let priceRange = { min: 0, max: 0 };
+        if (branchItems.length > 0) {
+          const prices = branchItems
+            .map(item => item.unitPrice || 0)
+            .filter(price => price > 0);
+          if (prices.length > 0) {
+            priceRange = {
+              min: Math.min(...prices),
+              max: Math.max(...prices)
+            };
+          }
+        }
+        
+        // Calculate estimated time (average delivery time or most common)
+        let estimatedTime = '';
+        if (branchItems.length > 0) {
+          const deliveryTimes = branchItems
+            .map(item => item.DeliveryTime)
+            .filter(time => time && time.trim() !== '');
+          if (deliveryTimes.length > 0) {
+            // Get most common delivery time
+            const timeCounts = {};
+            deliveryTimes.forEach(time => {
+              timeCounts[time] = (timeCounts[time] || 0) + 1;
+            });
+            estimatedTime = Object.keys(timeCounts).reduce((a, b) => 
+              timeCounts[a] > timeCounts[b] ? a : b
+            );
+          }
+        }
+        
+        // Calculate popular items (top 5 by order frequency)
+        const itemOrderCounts = {};
+        branchOrders.forEach(order => {
+          if (order.Product) {
+            order.Product.forEach(product => {
+              const itemId = product.Item_id;
+              if (itemToBranchMap[itemId] === branchId) {
+                itemOrderCounts[itemId] = (itemOrderCounts[itemId] || 0) + (product.Quantity || 1);
+              }
+            });
+          }
         });
+        
+        const popularItems = Object.entries(itemOrderCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([itemId, count]) => {
+            const item = branchItems.find(i => i.Restaurant_Items_id === parseInt(itemId, 10));
+            return {
+              ItemId: parseInt(itemId, 10),
+              ItemName: item?.name || 'Unknown Item',
+              OrderCount: count
+            };
+          });
         
         // Calculate earnings: Sum of completed transactions
         const earningsResult = await Transaction.aggregate([
@@ -761,7 +853,12 @@ const getBranchTrackRanksCompetitors = asyncHandler(async (req, res) => {
           Country_id: branch.Country_id || null,
           OrderCount: orderCount,
           ReviewCount: reviewCount,
-          Earning: earning
+          Earning: earning,
+          Rating: rating,
+          PriceRange: priceRange,
+          EstimatedTime: estimatedTime,
+          TrendPercentage: parseFloat(trendPercentage.toFixed(2)),
+          PopularItems: popularItems
         };
       })
     );
@@ -769,12 +866,13 @@ const getBranchTrackRanksCompetitors = asyncHandler(async (req, res) => {
     // Sort the results
     const sortField = sortBy === 'OrderCount' ? 'OrderCount' : 
                      sortBy === 'ReviewCount' ? 'ReviewCount' : 
-                     sortBy === 'Earning' ? 'Earning' : 'OrderCount';
+                     sortBy === 'Earning' ? 'Earning' : 
+                     sortBy === 'Rating' ? 'Rating' : 'OrderCount';
     const sortDirection = sortOrder === 'asc' ? 1 : -1;
     
     branchMetrics.sort((a, b) => {
-      if (sortField === 'Earning') {
-        return (b.Earning - a.Earning) * sortDirection;
+      if (sortField === 'Earning' || sortField === 'Rating' || sortField === 'TrendPercentage') {
+        return (b[sortField] - a[sortField]) * sortDirection;
       }
       return (b[sortField] - a[sortField]) * sortDirection;
     });
