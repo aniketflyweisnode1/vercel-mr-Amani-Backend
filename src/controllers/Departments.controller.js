@@ -1,10 +1,43 @@
 const Departments = require('../models/Departments.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateDepartment = (query) => query
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateDepartment = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status }) => {
   const filter = {};
@@ -23,16 +56,22 @@ const buildFilter = ({ search, status }) => {
 };
 
 const findDepartmentByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateDepartment(Departments.findById(identifier));
+    recordData = await Departments.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await Departments.findOne({ Departments_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!isNaN(numericId)) {
-    return populateDepartment(Departments.findOne({ Departments_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateDepartment(recordData);
 };
 
 const createDepartment = asyncHandler(async (req, res) => {
@@ -43,7 +82,7 @@ const createDepartment = asyncHandler(async (req, res) => {
     };
 
     const department = await Departments.create(payload);
-    const populated = await populateDepartment(Departments.findById(department._id));
+    const populated = await populateDepartment(department);
 
     sendSuccess(res, populated, 'Department created successfully', 201);
   } catch (error) {
@@ -72,13 +111,15 @@ const getAllDepartments = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [departments, total] = await Promise.all([
-      populateDepartment(Departments.find(filter))
+    const [departmentsData, total] = await Promise.all([
+      Departments.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Departments.countDocuments(filter)
     ]);
+    
+    const departments = await populateDepartment(departmentsData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -137,7 +178,7 @@ const updateDepartment = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Department not found');
     }
 
-    const populated = await populateDepartment(Departments.findById(department._id));
+    const populated = await populateDepartment(department);
     sendSuccess(res, populated, 'Department updated successfully');
   } catch (error) {
     console.error('Error updating department', { error: error.message, id: req.params.id });
@@ -203,13 +244,15 @@ const getDepartmentsByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [departments, total] = await Promise.all([
-      populateDepartment(Departments.find(filter))
+    const [departmentsData, total] = await Promise.all([
+      Departments.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Departments.countDocuments(filter)
     ]);
+    
+    const departments = await populateDepartment(departmentsData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -237,12 +280,13 @@ const getDepartmentsByTypeId = asyncHandler(async (req, res) => {
       return sendError(res, 'Invalid department ID format', 400);
     }
 
-    const department = await populateDepartment(Departments.findOne({ Departments_id: numericId }));
+    const departmentData = await Departments.findOne({ Departments_id: numericId });
 
-    if (!department) {
+    if (!departmentData) {
       return sendNotFound(res, 'Department not found');
     }
 
+    const department = await populateDepartment(departmentData);
     sendSuccess(res, department, 'Department retrieved successfully');
   } catch (error) {
     console.error('Error retrieving department by type ID', { error: error.message, department_id: req.params.department_id });
