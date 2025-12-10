@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 // Import controllers
-const { createUser, getAllUsers, getUserById, updateUser, deleteUser, activeDeviceLocation, getbyAuthProfile } = require('../../controllers/user.controller.js');
+const { createUser, getAllUsers, getUserById, updateUser, deleteUser, activeDeviceLocation, getbyAuthProfile, updateLanguage } = require('../../controllers/user.controller.js');
 
 // Import middleware
 const { auth } = require('../../../middleware/auth.js');
 const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
 
 // Import validators
-const { createUserSchema, updateUserSchema, getUserByIdSchema, getAllUsersSchema } = require('../../../validators/user.validator');
+const { createUserSchema, updateUserSchema, getUserByIdSchema, getAllUsersSchema, updateLanguageSchema } = require('../../../validators/user.validator');
 
 // Routes
 router.post('/create', validateBody(createUserSchema), createUser);
@@ -19,5 +19,6 @@ router.put('/update/:id', auth, validateParams(getUserByIdSchema), validateBody(
 router.delete('/delete/:id', auth, validateParams(getUserByIdSchema), deleteUser);
 router.put('/activeDeviceLocation', auth, activeDeviceLocation);
 router.get('/getbyAuthProfile', auth, getbyAuthProfile);
+router.put('/updateLanguage', auth, validateBody(updateLanguageSchema), updateLanguage);
 
 module.exports = router;

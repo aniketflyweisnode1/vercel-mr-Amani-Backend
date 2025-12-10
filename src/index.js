@@ -3,6 +3,7 @@ const router = express.Router();
 
 // Import route modules
 const LoginRoutes = require('./routes/Authentication/Login.routes.js');
+const ChangePasswordRoutes = require('./routes/Authentication/ChangePassword.routes.js');
 const UserRoutes = require('./routes/User/user.js');
 const DasboardListRoutes = require('./routes/User/DasboardList.routes');
 const ReelRoutes = require('./routes/SocialMedia/Reel.routes');
@@ -124,6 +125,7 @@ const RestaurantMobileAppRoutes = require('./routes/Restaurant/Restaurant_Mobile
 const RestaurantMobileReportsFilterRoutes = require('./routes/Restaurant/Restaurant_Mobile_Reports_filter.routes');
 const ReportsRoutes = require('./routes/Restaurant/Reports.routes');
 const ProvidersRoutes = require('./routes/Restaurant/Providers.routes');
+const SettingsAppPartnersNeedsRoutes = require('./routes/Restaurant/Settings_App_Partners_Needs.routes');
 const AnalyticsOperationsReportsRoutes = require('./routes/Restaurant/Analytics/Analytics_operations_Reports.routes');
 const AnalyticsSocialMediaReportsRoutes = require('./routes/Restaurant/Analytics/Analytics_social_media_Reports.routes');
 const RestaurantPlanRoutes = require('./routes/Restaurant/Restaurant_Plan.routes');
@@ -186,6 +188,7 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/authentication', LoginRoutes);
+router.use('/ChangePassword', ChangePasswordRoutes);
 router.use('/user', UserRoutes);
 router.use('/DasboardList', DasboardListRoutes);
 router.use('/myFavorites', MyFavoritesRoutes);
@@ -305,6 +308,7 @@ router.use('/Restaurant_Mobile_app', RestaurantMobileAppRoutes);
 router.use('/Restaurant_Mobile_Reports_filter', RestaurantMobileReportsFilterRoutes);
 router.use('/Reports', ReportsRoutes);
 router.use('/Providers', ProvidersRoutes);
+router.use('/Settings_App_Partners_Needs', SettingsAppPartnersNeedsRoutes);
 router.use('/Analytics_operations_Reports', AnalyticsOperationsReportsRoutes);
 router.use('/Analytics_social_media_Reports', AnalyticsSocialMediaReportsRoutes);
 router.use('/Restaurant_Plan', RestaurantPlanRoutes);

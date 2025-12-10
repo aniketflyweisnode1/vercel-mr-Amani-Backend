@@ -1,4 +1,4 @@
-﻿const User = require('../models/User.model');
+const User = require('../models/User.model');
 const { generateOTPWithExpiry, verifyOTP } = require('../../utils/otp');
 const { generateToken } = require('../../utils/jwt');
 const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
@@ -149,10 +149,20 @@ const resendOTP = asyncHandler(async (req, res) => {
  */
 const verifyOTPHandler = asyncHandler(async (req, res) => {
   try {
-    const { phoneNo, otp, role } = req.body;
+    const { phoneNo, email, otp, role } = req.body;
+
+    // Build query based on phoneNo or email
+    const query = {};
+    if (phoneNo) {
+      query.phoneNo = phoneNo.trim();
+    } else if (email) {
+      query.Email = email.toLowerCase().trim();
+    } else {
+      return sendError(res, 'Either phone number or email is required', 400);
+    }
 
     // Find user with OTP
-    const user = await User.findOne({ phoneNo }).select('+otp +otpExpiresAt');
+    const user = await User.findOne(query).select('+otp +otpExpiresAt');
 
     if (!user) {
       return sendError(res, 'User not found', 404);
@@ -242,11 +252,11 @@ const userLogout = asyncHandler(async (req, res) => {
     // User is already authenticated via auth middleware
     // The token is valid, so we just return success
     // Client should discard the token on their end
-    
-    console.info('User logged out successfully', { 
-      userId: req.userId, 
+
+    console.info('User logged out successfully', {
+      userId: req.userId,
       userIdNumber: req.userIdNumber,
-      phoneNo: req.user?.phoneNo 
+      phoneNo: req.user?.phoneNo
     });
 
     sendSuccess(res, {

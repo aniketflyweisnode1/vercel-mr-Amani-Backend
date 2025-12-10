@@ -390,10 +390,17 @@ const userLoginSchema = Joi.object({
 const verifyOTPSchema = Joi.object({
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)
-    .required()
+    .optional()
     .messages({
-      'string.empty': 'Phone number is required',
       'string.pattern.base': 'Please enter a valid 10-digit phone number'
+    }),
+  email: Joi.string()
+    .email()
+    .lowercase()
+    .trim()
+    .optional()
+    .messages({
+      'string.email': 'Please enter a valid email address'
     }),
   otp: Joi.string()
     .pattern(/^[0-9]{4}$/)
@@ -409,6 +416,8 @@ const verifyOTPSchema = Joi.object({
     .messages({
       'any.only': 'Role must be one of User, Vendor, Admin, or Restaurant'
     })
+}).or('phoneNo', 'email').messages({
+  'object.missing': 'Either phone number or email is required'
 });
 
 const resendOTPSchema = Joi.object({
@@ -674,6 +683,21 @@ const changePasswordSchema = Joi.object({
     })
 });
 
+// Update Language validation schema
+const updateLanguageSchema = Joi.object({
+  language_id: Joi.alternatives()
+    .try(
+      Joi.number().integer().positive(),
+      Joi.string().pattern(/^\d+$/),
+      Joi.valid(null)
+    )
+    .required()
+    .messages({
+      'alternatives.match': 'Language ID must be a valid positive number or null',
+      'any.required': 'Language ID is required'
+    })
+});
+
 module.exports = {
   createUserSchema,
   updateUserSchema,
@@ -684,5 +708,6 @@ module.exports = {
   resendOTPSchema,
   getUserByIdSchema,
   getAllUsersSchema,
-  changePasswordSchema
+  changePasswordSchema,
+  updateLanguageSchema
 };

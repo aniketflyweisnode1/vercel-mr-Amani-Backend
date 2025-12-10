@@ -48,6 +48,26 @@ const userSchema = new mongoose.Schema({
     ref: 'Role',
     default: null
   },
+  language_id: {
+    type: Number,
+    ref: 'Language',
+    default: null
+  },
+  country_id: {
+    type: Number,
+    ref: 'Country',
+    default: null
+  },
+  state_id: {
+    type: Number,
+    ref: 'State',
+    default: null
+  },
+  city_id: {
+    type: Number,
+    ref: 'City',
+    default: null
+  },
   status: {
     type: Boolean,
     default: true
@@ -104,6 +124,15 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false
   },
+  passwordChangeOTPVerified: {
+    type: Boolean,
+    default: false,
+    select: false
+  },
+  passwordChangeOTPVerifiedAt: {
+    type: Date,
+    select: false
+  },
   ReferralCode: {
     type: String,
     unique: true,
@@ -144,6 +173,10 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ user_id: 1 });
 userSchema.index({ phoneNo: 1 });
 userSchema.index({ role_id: 1 });
+userSchema.index({ language_id: 1 });
+userSchema.index({ country_id: 1 });
+userSchema.index({ state_id: 1 });
+userSchema.index({ city_id: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ Email: 1 });
 userSchema.index({ personType: 1 });

@@ -1,9 +1,10 @@
-﻿const User = require('../models/User.model');
+const User = require('../models/User.model');
 const User_Address = require('../models/User_Address.model');
 const City = require('../models/city.model');
 const State = require('../models/state.model');
 const Country = require('../models/country.model');
 const Role = require('../models/role.model');
+const Language = require('../models/Language.model');
 const Wallet = require('../models/Wallet.model');
 const Business_Details = require('../models/Business_Details.model');
 const BusinessType = require('../models/businessType.model');
@@ -11,6 +12,41 @@ const Subscription = require('../models/subscription.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated, sendUnauthorized } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
+// Helper function to populate user location fields
+const populateUserLocation = async (userObj) => {
+  if (!userObj) return userObj;
+  
+  const user = userObj.toObject ? userObj.toObject() : userObj;
+  
+  // Populate country_id
+  if (user.country_id) {
+    const countryId = typeof user.country_id === 'object' ? user.country_id : user.country_id;
+    const country = await Country.findOne({ country_id: countryId });
+    if (country) {
+      user.country_id = country.toObject ? country.toObject() : country;
+    }
+  }
+  
+  // Populate state_id
+  if (user.state_id) {
+    const stateId = typeof user.state_id === 'object' ? user.state_id : user.state_id;
+    const state = await State.findOne({ state_id: stateId });
+    if (state) {
+      user.state_id = state.toObject ? state.toObject() : state;
+    }
+  }
+  
+  // Populate city_id
+  if (user.city_id) {
+    const cityId = typeof user.city_id === 'object' ? user.city_id : user.city_id;
+    const city = await City.findOne({ city_id: cityId });
+    if (city) {
+      user.city_id = city.toObject ? city.toObject() : city;
+    }
+  }
+  
+  return user;
+};
 
 /**
  * Create a new user
@@ -174,9 +210,12 @@ const getUserById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'User not found');
     }
 
+    // Populate location fields
+    const populatedUser = await populateUserLocation(user);
+
     console.info('User retrieved successfully', { userId: user._id });
 
-    sendSuccess(res, user, 'User retrieved successfully');
+    sendSuccess(res, populatedUser, 'User retrieved successfully');
   } catch (error) {
     console.error('Error retrieving user', { error: error.message, userId: req.params.id });
     throw error;
@@ -283,18 +322,16 @@ const deleteUser = asyncHandler(async (req, res) => {
 const getProfile = asyncHandler(async (req, res) => {
   try {
     const user = await User.findById(req.userId)
-      .select('-password')
-      .populate('country_id', 'name')
-      .populate('state_id', 'name')
-      .populate('city_id', 'name')
-      .populate('created_by', 'name email')
-      .populate('updated_by', 'name email');
+      .select('-password');
 
     if (!user) {
       return sendNotFound(res, 'User not found');
     }
 
-    sendSuccess(res, user, 'Profile retrieved successfully');
+    // Populate location fields manually
+    const populatedUser = await populateUserLocation(user);
+
+    sendSuccess(res, populatedUser, 'Profile retrieved successfully');
   } catch (error) {
     console.error('Error retrieving profile', { error: error.message, userId: req.userId });
     throw error;
@@ -325,20 +362,18 @@ const updateProfile = asyncHandler(async (req, res) => {
         runValidators: true,
         select: '-password'
       }
-    )
-    .populate('country_id', 'name')
-    .populate('state_id', 'name')
-    .populate('city_id', 'name')
-    .populate('created_by', 'name email')
-    .populate('updated_by', 'name email');
+    );
 
     if (!user) {
       return sendNotFound(res, 'User not found');
     }
 
+    // Populate location fields manually
+    const populatedUser = await populateUserLocation(user);
+
     console.info('Profile updated successfully', { userId: user._id });
 
-    sendSuccess(res, user, 'Profile updated successfully');
+    sendSuccess(res, populatedUser, 'Profile updated successfully');
   } catch (error) {
     console.error('Error updating profile', { error: error.message, userId: req.userId });
     throw error;
@@ -662,6 +697,38 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
       }
     }
 
+    // Manually populate language_id
+    if (userProfile.language_id) {
+      const language = await Language.findOne({ Language_id: userProfile.language_id });
+      if (language) {
+        userProfile.language_id = language.toObject ? language.toObject() : language;
+      }
+    }
+
+    // Manually populate country_id
+    if (userProfile.country_id) {
+      const country = await Country.findOne({ country_id: userProfile.country_id });
+      if (country) {
+        userProfile.country_id = country.toObject ? country.toObject() : country;
+      }
+    }
+
+    // Manually populate state_id
+    if (userProfile.state_id) {
+      const state = await State.findOne({ state_id: userProfile.state_id });
+      if (state) {
+        userProfile.state_id = state.toObject ? state.toObject() : state;
+      }
+    }
+
+    // Manually populate city_id
+    if (userProfile.city_id) {
+      const city = await City.findOne({ city_id: userProfile.city_id });
+      if (city) {
+        userProfile.city_id = city.toObject ? city.toObject() : city;
+      }
+    }
+
     // Manually populate created_by
     if (userProfile.created_by) {
       const createdById = typeof userProfile.created_by === 'object' ? userProfile.created_by : userProfile.created_by;
@@ -720,6 +787,77 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Update Language for authenticated user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const updateLanguage = asyncHandler(async (req, res) => {
+  try {
+    const { language_id } = req.body;
+
+    if (!req.userIdNumber) {
+      return sendUnauthorized(res, 'Authentication required');
+    }
+
+    if (language_id === undefined || language_id === null) {
+      return sendError(res, 'Language ID is required', 400);
+    }
+
+    // Verify language exists if provided
+    if (language_id !== null) {
+      const languageId = parseInt(language_id, 10);
+      if (Number.isNaN(languageId)) {
+        return sendError(res, 'Invalid language ID format', 400);
+      }
+
+      const language = await Language.findOne({ Language_id: languageId, Status: true });
+      if (!language) {
+        return sendError(res, 'Language not found or inactive', 404);
+      }
+    }
+
+    // Update user language
+    const user = await User.findOneAndUpdate(
+      { user_id: req.userIdNumber },
+      {
+        language_id: language_id !== null ? parseInt(language_id, 10) : null,
+        updated_by: req.userIdNumber,
+        updated_at: new Date()
+      },
+      {
+        new: true,
+        runValidators: true,
+        select: '-password'
+      }
+    );
+
+    if (!user) {
+      return sendNotFound(res, 'User not found');
+    }
+
+    // Populate language_id and location fields
+    let userObj = user.toObject ? user.toObject() : user;
+    if (userObj.language_id) {
+      const language = await Language.findOne({ Language_id: userObj.language_id })
+        .select('Language_id name Status');
+      if (language) {
+        userObj.language_id = language.toObject ? language.toObject() : language;
+      }
+    }
+
+    // Populate location fields
+    userObj = await populateUserLocation(userObj);
+
+    console.info('User language updated successfully', { userId: user._id, user_id: user.user_id, language_id });
+
+    sendSuccess(res, userObj, 'Language updated successfully');
+  } catch (error) {
+    console.error('Error updating language', { error: error.message, userId: req.userIdNumber, stack: error.stack });
+    throw error;
+  }
+});
+
 module.exports = {
   createUser,
   getAllUsers,
@@ -731,5 +869,6 @@ module.exports = {
   updateProfile,
   changePassword,
   activeDeviceLocation,
-  getbyAuthProfile
+  getbyAuthProfile,
+  updateLanguage
 };
