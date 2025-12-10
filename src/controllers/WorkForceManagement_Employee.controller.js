@@ -7,6 +7,7 @@ const { asyncHandler } = require('../../middleware/errorHandler');
 const populateEmployee = (query) => query
   .populate('Role_id', 'role_id name status')
   .populate('Department_id', 'Departments_id name Status')
+  .populate('Branch_id', 'business_Branch_id BusinessName Address Status')
   .populate('created_by', 'firstName lastName phoneNo BusinessName')
   .populate('updated_by', 'firstName lastName phoneNo BusinessName');
 
@@ -40,7 +41,15 @@ const ensureDepartmentExists = async (departmentId) => {
   return !!department;
 };
 
-const buildFilter = ({ search, status, role_id, department_id, type }) => {
+const ensureBranchExists = async (branchId) => {
+  if (branchId === undefined || branchId === null) {
+    return true; // Branch_id is optional
+  }
+  const branch = await Business_Branch.findOne({ business_Branch_id: branchId, Status: true });
+  return !!branch;
+};
+
+const buildFilter = ({ search, status, role_id, department_id, Branch_id, type }) => {
   const filter = {};
 
   if (search) {
@@ -70,6 +79,13 @@ const buildFilter = ({ search, status, role_id, department_id, type }) => {
     }
   }
 
+  if (Branch_id !== undefined) {
+    const numericBranchId = parseInt(Branch_id, 10);
+    if (!isNaN(numericBranchId)) {
+      filter.Branch_id = numericBranchId;
+    }
+  }
+
   if (type) {
     filter.type = type;
   }
@@ -92,7 +108,7 @@ const findEmployeeByIdentifier = async (identifier) => {
 
 const createWorkForceEmployee = asyncHandler(async (req, res) => {
   try {
-    const { Role_id, Department_id, AcessPermission } = req.body;
+    const { Role_id, Department_id, Branch_id, AcessPermission } = req.body;
 
     const roleExists = await ensureRoleExists(Role_id);
     if (!roleExists) {
@@ -102,6 +118,13 @@ const createWorkForceEmployee = asyncHandler(async (req, res) => {
     const departmentExists = await ensureDepartmentExists(Department_id);
     if (!departmentExists) {
       return sendError(res, 'Department not found or inactive', 400);
+    }
+
+    if (Branch_id !== undefined && Branch_id !== null) {
+      const branchExists = await ensureBranchExists(Branch_id);
+      if (!branchExists) {
+        return sendError(res, 'Branch not found or inactive', 400);
+      }
     }
 
     const payload = {
@@ -187,7 +210,7 @@ const getWorkForceEmployeeById = asyncHandler(async (req, res) => {
 
 const updateWorkForceEmployee = asyncHandler(async (req, res) => {
   try {
-    const { Role_id, Department_id, AcessPermission } = req.body;
+    const { Role_id, Department_id, Branch_id, AcessPermission } = req.body;
 
     if (Role_id !== undefined) {
       const roleExists = await ensureRoleExists(Role_id);
@@ -200,6 +223,13 @@ const updateWorkForceEmployee = asyncHandler(async (req, res) => {
       const departmentExists = await ensureDepartmentExists(Department_id);
       if (!departmentExists) {
         return sendError(res, 'Department not found or inactive', 400);
+      }
+    }
+
+    if (Branch_id !== undefined && Branch_id !== null) {
+      const branchExists = await ensureBranchExists(Branch_id);
+      if (!branchExists) {
+        return sendError(res, 'Branch not found or inactive', 400);
       }
     }
 
@@ -287,6 +317,7 @@ const getWorkForceEmployeesByAuth = asyncHandler(async (req, res) => {
       search = '',
       role_id,
       department_id,
+      Branch_id,
       type,
       sortBy = 'created_at',
       sortOrder = 'desc'
@@ -296,7 +327,7 @@ const getWorkForceEmployeesByAuth = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const filter = buildFilter({ search, status, role_id, department_id, type });
+    const filter = buildFilter({ search, status, role_id, department_id, Branch_id, type });
     filter.created_by = userId;
 
     const sort = {};

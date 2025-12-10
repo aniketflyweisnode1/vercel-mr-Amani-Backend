@@ -13,6 +13,7 @@ const createWorkForceEmployeeSchema = Joi.object({
   email: Joi.string().trim().email().max(200).required(),
   phoneNumber: Joi.string().trim().min(5).max(20).required(),
   Department_id: Joi.number().integer().positive().required(),
+  Branch_id: Joi.number().integer().positive().optional().allow(null),
   employee_pic: Joi.string().trim().max(500).optional().allow(''),
   AcessPermission: Joi.array().items(accessPermissionSchema).optional(),
   Permission: Joi.string().trim().max(500).optional().allow(''),
@@ -28,6 +29,7 @@ const updateWorkForceEmployeeSchema = Joi.object({
   email: Joi.string().trim().email().max(200).optional(),
   phoneNumber: Joi.string().trim().min(5).max(20).optional(),
   Department_id: Joi.number().integer().positive().optional(),
+  Branch_id: Joi.number().integer().positive().optional().allow(null),
   employee_pic: Joi.string().trim().max(500).optional().allow(''),
   AcessPermission: Joi.array().items(accessPermissionSchema).optional(),
   Permission: Joi.string().trim().max(500).optional().allow(''),
@@ -50,6 +52,7 @@ const baseListSchema = {
   status: Joi.boolean().optional(),
   role_id: Joi.number().integer().positive().optional(),
   department_id: Joi.number().integer().positive().optional(),
+  Branch_id: Joi.number().integer().positive().optional(),
   type: Joi.string().valid('Branch', 'Department').optional(),
   sortBy: Joi.string().valid('First_name', 'created_at', 'updated_at', 'WorkForceManagement_Employee_id').default('created_at'),
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')

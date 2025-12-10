@@ -60,7 +60,12 @@ const workForceEmployeeSchema = new mongoose.Schema({
   Department_id: {
     type: Number,
     ref: 'Departments',
-    required: [true, 'Department ID is required']
+    default: null
+  },
+  Branch_id: {
+    type: Number,
+    ref: 'Business_Branch',
+    default: null
   },
   employee_pic: {
     type: String,
@@ -78,7 +83,7 @@ const workForceEmployeeSchema = new mongoose.Schema({
   },
   branchPermission: {
     type: Boolean,
-    default: false
+    default: true
   },
   Status: {
     type: Boolean,
@@ -110,6 +115,7 @@ const workForceEmployeeSchema = new mongoose.Schema({
 workForceEmployeeSchema.index({ WorkForceManagement_Employee_id: 1 });
 workForceEmployeeSchema.index({ Role_id: 1 });
 workForceEmployeeSchema.index({ Department_id: 1 });
+workForceEmployeeSchema.index({ Branch_id: 1 });
 workForceEmployeeSchema.index({ email: 1 }, { unique: true });
 workForceEmployeeSchema.index({ Status: 1 });
 
