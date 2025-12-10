@@ -1,9 +1,0 @@
-{
-  "item_id": 1,
-  "Supplier_id": 1,
-  "RequiredStock": 100,
-  "Unit": "kg",
-  "Price": 50.00,
-  "DeliveryPeriod": "Daily",
-  "Status": true
-}

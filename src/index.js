@@ -126,6 +126,7 @@ const RestaurantMobileReportsFilterRoutes = require('./routes/Restaurant/Restaur
 const ReportsRoutes = require('./routes/Restaurant/Reports.routes');
 const ProvidersRoutes = require('./routes/Restaurant/Providers.routes');
 const SettingsAppPartnersNeedsRoutes = require('./routes/Restaurant/Settings_App_Partners_Needs.routes');
+const ChangesPlatfromsRoutes = require('./routes/Restaurant/Changes_Platfroms.routes');
 const AnalyticsOperationsReportsRoutes = require('./routes/Restaurant/Analytics/Analytics_operations_Reports.routes');
 const AnalyticsSocialMediaReportsRoutes = require('./routes/Restaurant/Analytics/Analytics_social_media_Reports.routes');
 const RestaurantPlanRoutes = require('./routes/Restaurant/Restaurant_Plan.routes');
@@ -309,6 +310,7 @@ router.use('/Restaurant_Mobile_Reports_filter', RestaurantMobileReportsFilterRou
 router.use('/Reports', ReportsRoutes);
 router.use('/Providers', ProvidersRoutes);
 router.use('/Settings_App_Partners_Needs', SettingsAppPartnersNeedsRoutes);
+router.use('/Changes_Platfroms', ChangesPlatfromsRoutes);
 router.use('/Analytics_operations_Reports', AnalyticsOperationsReportsRoutes);
 router.use('/Analytics_social_media_Reports', AnalyticsSocialMediaReportsRoutes);
 router.use('/Restaurant_Plan', RestaurantPlanRoutes);
