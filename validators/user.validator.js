@@ -126,6 +126,14 @@ const createUserSchema = Joi.object({
     .messages({
       'string.max': 'Business name cannot exceed 150 characters'
     }),
+  BusinessRegistrationNo: Joi.string()
+    .trim()
+    .max(100)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Business registration number cannot exceed 100 characters'
+    }),
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)
     .required()
@@ -171,6 +179,12 @@ const createUserSchema = Joi.object({
     .optional()
     .messages({
       'boolean.base': 'Permissions_DeviceLocation must be a boolean value'
+    }),
+  freeTrialPlan: Joi.boolean()
+    .default(false)
+    .optional()
+    .messages({
+      'boolean.base': 'freeTrialPlan must be a boolean value'
     }),
   Bio: Joi.string()
     .trim()
@@ -257,6 +271,14 @@ const updateUserSchema = Joi.object({
     .messages({
       'string.max': 'Business name cannot exceed 150 characters'
     }),
+  BusinessRegistrationNo: Joi.string()
+    .trim()
+    .max(100)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Business registration number cannot exceed 100 characters'
+    }),
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)
     .optional()
@@ -299,6 +321,11 @@ const updateUserSchema = Joi.object({
     .optional()
     .messages({
       'boolean.base': 'Permissions_DeviceLocation must be a boolean value'
+    }),
+  freeTrialPlan: Joi.boolean()
+    .optional()
+    .messages({
+      'boolean.base': 'freeTrialPlan must be a boolean value'
     }),
   Bio: Joi.string()
     .trim()
@@ -558,6 +585,14 @@ const updateUserByIdBodySchema = Joi.object({
     .messages({
       'string.max': 'Business name cannot exceed 150 characters'
     }),
+  BusinessRegistrationNo: Joi.string()
+    .trim()
+    .max(100)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Business registration number cannot exceed 100 characters'
+    }),
   phoneNo: Joi.string()
     .pattern(/^[0-9]{10}$/)
     .optional()
@@ -600,6 +635,11 @@ const updateUserByIdBodySchema = Joi.object({
     .optional()
     .messages({
       'boolean.base': 'Permissions_DeviceLocation must be a boolean value'
+    }),
+  freeTrialPlan: Joi.boolean()
+    .optional()
+    .messages({
+      'boolean.base': 'freeTrialPlan must be a boolean value'
     }),
   Bio: Joi.string()
     .trim()

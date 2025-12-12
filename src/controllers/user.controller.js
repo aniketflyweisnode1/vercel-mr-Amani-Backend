@@ -115,6 +115,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
         { BusinessName: { $regex: search, $options: 'i' } },
+        { BusinessRegistrationNo: { $regex: search, $options: 'i' } },
         { phoneNo: { $regex: search, $options: 'i' } },
         { Email: { $regex: search, $options: 'i' } },
         { Bio: { $regex: search, $options: 'i' } },

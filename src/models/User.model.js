@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: [150, 'Business name cannot exceed 150 characters']
   },
+  BusinessRegistrationNo: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Business registration number cannot exceed 100 characters']
+  },
   password: {
     type: String,
     trim: true,
@@ -30,7 +35,6 @@ const userSchema = new mongoose.Schema({
   },
   phoneNo: {
     type: String,
-    required: [true, 'Phone number is required'],
     unique: true,
     trim: true,
     match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
@@ -77,6 +81,10 @@ const userSchema = new mongoose.Schema({
     default: true
   },
   Permissions_DeviceLocation: {
+    type: Boolean,
+    default: false
+  },
+  freeTrialPlan: {
     type: Boolean,
     default: false
   },

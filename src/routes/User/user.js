@@ -12,10 +12,10 @@ const { validateBody, validateQuery, validateParams } = require('../../../middle
 const { createUserSchema, updateUserSchema, getUserByIdSchema, getAllUsersSchema, updateLanguageSchema } = require('../../../validators/user.validator');
 
 // Routes
-router.post('/create', validateBody(createUserSchema), createUser);
+router.post('/create', createUser);
 router.get('/getAll', validateQuery(getAllUsersSchema), getAllUsers);
 router.get('/getById/:id', auth, validateParams(getUserByIdSchema), getUserById);
-router.put('/update/:id', auth, validateParams(getUserByIdSchema), validateBody(updateUserSchema), updateUser);
+router.put('/update/:id', auth, updateUser);
 router.delete('/delete/:id', auth, validateParams(getUserByIdSchema), deleteUser);
 router.put('/activeDeviceLocation', auth, activeDeviceLocation);
 router.get('/getbyAuthProfile', auth, getbyAuthProfile);
