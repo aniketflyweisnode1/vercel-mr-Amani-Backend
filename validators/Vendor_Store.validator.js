@@ -95,11 +95,16 @@ const getVendorStoresByAuthSchema = Joi.object({
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
 });
 
+const getVendorDashboardSchema = Joi.object({
+  Vender_store_id: Joi.number().integer().positive().required()
+});
+
 module.exports = {
   createVendorStoreSchema,
   updateVendorStoreSchema,
   getVendorStoreByIdSchema,
   getAllVendorStoresSchema,
-  getVendorStoresByAuthSchema
+  getVendorStoresByAuthSchema,
+  getVendorDashboardSchema
 };
 

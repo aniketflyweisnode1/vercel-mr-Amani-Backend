@@ -1,5 +1,6 @@
 const MarketingCouponCategory = require('../models/Marketing_Promotions_coupon_Category.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -19,10 +20,51 @@ const ensureBusinessBranchExists = async (business_Branch_id) => {
   return !!branch;
 };
 
-const populateCategory = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateCategory = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({ search, status, business_Branch_id }) => {
   const filter = {};
@@ -49,16 +91,22 @@ const buildFilterFromQuery = ({ search, status, business_Branch_id }) => {
 };
 
 const findCategoryByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateCategory(MarketingCouponCategory.findById(identifier));
+    recordData = await MarketingCouponCategory.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await MarketingCouponCategory.findOne({ Marketing_Promotions_coupon_Category_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!isNaN(numericId)) {
-    return populateCategory(MarketingCouponCategory.findOne({ Marketing_Promotions_coupon_Category_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateCategory(recordData);
 };
 
 const createMarketingCouponCategory = asyncHandler(async (req, res) => {
@@ -85,7 +133,7 @@ const createMarketingCouponCategory = asyncHandler(async (req, res) => {
     };
 
     const category = await MarketingCouponCategory.create(payload);
-    const populated = await populateCategory(MarketingCouponCategory.findById(category._id));
+    const populated = await populateCategory(category);
 
     sendSuccess(res, populated, 'Marketing promotion coupon category created successfully', 201);
   } catch (error) {
@@ -115,13 +163,15 @@ const getAllMarketingCouponCategories = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [categories, total] = await Promise.all([
-      populateCategory(MarketingCouponCategory.find(filter))
+    const [categoriesData, total] = await Promise.all([
+      MarketingCouponCategory.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       MarketingCouponCategory.countDocuments(filter)
     ]);
+    
+    const categories = await populateCategory(categoriesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -191,7 +241,7 @@ const updateMarketingCouponCategory = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Marketing promotion coupon category not found');
     }
 
-    const populated = await populateCategory(MarketingCouponCategory.findById(category._id));
+    const populated = await populateCategory(category);
     sendSuccess(res, populated, 'Marketing promotion coupon category updated successfully');
   } catch (error) {
     console.error('Error updating marketing coupon category', { error: error.message, id: req.params.id });
@@ -256,13 +306,15 @@ const getMarketingCouponCategoriesByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [categories, total] = await Promise.all([
-      populateCategory(MarketingCouponCategory.find(filter))
+    const [categoriesData, total] = await Promise.all([
+      MarketingCouponCategory.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       MarketingCouponCategory.countDocuments(filter)
     ]);
+    
+    const categories = await populateCategory(categoriesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
