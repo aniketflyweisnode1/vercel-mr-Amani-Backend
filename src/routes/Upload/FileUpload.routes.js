@@ -22,6 +22,7 @@ const upload = multer({
   storage: multerS3({
     s3: s3Client,
     bucket: BUCKET_NAME,
+    acl: 'public-read',
     // Note: ACL removed - if bucket has ACLs disabled, this causes Access Denied
     // Use bucket policy for public access instead
     metadata: function (req, file, cb) {
