@@ -157,6 +157,7 @@ const RecentAcitvitysRoutes = require('./routes/ShopingVendor/RecentAcitvitys.ro
 const SocketChatRoutes = require('./routes/Chat/SocketChat.routes');
 const ChatFileUploadRoutes = require('./routes/Chat/ChatFileUpload.routes');
 const ChatOTPRoutes = require('./routes/Chat/ChatOTP.routes');
+const FileUploadRoutes = require('./routes/Upload/FileUpload.routes');
 const { sendSuccess } = require('../utils/response');
 
 /**
@@ -344,4 +345,6 @@ router.use('/SocketChat', SocketChatRoutes);
 router.use('/chat', ChatFileUploadRoutes);
 // Chat OTP routes - REST API endpoints for OTP sending
 router.use('/chat', ChatOTPRoutes);
+// File upload routes - Direct S3 upload using AWS SDK v3
+router.use('/upload', FileUploadRoutes);
 module.exports = router;

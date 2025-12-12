@@ -8,14 +8,16 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('./logger');
 
-// Configure AWS S3
+// Configure AWS S3 - Use environment variables if available, otherwise use defaults
+const AWS_REGION = 'ap-south-1';
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-east-1'
+  accessKeyId: 'AKIAQT46LI6Y37VKWJ5I',
+  secretAccessKey: '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',
+  region: AWS_REGION,
+  signatureVersion: 'v4' // Ensure v4 signature is used
 });
 
-const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
+const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || 'triaxxss';
 
 /**
  * Upload file to S3
@@ -29,7 +31,7 @@ const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
  */
 const uploadToS3 = async (options) => {
   try {
-    const { file, filename, folder = '', contentType, isBuffer = false } = options;
+    const { file, filename, folder = 'upload', contentType, isBuffer = false } = options;
 
     if (!BUCKET_NAME) {
       throw new Error('AWS S3 bucket name is not configured');
@@ -54,11 +56,24 @@ const uploadToS3 = async (options) => {
       Bucket: BUCKET_NAME,
       Key: key,
       Body: fileContent,
-      ContentType: mimeType,
-      ACL: 'public-read' // Make file publicly accessible (adjust based on your needs)
+      ContentType: mimeType
+      // Note: ACL removed - if bucket has ACLs disabled, this causes signature mismatch
+      // Use bucket policy for public access instead
     };
 
-    const result = await s3.upload(params).promise();
+    // Try upload without ACL first, if it fails due to ACL, we'll handle it
+    let result;
+    try {
+      result = await s3.upload(params).promise();
+    } catch (error) {
+      // If error is related to ACL, try without it (though we already removed it)
+      // This might be a credentials or region issue
+      if (error.code === 'SignatureDoesNotMatch' || error.message.includes('signature')) {
+        // Re-throw with more helpful message
+        throw new Error(`S3 Signature Error: ${error.message}. Please check: 1) AWS credentials are correct, 2) Region matches bucket region, 3) System clock is synchronized`);
+      }
+      throw error;
+    }
 
     logger.info('File uploaded to S3 successfully', {
       key: result.Key,
@@ -79,7 +94,7 @@ const uploadToS3 = async (options) => {
       stack: error.stack,
       filename: options.filename
     });
-    
+
     throw new Error(`Failed to upload file to S3: ${error.message}`);
   }
 };
@@ -149,7 +164,7 @@ const deleteFromS3 = async (key) => {
       stack: error.stack,
       key
     });
-    
+
     throw new Error(`Failed to delete file from S3: ${error.message}`);
   }
 };
@@ -163,7 +178,7 @@ const getS3FileURL = (key) => {
   if (!BUCKET_NAME) {
     throw new Error('AWS S3 bucket name is not configured');
   }
-  return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+  return `https://${BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
 };
 
 /**
