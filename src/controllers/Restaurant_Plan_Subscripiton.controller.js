@@ -4,11 +4,61 @@ const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateRestaurantPlanSubscription = (query) => query
-  .populate('Restaurant_Plan_id', 'Restaurant_Plan_id name fee duration Description')
-  .populate('Subscribe_By', 'firstName lastName phoneNo email BusinessName')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateRestaurantPlanSubscription = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Restaurant_Plan_id
+      if (recordObj.Restaurant_Plan_id) {
+        const planId = typeof recordObj.Restaurant_Plan_id === 'object' ? recordObj.Restaurant_Plan_id : recordObj.Restaurant_Plan_id;
+        const plan = await RestaurantPlan.findOne({ Restaurant_Plan_id: planId })
+          .select('Restaurant_Plan_id name fee duration Description');
+        if (plan) {
+          recordObj.Restaurant_Plan_id = plan.toObject ? plan.toObject() : plan;
+        }
+      }
+      
+      // Populate Subscribe_By
+      if (recordObj.Subscribe_By) {
+        const subscribeById = typeof recordObj.Subscribe_By === 'object' ? recordObj.Subscribe_By : recordObj.Subscribe_By;
+        const subscribeBy = await User.findOne({ user_id: subscribeById })
+          .select('user_id firstName lastName phoneNo Email BusinessName');
+        if (subscribeBy) {
+          recordObj.Subscribe_By = subscribeBy.toObject ? subscribeBy.toObject() : subscribeBy;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Restaurant_Plan_id, Subscribe_By, PaymentStatus }) => {
   const filter = {};
@@ -77,21 +127,27 @@ const ensureUserExists = async (Subscribe_By) => {
   if (Number.isNaN(userId)) {
     return false;
   }
-  const user = await User.findOne({ user_id: userId, Status: true });
+  const user = await User.findOne({ user_id: userId});
   return Boolean(user);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let subscriptionData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateRestaurantPlanSubscription(RestaurantPlanSubscription.findById(identifier));
+    subscriptionData = await RestaurantPlanSubscription.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      subscriptionData = await RestaurantPlanSubscription.findOne({ Restaurant_Plan_Subscripiton_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateRestaurantPlanSubscription(RestaurantPlanSubscription.findOne({ Restaurant_Plan_Subscripiton_id: numericId }));
+  
+  if (!subscriptionData) {
+    return null;
   }
-
-  return null;
+  
+  return await populateRestaurantPlanSubscription(subscriptionData);
 };
 
 const createRestaurantPlanSubscription = asyncHandler(async (req, res) => {
@@ -116,7 +172,7 @@ const createRestaurantPlanSubscription = asyncHandler(async (req, res) => {
     };
 
     const subscription = await RestaurantPlanSubscription.create(payload);
-    const populated = await populateRestaurantPlanSubscription(RestaurantPlanSubscription.findById(subscription._id));
+    const populated = await populateRestaurantPlanSubscription(subscription);
 
     sendSuccess(res, populated, 'Restaurant plan subscription created successfully', 201);
   } catch (error) {
@@ -148,13 +204,15 @@ const getAllRestaurantPlanSubscriptions = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [subscriptions, total] = await Promise.all([
-      populateRestaurantPlanSubscription(RestaurantPlanSubscription.find(filter))
+    const [subscriptionsData, total] = await Promise.all([
+      RestaurantPlanSubscription.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantPlanSubscription.countDocuments(filter)
     ]);
+    
+    const subscriptions = await populateRestaurantPlanSubscription(subscriptionsData);
 
     sendPaginated(res, subscriptions, paginateMeta(numericPage, numericLimit, total), 'Restaurant plan subscriptions retrieved successfully');
   } catch (error) {
@@ -166,13 +224,7 @@ const getAllRestaurantPlanSubscriptions = asyncHandler(async (req, res) => {
 const getRestaurantPlanSubscriptionById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const subscriptionQuery = findByIdentifier(id);
-
-    if (!subscriptionQuery) {
-      return sendError(res, 'Invalid restaurant plan subscription identifier', 400);
-    }
-
-    const subscription = await subscriptionQuery;
+    const subscription = await findByIdentifier(id);
 
     if (!subscription) {
       return sendNotFound(res, 'Restaurant plan subscription not found');
@@ -223,7 +275,7 @@ const updateRestaurantPlanSubscription = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant plan subscription not found');
     }
 
-    const populated = await populateRestaurantPlanSubscription(RestaurantPlanSubscription.findById(subscription._id));
+    const populated = await populateRestaurantPlanSubscription(subscription);
     sendSuccess(res, populated, 'Restaurant plan subscription updated successfully');
   } catch (error) {
     console.error('Error updating restaurant plan subscription', { error: error.message, id: req.params.id });
@@ -296,13 +348,15 @@ const getRestaurantPlanSubscriptionsByPlanId = asyncHandler(async (req, res) => 
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [subscriptions, total] = await Promise.all([
-      populateRestaurantPlanSubscription(RestaurantPlanSubscription.find(filter))
+    const [subscriptionsData, total] = await Promise.all([
+      RestaurantPlanSubscription.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantPlanSubscription.countDocuments(filter)
     ]);
+    
+    const subscriptions = await populateRestaurantPlanSubscription(subscriptionsData);
 
     sendPaginated(res, subscriptions, paginateMeta(numericPage, numericLimit, total), 'Restaurant plan subscriptions retrieved successfully');
   } catch (error) {
@@ -340,13 +394,15 @@ const getRestaurantPlanSubscriptionsByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [subscriptions, total] = await Promise.all([
-      populateRestaurantPlanSubscription(RestaurantPlanSubscription.find(filter))
+    const [subscriptionsData, total] = await Promise.all([
+      RestaurantPlanSubscription.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantPlanSubscription.countDocuments(filter)
     ]);
+    
+    const subscriptions = await populateRestaurantPlanSubscription(subscriptionsData);
 
     sendPaginated(res, subscriptions, paginateMeta(numericPage, numericLimit, total), 'Restaurant plan subscriptions retrieved successfully');
   } catch (error) {

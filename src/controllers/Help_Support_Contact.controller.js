@@ -1,12 +1,54 @@
 const HelpSupportContact = require('../models/Help_Support_Contact.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateHelpSupportContact = (query) => query
-  .populate('Branch_Id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateHelpSupportContact = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Branch_Id
+      if (recordObj.Branch_Id) {
+        const branchId = typeof recordObj.Branch_Id === 'object' ? recordObj.Branch_Id : recordObj.Branch_Id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.Branch_Id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Branch_Id }) => {
   const filter = {};
@@ -57,15 +99,23 @@ const ensureBranchExists = async (Branch_Id) => {
   return Boolean(branch);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let contactData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateHelpSupportContact(HelpSupportContact.findById(identifier));
+    contactData = await HelpSupportContact.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      contactData = await HelpSupportContact.findOne({ Help_Support_Contact_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateHelpSupportContact(HelpSupportContact.findOne({ Help_Support_Contact_id: numericId }));
+  
+  if (!contactData) {
+    return null;
   }
-  return null;
+  
+  return await populateHelpSupportContact(contactData);
 };
 
 const createHelpSupportContact = asyncHandler(async (req, res) => {
@@ -79,7 +129,7 @@ const createHelpSupportContact = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const contact = await HelpSupportContact.create(payload);
-    const populated = await populateHelpSupportContact(HelpSupportContact.findById(contact._id));
+    const populated = await populateHelpSupportContact(contact);
     sendSuccess(res, populated, 'Help support contact created successfully', 201);
   } catch (error) {
     console.error('Error creating help support contact', { error: error.message });
@@ -104,13 +154,15 @@ const getAllHelpSupportContacts = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, Branch_Id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [contacts, total] = await Promise.all([
-      populateHelpSupportContact(HelpSupportContact.find(filter))
+    const [contactsData, total] = await Promise.all([
+      HelpSupportContact.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportContact.countDocuments(filter)
     ]);
+    
+    const contacts = await populateHelpSupportContact(contactsData);
     sendPaginated(res, contacts, paginateMeta(numericPage, numericLimit, total), 'Help support contacts retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support contacts', { error: error.message });
@@ -121,11 +173,7 @@ const getAllHelpSupportContacts = asyncHandler(async (req, res) => {
 const getHelpSupportContactById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const contactQuery = findByIdentifier(id);
-    if (!contactQuery) {
-      return sendError(res, 'Invalid help support contact identifier', 400);
-    }
-    const contact = await contactQuery;
+    const contact = await findByIdentifier(id);
     if (!contact) {
       return sendNotFound(res, 'Help support contact not found');
     }
@@ -161,7 +209,7 @@ const updateHelpSupportContact = asyncHandler(async (req, res) => {
     if (!contact) {
       return sendNotFound(res, 'Help support contact not found');
     }
-    const populated = await populateHelpSupportContact(HelpSupportContact.findById(contact._id));
+    const populated = await populateHelpSupportContact(contact);
     sendSuccess(res, populated, 'Help support contact updated successfully');
   } catch (error) {
     console.error('Error updating help support contact', { error: error.message, id: req.params.id });
@@ -219,13 +267,15 @@ const getHelpSupportContactsByBranchId = asyncHandler(async (req, res) => {
     filter.Branch_Id = branchId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [contacts, total] = await Promise.all([
-      populateHelpSupportContact(HelpSupportContact.find(filter))
+    const [contactsData, total] = await Promise.all([
+      HelpSupportContact.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportContact.countDocuments(filter)
     ]);
+    
+    const contacts = await populateHelpSupportContact(contactsData);
     sendPaginated(res, contacts, paginateMeta(numericPage, numericLimit, total), 'Help support contacts retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support contacts by branch', { error: error.message, Branch_Id: req.params.Branch_Id });
@@ -255,13 +305,15 @@ const getHelpSupportContactsByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [contacts, total] = await Promise.all([
-      populateHelpSupportContact(HelpSupportContact.find(filter))
+    const [contactsData, total] = await Promise.all([
+      HelpSupportContact.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportContact.countDocuments(filter)
     ]);
+    
+    const contacts = await populateHelpSupportContact(contactsData);
     sendPaginated(res, contacts, paginateMeta(numericPage, numericLimit, total), 'Help support contacts retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support contacts by auth', { error: error.message, userId: req.userIdNumber });

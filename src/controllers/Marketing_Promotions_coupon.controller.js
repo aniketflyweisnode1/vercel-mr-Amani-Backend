@@ -2,6 +2,7 @@ const MarketingCoupon = require('../models/Marketing_Promotions_coupon.model');
 const MarketingCouponCategory = require('../models/Marketing_Promotions_coupon_Category.model');
 const Business_Branch = require('../models/business_Branch.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -92,11 +93,61 @@ const buildDiscountTypePayload = (input = {}) => ({
   PercentageDiscoount: normalizeBoolean(input?.PercentageDiscoount, false)
 });
 
-const populateCoupon = (query) => query
-  .populate('Marketing_Promotions_coupon_Category_id', 'Marketing_Promotions_coupon_Category_id CategoryName')
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateCoupon = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Marketing_Promotions_coupon_Category_id
+      if (recordObj.Marketing_Promotions_coupon_Category_id) {
+        const categoryId = typeof recordObj.Marketing_Promotions_coupon_Category_id === 'object' ? recordObj.Marketing_Promotions_coupon_Category_id : recordObj.Marketing_Promotions_coupon_Category_id;
+        const category = await MarketingCouponCategory.findOne({ Marketing_Promotions_coupon_Category_id: categoryId })
+          .select('Marketing_Promotions_coupon_Category_id CategoryName');
+        if (category) {
+          recordObj.Marketing_Promotions_coupon_Category_id = category.toObject ? category.toObject() : category;
+        }
+      }
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({
   search,
@@ -207,13 +258,15 @@ const listCoupons = async ({
   const sort = {};
   sort[options.sortBy] = options.sortOrder === 'asc' ? 1 : -1;
 
-  const [coupons, total] = await Promise.all([
-    populateCoupon(MarketingCoupon.find(filter))
+  const [couponsData, total] = await Promise.all([
+    MarketingCoupon.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(numericLimit),
     MarketingCoupon.countDocuments(filter)
   ]);
+  
+  const coupons = await populateCoupon(couponsData);
 
   const totalPages = Math.ceil(total / numericLimit) || 1;
   const pagination = {
@@ -229,16 +282,22 @@ const listCoupons = async ({
 };
 
 const findCouponByIdentifier = async (identifier) => {
+  let couponData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateCoupon(MarketingCoupon.findById(identifier));
+    couponData = await MarketingCoupon.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      couponData = await MarketingCoupon.findOne({ Marketing_Promotions_coupon_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateCoupon(MarketingCoupon.findOne({ Marketing_Promotions_coupon_id: numericId }));
+  if (!couponData) {
+    return null;
   }
 
-  return null;
+  return await populateCoupon(couponData);
 };
 
 const createMarketingCoupon = asyncHandler(async (req, res) => {
@@ -289,7 +348,7 @@ const createMarketingCoupon = asyncHandler(async (req, res) => {
     };
 
     const coupon = await MarketingCoupon.create(payload);
-    const populated = await populateCoupon(MarketingCoupon.findById(coupon._id));
+    const populated = await populateCoupon(coupon);
 
     sendSuccess(res, populated, 'Marketing promotion coupon created successfully', 201);
   } catch (error) {
@@ -411,7 +470,7 @@ const updateMarketingCoupon = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Marketing promotion coupon not found');
     }
 
-    const populated = await populateCoupon(MarketingCoupon.findById(coupon._id));
+    const populated = await populateCoupon(coupon);
     sendSuccess(res, populated, 'Marketing promotion coupon updated successfully');
   } catch (error) {
     console.error('Error updating marketing coupon', { error: error.message, id: req.params.id });

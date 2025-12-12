@@ -1,10 +1,43 @@
 const IssueType = require('../models/Issue_Type.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateIssueType = (query) => query
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateIssueType = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status }) => {
   const filter = {};
@@ -35,15 +68,23 @@ const paginateMeta = (page, limit, total) => {
   };
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let issueTypeData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateIssueType(IssueType.findById(identifier));
+    issueTypeData = await IssueType.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      issueTypeData = await IssueType.findOne({ Issue_Type_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateIssueType(IssueType.findOne({ Issue_Type_id: numericId }));
+  
+  if (!issueTypeData) {
+    return null;
   }
-  return null;
+  
+  return await populateIssueType(issueTypeData);
 };
 
 const createIssueType = asyncHandler(async (req, res) => {
@@ -53,7 +94,7 @@ const createIssueType = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const issueType = await IssueType.create(payload);
-    const populated = await populateIssueType(IssueType.findById(issueType._id));
+    const populated = await populateIssueType(issueType);
     sendSuccess(res, populated, 'Issue type created successfully', 201);
   } catch (error) {
     console.error('Error creating issue type', { error: error.message });
@@ -77,13 +118,15 @@ const getAllIssueTypes = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [issueTypes, total] = await Promise.all([
-      populateIssueType(IssueType.find(filter))
+    const [issueTypesData, total] = await Promise.all([
+      IssueType.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       IssueType.countDocuments(filter)
     ]);
+    
+    const issueTypes = await populateIssueType(issueTypesData);
     sendPaginated(res, issueTypes, paginateMeta(numericPage, numericLimit, total), 'Issue types retrieved successfully');
   } catch (error) {
     console.error('Error retrieving issue types', { error: error.message });
@@ -94,11 +137,7 @@ const getAllIssueTypes = asyncHandler(async (req, res) => {
 const getIssueTypeById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const issueTypeQuery = findByIdentifier(id);
-    if (!issueTypeQuery) {
-      return sendError(res, 'Invalid issue type identifier', 400);
-    }
-    const issueType = await issueTypeQuery;
+    const issueType = await findByIdentifier(id);
     if (!issueType) {
       return sendNotFound(res, 'Issue type not found');
     }
@@ -130,7 +169,7 @@ const updateIssueType = asyncHandler(async (req, res) => {
     if (!issueType) {
       return sendNotFound(res, 'Issue type not found');
     }
-    const populated = await populateIssueType(IssueType.findById(issueType._id));
+    const populated = await populateIssueType(issueType);
     sendSuccess(res, populated, 'Issue type updated successfully');
   } catch (error) {
     console.error('Error updating issue type', { error: error.message, id: req.params.id });
@@ -187,13 +226,15 @@ const getIssueTypesByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [issueTypes, total] = await Promise.all([
-      populateIssueType(IssueType.find(filter))
+    const [issueTypesData, total] = await Promise.all([
+      IssueType.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       IssueType.countDocuments(filter)
     ]);
+    
+    const issueTypes = await populateIssueType(issueTypesData);
     sendPaginated(res, issueTypes, paginateMeta(numericPage, numericLimit, total), 'Issue types retrieved successfully');
   } catch (error) {
     console.error('Error retrieving issue types by auth', { error: error.message, userId: req.userIdNumber });

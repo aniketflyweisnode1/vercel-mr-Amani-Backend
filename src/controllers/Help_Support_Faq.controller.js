@@ -1,12 +1,54 @@
 const HelpSupportFaq = require('../models/Help_Support_Faq.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateHelpSupportFaq = (query) => query
-  .populate('Branch_Id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateHelpSupportFaq = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Branch_Id
+      if (recordObj.Branch_Id) {
+        const branchId = typeof recordObj.Branch_Id === 'object' ? recordObj.Branch_Id : recordObj.Branch_Id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.Branch_Id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Branch_Id, type }) => {
   const filter = {};
@@ -60,15 +102,23 @@ const ensureBranchExists = async (Branch_Id) => {
   return Boolean(branch);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let faqData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateHelpSupportFaq(HelpSupportFaq.findById(identifier));
+    faqData = await HelpSupportFaq.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      faqData = await HelpSupportFaq.findOne({ Help_Support_Faq_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateHelpSupportFaq(HelpSupportFaq.findOne({ Help_Support_Faq_id: numericId }));
+  
+  if (!faqData) {
+    return null;
   }
-  return null;
+  
+  return await populateHelpSupportFaq(faqData);
 };
 
 const createHelpSupportFaq = asyncHandler(async (req, res) => {
@@ -82,7 +132,7 @@ const createHelpSupportFaq = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const faq = await HelpSupportFaq.create(payload);
-    const populated = await populateHelpSupportFaq(HelpSupportFaq.findById(faq._id));
+    const populated = await populateHelpSupportFaq(faq);
     sendSuccess(res, populated, 'Help support FAQ created successfully', 201);
   } catch (error) {
     console.error('Error creating help support FAQ', { error: error.message });
@@ -108,13 +158,15 @@ const getAllHelpSupportFaqs = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, Branch_Id, type });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [faqs, total] = await Promise.all([
-      populateHelpSupportFaq(HelpSupportFaq.find(filter))
+    const [faqsData, total] = await Promise.all([
+      HelpSupportFaq.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportFaq.countDocuments(filter)
     ]);
+    
+    const faqs = await populateHelpSupportFaq(faqsData);
     sendPaginated(res, faqs, paginateMeta(numericPage, numericLimit, total), 'Help support FAQs retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support FAQs', { error: error.message });
@@ -125,11 +177,7 @@ const getAllHelpSupportFaqs = asyncHandler(async (req, res) => {
 const getHelpSupportFaqById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const faqQuery = findByIdentifier(id);
-    if (!faqQuery) {
-      return sendError(res, 'Invalid help support FAQ identifier', 400);
-    }
-    const faq = await faqQuery;
+    const faq = await findByIdentifier(id);
     if (!faq) {
       return sendNotFound(res, 'Help support FAQ not found');
     }
@@ -165,7 +213,7 @@ const updateHelpSupportFaq = asyncHandler(async (req, res) => {
     if (!faq) {
       return sendNotFound(res, 'Help support FAQ not found');
     }
-    const populated = await populateHelpSupportFaq(HelpSupportFaq.findById(faq._id));
+    const populated = await populateHelpSupportFaq(faq);
     sendSuccess(res, populated, 'Help support FAQ updated successfully');
   } catch (error) {
     console.error('Error updating help support FAQ', { error: error.message, id: req.params.id });
@@ -224,13 +272,15 @@ const getHelpSupportFaqsByType = asyncHandler(async (req, res) => {
     filter.type = type;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [faqs, total] = await Promise.all([
-      populateHelpSupportFaq(HelpSupportFaq.find(filter))
+    const [faqsData, total] = await Promise.all([
+      HelpSupportFaq.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportFaq.countDocuments(filter)
     ]);
+    
+    const faqs = await populateHelpSupportFaq(faqsData);
     sendPaginated(res, faqs, paginateMeta(numericPage, numericLimit, total), 'Help support FAQs retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support FAQs by type', { error: error.message, type: req.params.type });
@@ -261,13 +311,15 @@ const getHelpSupportFaqsByBranchId = asyncHandler(async (req, res) => {
     filter.Branch_Id = branchId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [faqs, total] = await Promise.all([
-      populateHelpSupportFaq(HelpSupportFaq.find(filter))
+    const [faqsData, total] = await Promise.all([
+      HelpSupportFaq.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportFaq.countDocuments(filter)
     ]);
+    
+    const faqs = await populateHelpSupportFaq(faqsData);
     sendPaginated(res, faqs, paginateMeta(numericPage, numericLimit, total), 'Help support FAQs retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support FAQs by branch', { error: error.message, Branch_Id: req.params.Branch_Id });
@@ -298,13 +350,15 @@ const getHelpSupportFaqsByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [faqs, total] = await Promise.all([
-      populateHelpSupportFaq(HelpSupportFaq.find(filter))
+    const [faqsData, total] = await Promise.all([
+      HelpSupportFaq.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportFaq.countDocuments(filter)
     ]);
+    
+    const faqs = await populateHelpSupportFaq(faqsData);
     sendPaginated(res, faqs, paginateMeta(numericPage, numericLimit, total), 'Help support FAQs retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support FAQs by auth', { error: error.message, userId: req.userIdNumber });

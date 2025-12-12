@@ -1,6 +1,7 @@
 const Favourites = require('../models/Favourites.model');
 const Business_Branch = require('../models/business_Branch.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -61,10 +62,51 @@ const buildFilterFromQuery = ({ search, status, business_Branch_id, item_id }) =
   return filter;
 };
 
-const populateFavourites = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id name address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateFavourites = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const createFavourite = asyncHandler(async (req, res) => {
   try {
@@ -91,7 +133,7 @@ const createFavourite = asyncHandler(async (req, res) => {
     const favourite = await Favourites.create(payload);
     console.info('Favourite created successfully', { id: favourite._id, Favourites_id: favourite.Favourites_id });
 
-    const populated = await populateFavourites(Favourites.findById(favourite._id));
+    const populated = await populateFavourites(favourite);
     sendSuccess(res, populated, 'Favourite created successfully', 201);
   } catch (error) {
     console.error('Error creating favourite', { error: error.message, stack: error.stack });
@@ -121,13 +163,15 @@ const getAllFavourites = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [favourites, total] = await Promise.all([
-      populateFavourites(Favourites.find(filter))
+    const [favouritesData, total] = await Promise.all([
+      Favourites.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Favourites.countDocuments(filter)
     ]);
+    
+    const favourites = await populateFavourites(favouritesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -150,23 +194,24 @@ const getAllFavourites = asyncHandler(async (req, res) => {
 const getFavouriteById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    let favourite;
+    let favouriteData;
 
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      favourite = await populateFavourites(Favourites.findById(id));
+      favouriteData = await Favourites.findById(id);
     } else {
       const favouriteId = parseInt(id, 10);
       if (isNaN(favouriteId)) {
         return sendNotFound(res, 'Invalid favourite ID format');
       }
-      favourite = await populateFavourites(Favourites.findOne({ Favourites_id: favouriteId }));
+      favouriteData = await Favourites.findOne({ Favourites_id: favouriteId });
     }
-
-    if (!favourite) {
+    
+    if (!favouriteData) {
       return sendNotFound(res, 'Favourite not found');
     }
-
-    console.info('Favourite retrieved successfully', { id: favourite._id });
+    
+    const favourite = await populateFavourites(favouriteData);
+    console.info('Favourite retrieved successfully', { id: favourite._id || favourite.Favourites_id });
     sendSuccess(res, favourite, 'Favourite retrieved successfully');
   } catch (error) {
     console.error('Error retrieving favourite', { error: error.message, id: req.params.id });
@@ -214,8 +259,8 @@ const updateFavourite = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Favourite not found');
     }
 
-    const populated = await populateFavourites(Favourites.findById(favourite._id));
-    console.info('Favourite updated successfully', { id: favourite._id });
+    const populated = await populateFavourites(favourite);
+    console.info('Favourite updated successfully', { id: favourite._id || favourite.Favourites_id });
     sendSuccess(res, populated, 'Favourite updated successfully');
   } catch (error) {
     console.error('Error updating favourite', { error: error.message, id: req.params.id });
@@ -281,13 +326,15 @@ const getFavouritesByAuth = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [favourites, total] = await Promise.all([
-      populateFavourites(Favourites.find(filter))
+    const [favouritesData, total] = await Promise.all([
+      Favourites.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Favourites.countDocuments(filter)
     ]);
+    
+    const favourites = await populateFavourites(favouritesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -342,13 +389,15 @@ const getFavouritesByBusinessBranchId = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [favourites, total] = await Promise.all([
-      populateFavourites(Favourites.find(filter))
+    const [favouritesData, total] = await Promise.all([
+      Favourites.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Favourites.countDocuments(filter)
     ]);
+    
+    const favourites = await populateFavourites(favouritesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {

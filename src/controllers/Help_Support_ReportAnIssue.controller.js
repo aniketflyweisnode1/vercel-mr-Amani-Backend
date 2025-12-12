@@ -1,14 +1,65 @@
 const HelpSupportReportAnIssue = require('../models/Help_Support_ReportAnIssue.model');
 const Business_Branch = require('../models/business_Branch.model');
 const Issue_Type = require('../models/Issue_Type.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateHelpSupportReportAnIssue = (query) => query
-  .populate('Branch_Id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('Issue_type_id', 'Issue_Type_id Issue_type Description')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateHelpSupportReportAnIssue = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Branch_Id
+      if (recordObj.Branch_Id) {
+        const branchId = typeof recordObj.Branch_Id === 'object' ? recordObj.Branch_Id : recordObj.Branch_Id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.Branch_Id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate Issue_type_id
+      if (recordObj.Issue_type_id) {
+        const issueTypeId = typeof recordObj.Issue_type_id === 'object' ? recordObj.Issue_type_id : recordObj.Issue_type_id;
+        const issueType = await Issue_Type.findOne({ Issue_Type_id: issueTypeId })
+          .select('Issue_Type_id Issue_type Description');
+        if (issueType) {
+          recordObj.Issue_type_id = issueType.toObject ? issueType.toObject() : issueType;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Branch_Id, Issue_type_id }) => {
   const filter = {};
@@ -76,15 +127,23 @@ const ensureIssueTypeExists = async (Issue_type_id) => {
   return Boolean(issueType);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let reportData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.findById(identifier));
+    reportData = await HelpSupportReportAnIssue.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      reportData = await HelpSupportReportAnIssue.findOne({ Help_Support_ReportAnIssue_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.findOne({ Help_Support_ReportAnIssue_id: numericId }));
+  
+  if (!reportData) {
+    return null;
   }
-  return null;
+  
+  return await populateHelpSupportReportAnIssue(reportData);
 };
 
 const createHelpSupportReportAnIssue = asyncHandler(async (req, res) => {
@@ -101,7 +160,7 @@ const createHelpSupportReportAnIssue = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const report = await HelpSupportReportAnIssue.create(payload);
-    const populated = await populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.findById(report._id));
+    const populated = await populateHelpSupportReportAnIssue(report);
     sendSuccess(res, populated, 'Help support report an issue created successfully', 201);
   } catch (error) {
     console.error('Error creating help support report an issue', { error: error.message });
@@ -127,13 +186,15 @@ const getAllHelpSupportReportAnIssues = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, Branch_Id, Issue_type_id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [reports, total] = await Promise.all([
-      populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.find(filter))
+    const [reportsData, total] = await Promise.all([
+      HelpSupportReportAnIssue.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportReportAnIssue.countDocuments(filter)
     ]);
+    
+    const reports = await populateHelpSupportReportAnIssue(reportsData);
     sendPaginated(res, reports, paginateMeta(numericPage, numericLimit, total), 'Help support report an issues retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support report an issues', { error: error.message });
@@ -144,11 +205,7 @@ const getAllHelpSupportReportAnIssues = asyncHandler(async (req, res) => {
 const getHelpSupportReportAnIssueById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const reportQuery = findByIdentifier(id);
-    if (!reportQuery) {
-      return sendError(res, 'Invalid help support report an issue identifier', 400);
-    }
-    const report = await reportQuery;
+    const report = await findByIdentifier(id);
     if (!report) {
       return sendNotFound(res, 'Help support report an issue not found');
     }
@@ -187,7 +244,7 @@ const updateHelpSupportReportAnIssue = asyncHandler(async (req, res) => {
     if (!report) {
       return sendNotFound(res, 'Help support report an issue not found');
     }
-    const populated = await populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.findById(report._id));
+    const populated = await populateHelpSupportReportAnIssue(report);
     sendSuccess(res, populated, 'Help support report an issue updated successfully');
   } catch (error) {
     console.error('Error updating help support report an issue', { error: error.message, id: req.params.id });
@@ -246,13 +303,15 @@ const getHelpSupportReportAnIssuesByIssueTypeId = asyncHandler(async (req, res) 
     filter.Issue_type_id = issueTypeId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [reports, total] = await Promise.all([
-      populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.find(filter))
+    const [reportsData, total] = await Promise.all([
+      HelpSupportReportAnIssue.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportReportAnIssue.countDocuments(filter)
     ]);
+    
+    const reports = await populateHelpSupportReportAnIssue(reportsData);
     sendPaginated(res, reports, paginateMeta(numericPage, numericLimit, total), 'Help support report an issues retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support report an issues by issue type', { error: error.message, Issue_type_id: req.params.Issue_type_id });
@@ -283,13 +342,15 @@ const getHelpSupportReportAnIssuesByBranchId = asyncHandler(async (req, res) => 
     filter.Branch_Id = branchId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [reports, total] = await Promise.all([
-      populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.find(filter))
+    const [reportsData, total] = await Promise.all([
+      HelpSupportReportAnIssue.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportReportAnIssue.countDocuments(filter)
     ]);
+    
+    const reports = await populateHelpSupportReportAnIssue(reportsData);
     sendPaginated(res, reports, paginateMeta(numericPage, numericLimit, total), 'Help support report an issues retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support report an issues by branch', { error: error.message, Branch_Id: req.params.Branch_Id });
@@ -320,13 +381,15 @@ const getHelpSupportReportAnIssuesByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [reports, total] = await Promise.all([
-      populateHelpSupportReportAnIssue(HelpSupportReportAnIssue.find(filter))
+    const [reportsData, total] = await Promise.all([
+      HelpSupportReportAnIssue.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportReportAnIssue.countDocuments(filter)
     ]);
+    
+    const reports = await populateHelpSupportReportAnIssue(reportsData);
     sendPaginated(res, reports, paginateMeta(numericPage, numericLimit, total), 'Help support report an issues retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support report an issues by auth', { error: error.message, userId: req.userIdNumber });

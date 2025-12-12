@@ -1,15 +1,76 @@
 const WorkForceEmployee = require('../models/WorkForceManagement_Employee.model');
 const Role = require('../models/role.model');
 const Departments = require('../models/Departments.model');
+const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateEmployee = (query) => query
-  .populate('Role_id', 'role_id name status')
-  .populate('Department_id', 'Departments_id name Status')
-  .populate('Branch_id', 'business_Branch_id BusinessName Address Status')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateEmployee = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Role_id
+      if (recordObj.Role_id) {
+        const roleId = typeof recordObj.Role_id === 'object' ? recordObj.Role_id : recordObj.Role_id;
+        const role = await Role.findOne({ role_id: roleId })
+          .select('role_id name status');
+        if (role) {
+          recordObj.Role_id = role.toObject ? role.toObject() : role;
+        }
+      }
+      
+      // Populate Department_id
+      if (recordObj.Department_id) {
+        const departmentId = typeof recordObj.Department_id === 'object' ? recordObj.Department_id : recordObj.Department_id;
+        const department = await Departments.findOne({ Departments_id: departmentId })
+          .select('Departments_id name Status');
+        if (department) {
+          recordObj.Department_id = department.toObject ? department.toObject() : department;
+        }
+      }
+      
+      // Populate Branch_id
+      if (recordObj.Branch_id) {
+        const branchId = typeof recordObj.Branch_id === 'object' ? recordObj.Branch_id : recordObj.Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address Status');
+        if (branch) {
+          recordObj.Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const normalizeBoolean = (value, defaultValue = false) => {
   if (value === undefined || value === null) return defaultValue;
@@ -94,16 +155,22 @@ const buildFilter = ({ search, status, role_id, department_id, Branch_id, type }
 };
 
 const findEmployeeByIdentifier = async (identifier) => {
+  let employeeData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateEmployee(WorkForceEmployee.findById(identifier));
+    employeeData = await WorkForceEmployee.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      employeeData = await WorkForceEmployee.findOne({ WorkForceManagement_Employee_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!isNaN(numericId)) {
-    return populateEmployee(WorkForceEmployee.findOne({ WorkForceManagement_Employee_id: numericId }));
+  if (!employeeData) {
+    return null;
   }
 
-  return null;
+  return await populateEmployee(employeeData);
 };
 
 const createWorkForceEmployee = asyncHandler(async (req, res) => {
@@ -135,7 +202,7 @@ const createWorkForceEmployee = asyncHandler(async (req, res) => {
     };
 
     const employee = await WorkForceEmployee.create(payload);
-    const populated = await populateEmployee(WorkForceEmployee.findById(employee._id));
+    const populated = await populateEmployee(employee);
 
     sendSuccess(res, populated, 'Workforce employee created successfully', 201);
   } catch (error) {
@@ -167,13 +234,15 @@ const getAllWorkForceEmployees = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [employees, total] = await Promise.all([
-      populateEmployee(WorkForceEmployee.find(filter))
+    const [employeesData, total] = await Promise.all([
+      WorkForceEmployee.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       WorkForceEmployee.countDocuments(filter)
     ]);
+    
+    const employees = await populateEmployee(employeesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -264,7 +333,7 @@ const updateWorkForceEmployee = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Workforce employee not found');
     }
 
-    const populated = await populateEmployee(WorkForceEmployee.findById(employee._id));
+    const populated = await populateEmployee(employee);
     sendSuccess(res, populated, 'Workforce employee updated successfully');
   } catch (error) {
     console.error('Error updating workforce employee', { error: error.message, id: req.params.id });
@@ -333,13 +402,15 @@ const getWorkForceEmployeesByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [employees, total] = await Promise.all([
-      populateEmployee(WorkForceEmployee.find(filter))
+    const [employeesData, total] = await Promise.all([
+      WorkForceEmployee.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       WorkForceEmployee.countDocuments(filter)
     ]);
+    
+    const employees = await populateEmployee(employeesData);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {

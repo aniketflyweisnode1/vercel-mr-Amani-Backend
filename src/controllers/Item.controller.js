@@ -177,26 +177,94 @@ const applyItemSort = (sortBy, sortOrder) => {
   return sort;
 };
 
-const listItemQuery = (filter = {}) =>
-  Item.find(filter)
-    .populate('service_id', 'name')
-    .populate('item_type_id', 'name')
-    .populate('item_Category_id', 'CategoryName')
-    .populate('business_Branch_id', 'name address City state country');
+// Manual population function for Number refs
+const populateItem = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate service_id
+      if (recordObj.service_id) {
+        const serviceId = typeof recordObj.service_id === 'object' ? recordObj.service_id : recordObj.service_id;
+        const service = await Services.findOne({ service_id: serviceId })
+          .select('service_id name');
+        if (service) {
+          recordObj.service_id = service.toObject ? service.toObject() : service;
+        }
+      }
+      
+      // Populate item_type_id
+      if (recordObj.item_type_id) {
+        const itemTypeId = typeof recordObj.item_type_id === 'object' ? recordObj.item_type_id : recordObj.item_type_id;
+        const itemType = await ItemType.findOne({ Item_type_id: itemTypeId })
+          .select('Item_type_id name');
+        if (itemType) {
+          recordObj.item_type_id = itemType.toObject ? itemType.toObject() : itemType;
+        }
+      }
+      
+      // Populate item_Category_id
+      if (recordObj.item_Category_id) {
+        const categoryId = typeof recordObj.item_Category_id === 'object' ? recordObj.item_Category_id : recordObj.item_Category_id;
+        const category = await ItemCategory.findOne({ item_Category_id: categoryId })
+          .select('item_Category_id CategoryName');
+        if (category) {
+          recordObj.item_Category_id = category.toObject ? category.toObject() : category;
+        }
+      }
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address City state country');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
-const findItemByIdQuery = (id) =>
-  Item.findById(id)
-    .populate('service_id', 'name')
-    .populate('item_type_id', 'name')
-    .populate('item_Category_id', 'CategoryName')
-    .populate('business_Branch_id', 'name address City state country');
+const listItemQuery = async (filter = {}) => {
+  const items = await Item.find(filter);
+  return await populateItem(items);
+};
 
-const updateItemByIdQuery = (id, update, options) =>
-  Item.findByIdAndUpdate(id, update, options)
-    .populate('service_id', 'name')
-    .populate('item_type_id', 'name')
-    .populate('item_Category_id', 'CategoryName')
-    .populate('business_Branch_id', 'name address City state country');
+const findItemByIdQuery = async (id) => {
+  let item;
+  if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    item = await Item.findById(id);
+  } else {
+    const numericId = parseInt(id, 10);
+    if (!Number.isNaN(numericId)) {
+      item = await Item.findOne({ Item_id: numericId });
+    }
+  }
+  if (!item) return null;
+  return await populateItem(item);
+};
+
+const updateItemByIdQuery = async (id, update, options) => {
+  let item;
+  if (id.match(/^[0-9a-fA-F]{24}$/)) {
+    item = await Item.findByIdAndUpdate(id, update, options);
+  } else {
+    const numericId = parseInt(id, 10);
+    if (!Number.isNaN(numericId)) {
+      item = await Item.findOneAndUpdate({ Item_id: numericId }, update, options);
+    }
+  }
+  if (!item) return null;
+  return await populateItem(item);
+};
 
 const getAllItems = asyncHandler(async (req, res) => {
   try {
@@ -223,13 +291,15 @@ const getAllItems = asyncHandler(async (req, res) => {
     const sort = applyItemSort(sortBy, sortOrder);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [items, total] = await Promise.all([
-      listItemQuery(filter)
+    const [itemsData, total] = await Promise.all([
+      Item.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Item.countDocuments(filter)
     ]);
+    
+    const items = await populateItem(itemsData);
 
     console.info('Items retrieved successfully', { 
       total, 
@@ -275,13 +345,15 @@ const getItemsByAuthUser = asyncHandler(async (req, res) => {
     const sort = applyItemSort(sortBy, sortOrder);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [items, total] = await Promise.all([
-      listItemQuery(filter)
+    const [itemsData, total] = await Promise.all([
+      Item.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Item.countDocuments(filter)
     ]);
+    
+    const items = await populateItem(itemsData);
 
     console.info('Items retrieved for auth user', { 
       total, 

@@ -1,12 +1,54 @@
 const RestaurantPlan = require('../models/Restaurant_Plan.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateRestaurantPlan = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateRestaurantPlan = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, business_Branch_id }) => {
   const filter = {};
@@ -57,17 +99,23 @@ const ensureBranchExists = async (business_Branch_id) => {
   return Boolean(branch);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let planData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateRestaurantPlan(RestaurantPlan.findById(identifier));
+    planData = await RestaurantPlan.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      planData = await RestaurantPlan.findOne({ Restaurant_Plan_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateRestaurantPlan(RestaurantPlan.findOne({ Restaurant_Plan_id: numericId }));
+  
+  if (!planData) {
+    return null;
   }
-
-  return null;
+  
+  return await populateRestaurantPlan(planData);
 };
 
 const createRestaurantPlan = asyncHandler(async (req, res) => {
@@ -84,7 +132,7 @@ const createRestaurantPlan = asyncHandler(async (req, res) => {
     };
 
     const plan = await RestaurantPlan.create(payload);
-    const populated = await populateRestaurantPlan(RestaurantPlan.findById(plan._id));
+    const populated = await populateRestaurantPlan(plan);
 
     sendSuccess(res, populated, 'Restaurant plan created successfully', 201);
   } catch (error) {
@@ -114,13 +162,15 @@ const getAllRestaurantPlans = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [plans, total] = await Promise.all([
-      populateRestaurantPlan(RestaurantPlan.find(filter))
+    const [plansData, total] = await Promise.all([
+      RestaurantPlan.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantPlan.countDocuments(filter)
     ]);
+    
+    const plans = await populateRestaurantPlan(plansData);
 
     sendPaginated(res, plans, paginateMeta(numericPage, numericLimit, total), 'Restaurant plans retrieved successfully');
   } catch (error) {
@@ -132,13 +182,7 @@ const getAllRestaurantPlans = asyncHandler(async (req, res) => {
 const getRestaurantPlanById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const planQuery = findByIdentifier(id);
-
-    if (!planQuery) {
-      return sendError(res, 'Invalid restaurant plan identifier', 400);
-    }
-
-    const plan = await planQuery;
+    const plan = await findByIdentifier(id);
 
     if (!plan) {
       return sendNotFound(res, 'Restaurant plan not found');
@@ -181,7 +225,7 @@ const updateRestaurantPlan = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Restaurant plan not found');
     }
 
-    const populated = await populateRestaurantPlan(RestaurantPlan.findById(plan._id));
+    const populated = await populateRestaurantPlan(plan);
     sendSuccess(res, populated, 'Restaurant plan updated successfully');
   } catch (error) {
     console.error('Error updating restaurant plan', { error: error.message, id: req.params.id });
@@ -247,13 +291,15 @@ const getRestaurantPlansByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [plans, total] = await Promise.all([
-      populateRestaurantPlan(RestaurantPlan.find(filter))
+    const [plansData, total] = await Promise.all([
+      RestaurantPlan.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       RestaurantPlan.countDocuments(filter)
     ]);
+    
+    const plans = await populateRestaurantPlan(plansData);
 
     sendPaginated(res, plans, paginateMeta(numericPage, numericLimit, total), 'Restaurant plans retrieved successfully');
   } catch (error) {

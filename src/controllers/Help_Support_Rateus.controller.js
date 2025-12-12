@@ -1,12 +1,54 @@
 const HelpSupportRateus = require('../models/Help_Support_Rateus.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateHelpSupportRateus = (query) => query
-  .populate('Branch_Id', 'business_Branch_id firstName lastName BusinessName Address City state country')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateHelpSupportRateus = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Branch_Id
+      if (recordObj.Branch_Id) {
+        const branchId = typeof recordObj.Branch_Id === 'object' ? recordObj.Branch_Id : recordObj.Branch_Id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id firstName lastName BusinessName Address City state country');
+        if (branch) {
+          recordObj.Branch_Id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Branch_Id, YourFeel }) => {
   const filter = {};
@@ -59,15 +101,23 @@ const ensureBranchExists = async (Branch_Id) => {
   return Boolean(branch);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let rateusData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateHelpSupportRateus(HelpSupportRateus.findById(identifier));
+    rateusData = await HelpSupportRateus.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      rateusData = await HelpSupportRateus.findOne({ Help_Support_Rateus_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateHelpSupportRateus(HelpSupportRateus.findOne({ Help_Support_Rateus_id: numericId }));
+  
+  if (!rateusData) {
+    return null;
   }
-  return null;
+  
+  return await populateHelpSupportRateus(rateusData);
 };
 
 const createHelpSupportRateus = asyncHandler(async (req, res) => {
@@ -81,7 +131,7 @@ const createHelpSupportRateus = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const rateus = await HelpSupportRateus.create(payload);
-    const populated = await populateHelpSupportRateus(HelpSupportRateus.findById(rateus._id));
+    const populated = await populateHelpSupportRateus(rateus);
     sendSuccess(res, populated, 'Help support rate us created successfully', 201);
   } catch (error) {
     console.error('Error creating help support rate us', { error: error.message });
@@ -107,13 +157,15 @@ const getAllHelpSupportRateuses = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, Branch_Id, YourFeel });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [rateuses, total] = await Promise.all([
-      populateHelpSupportRateus(HelpSupportRateus.find(filter))
+    const [rateusesData, total] = await Promise.all([
+      HelpSupportRateus.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportRateus.countDocuments(filter)
     ]);
+    
+    const rateuses = await populateHelpSupportRateus(rateusesData);
     sendPaginated(res, rateuses, paginateMeta(numericPage, numericLimit, total), 'Help support rate uses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support rate uses', { error: error.message });
@@ -124,11 +176,7 @@ const getAllHelpSupportRateuses = asyncHandler(async (req, res) => {
 const getHelpSupportRateusById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const rateusQuery = findByIdentifier(id);
-    if (!rateusQuery) {
-      return sendError(res, 'Invalid help support rate us identifier', 400);
-    }
-    const rateus = await rateusQuery;
+    const rateus = await findByIdentifier(id);
     if (!rateus) {
       return sendNotFound(res, 'Help support rate us not found');
     }
@@ -164,7 +212,7 @@ const updateHelpSupportRateus = asyncHandler(async (req, res) => {
     if (!rateus) {
       return sendNotFound(res, 'Help support rate us not found');
     }
-    const populated = await populateHelpSupportRateus(HelpSupportRateus.findById(rateus._id));
+    const populated = await populateHelpSupportRateus(rateus);
     sendSuccess(res, populated, 'Help support rate us updated successfully');
   } catch (error) {
     console.error('Error updating help support rate us', { error: error.message, id: req.params.id });
@@ -219,13 +267,15 @@ const getHelpSupportRateusesByFeel = asyncHandler(async (req, res) => {
     filter['YourFeel.status'] = feel;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [rateuses, total] = await Promise.all([
-      populateHelpSupportRateus(HelpSupportRateus.find(filter))
+    const [rateusesData, total] = await Promise.all([
+      HelpSupportRateus.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportRateus.countDocuments(filter)
     ]);
+    
+    const rateuses = await populateHelpSupportRateus(rateusesData);
     sendPaginated(res, rateuses, paginateMeta(numericPage, numericLimit, total), 'Help support rate uses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support rate uses by feel', { error: error.message, feel: req.params.feel });
@@ -256,13 +306,15 @@ const getHelpSupportRateusesByBranchId = asyncHandler(async (req, res) => {
     filter.Branch_Id = branchId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [rateuses, total] = await Promise.all([
-      populateHelpSupportRateus(HelpSupportRateus.find(filter))
+    const [rateusesData, total] = await Promise.all([
+      HelpSupportRateus.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportRateus.countDocuments(filter)
     ]);
+    
+    const rateuses = await populateHelpSupportRateus(rateusesData);
     sendPaginated(res, rateuses, paginateMeta(numericPage, numericLimit, total), 'Help support rate uses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support rate uses by branch', { error: error.message, Branch_Id: req.params.Branch_Id });
@@ -293,13 +345,15 @@ const getHelpSupportRateusesByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [rateuses, total] = await Promise.all([
-      populateHelpSupportRateus(HelpSupportRateus.find(filter))
+    const [rateusesData, total] = await Promise.all([
+      HelpSupportRateus.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       HelpSupportRateus.countDocuments(filter)
     ]);
+    
+    const rateuses = await populateHelpSupportRateus(rateusesData);
     sendPaginated(res, rateuses, paginateMeta(numericPage, numericLimit, total), 'Help support rate uses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving help support rate uses by auth', { error: error.message, userId: req.userIdNumber });

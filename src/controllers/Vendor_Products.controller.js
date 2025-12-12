@@ -5,12 +5,71 @@ const VendorProductSubCategory = require('../models/Vendor_Product_SubCategory.m
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateVendorProducts = (query) => query
-  .populate('user_id', 'user_id firstName lastName phoneNo BusinessName Email')
-  .populate('Category_id', 'Vendor_Product_Category_id CategoryName')
-  .populate('Subcategory_id', 'Vendor_Product_SubCategory_id SubCategoryName')
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateVendorProducts = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate user_id
+      if (recordObj.user_id) {
+        const userId = typeof recordObj.user_id === 'object' ? recordObj.user_id : recordObj.user_id;
+        const user = await User.findOne({ user_id: userId })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) {
+          recordObj.user_id = user.toObject ? user.toObject() : user;
+        }
+      }
+      
+      // Populate Category_id
+      if (recordObj.Category_id) {
+        const categoryId = typeof recordObj.Category_id === 'object' ? recordObj.Category_id : recordObj.Category_id;
+        const category = await VendorProductCategory.findOne({ Vendor_Product_Category_id: categoryId })
+          .select('Vendor_Product_Category_id CategoryName');
+        if (category) {
+          recordObj.Category_id = category.toObject ? category.toObject() : category;
+        }
+      }
+      
+      // Populate Subcategory_id
+      if (recordObj.Subcategory_id) {
+        const subcategoryId = typeof recordObj.Subcategory_id === 'object' ? recordObj.Subcategory_id : recordObj.Subcategory_id;
+        const subcategory = await VendorProductSubCategory.findOne({ Vendor_Product_SubCategory_id: subcategoryId })
+          .select('Vendor_Product_SubCategory_id SubCategoryName');
+        if (subcategory) {
+          recordObj.Subcategory_id = subcategory.toObject ? subcategory.toObject() : subcategory;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, user_id, Category_id, Subcategory_id, Coupontype, Avaliable }) => {
   const filter = {};
@@ -109,15 +168,23 @@ const ensureSubCategoryExists = async (Subcategory_id) => {
   return Boolean(subcategory);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let productData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateVendorProducts(VendorProducts.findById(identifier));
+    productData = await VendorProducts.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      productData = await VendorProducts.findOne({ Vendor_Products_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateVendorProducts(VendorProducts.findOne({ Vendor_Products_id: numericId }));
+  
+  if (!productData) {
+    return null;
   }
-  return null;
+  
+  return await populateVendorProducts(productData);
 };
 
 const createVendorProducts = asyncHandler(async (req, res) => {
@@ -137,7 +204,7 @@ const createVendorProducts = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const product = await VendorProducts.create(payload);
-    const populated = await populateVendorProducts(VendorProducts.findById(product._id));
+    const populated = await populateVendorProducts(product);
     sendSuccess(res, populated, 'Vendor product created successfully', 201);
   } catch (error) {
     console.error('Error creating vendor product', { error: error.message });
@@ -166,13 +233,15 @@ const getAllVendorProducts = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, user_id, Category_id, Subcategory_id, Coupontype, Avaliable });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [products, total] = await Promise.all([
-      populateVendorProducts(VendorProducts.find(filter))
+    const [productsData, total] = await Promise.all([
+      VendorProducts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorProducts.countDocuments(filter)
     ]);
+    
+    const products = await populateVendorProducts(productsData);
     sendPaginated(res, products, paginateMeta(numericPage, numericLimit, total), 'Vendor products retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor products', { error: error.message });
@@ -183,11 +252,10 @@ const getAllVendorProducts = asyncHandler(async (req, res) => {
 const getVendorProductsById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const productQuery = findByIdentifier(id);
-    if (!productQuery) {
-      return sendError(res, 'Invalid vendor product identifier', 400);
+    const product = await findByIdentifier(id);
+    if (!product) {
+      return sendNotFound(res, 'Vendor product not found');
     }
-    const product = await productQuery;
     if (!product) {
       return sendNotFound(res, 'Vendor product not found');
     }
@@ -229,7 +297,7 @@ const updateVendorProducts = asyncHandler(async (req, res) => {
     if (!product) {
       return sendNotFound(res, 'Vendor product not found');
     }
-    const populated = await populateVendorProducts(VendorProducts.findById(product._id));
+    const populated = await populateVendorProducts(product);
     sendSuccess(res, populated, 'Vendor product updated successfully');
   } catch (error) {
     console.error('Error updating vendor product', { error: error.message, id: req.params.id });
@@ -290,13 +358,15 @@ const getVendorProductsByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [products, total] = await Promise.all([
-      populateVendorProducts(VendorProducts.find(filter))
+    const [productsData, total] = await Promise.all([
+      VendorProducts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorProducts.countDocuments(filter)
     ]);
+    
+    const products = await populateVendorProducts(productsData);
     sendPaginated(res, products, paginateMeta(numericPage, numericLimit, total), 'Vendor products retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor products by auth', { error: error.message, userId: req.userIdNumber });
@@ -330,13 +400,15 @@ const getVendorProductsByCategoryId = asyncHandler(async (req, res) => {
     filter.Category_id = categoryId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [products, total] = await Promise.all([
-      populateVendorProducts(VendorProducts.find(filter))
+    const [productsData, total] = await Promise.all([
+      VendorProducts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorProducts.countDocuments(filter)
     ]);
+    
+    const products = await populateVendorProducts(productsData);
     sendPaginated(res, products, paginateMeta(numericPage, numericLimit, total), 'Vendor products retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor products by category', { error: error.message, Category_id: req.params.Category_id });
@@ -370,13 +442,15 @@ const getVendorProductsBySubCategoryId = asyncHandler(async (req, res) => {
     filter.Subcategory_id = subcategoryId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [products, total] = await Promise.all([
-      populateVendorProducts(VendorProducts.find(filter))
+    const [productsData, total] = await Promise.all([
+      VendorProducts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorProducts.countDocuments(filter)
     ]);
+    
+    const products = await populateVendorProducts(productsData);
     sendPaginated(res, products, paginateMeta(numericPage, numericLimit, total), 'Vendor products retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor products by subcategory', { error: error.message, Subcategory_id: req.params.Subcategory_id });
