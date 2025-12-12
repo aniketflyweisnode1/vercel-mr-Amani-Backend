@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
   },
   dob: {
     type: Date,
-    required: [true, 'Date of birth is required']
+    // required: [true, 'Date of birth is required']
   },
   isAgreeTermsConditions: {
     type: Boolean,

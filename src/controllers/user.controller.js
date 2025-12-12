@@ -58,7 +58,7 @@ const createUser = asyncHandler(async (req, res) => {
     // Create user data
     const userData = {
       ...req.body,
-      password: req.body.password || req.body.phoneNo.toString(),
+      password: req.body.password || (req.body.phoneNo ? req.body.phoneNo.toString() : null),
       created_by: req.userIdNumber || null
     };
 
