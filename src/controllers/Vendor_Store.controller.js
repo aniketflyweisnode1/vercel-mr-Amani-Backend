@@ -10,10 +10,51 @@ const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateVendorStore = (query) => query
-  .populate('user_id', 'user_id firstName lastName phoneNo BusinessName Email')
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateVendorStore = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate user_id
+      if (recordObj.user_id) {
+        const userId = typeof recordObj.user_id === 'object' ? recordObj.user_id : recordObj.user_id;
+        const user = await User.findOne({ user_id: userId })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) {
+          recordObj.user_id = user.toObject ? user.toObject() : user;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, user_id }) => {
   const filter = {};
@@ -76,15 +117,23 @@ const ensureUserExists = async (user_id) => {
   return Boolean(user);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateVendorStore(VendorStore.findById(identifier));
+    recordData = await VendorStore.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await VendorStore.findOne({ Vendor_Store_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateVendorStore(VendorStore.findOne({ Vendor_Store_id: numericId }));
+
+  if (!recordData) {
+    return null;
   }
-  return null;
+
+  return await populateVendorStore(recordData);
 };
 
 const createVendorStore = asyncHandler(async (req, res) => {
@@ -98,7 +147,7 @@ const createVendorStore = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const vendorStore = await VendorStore.create(payload);
-    const populated = await populateVendorStore(VendorStore.findById(vendorStore._id));
+    const populated = await populateVendorStore(vendorStore);
     sendSuccess(res, populated, 'Vendor store created successfully', 201);
   } catch (error) {
     console.error('Error creating vendor store', { error: error.message });
@@ -123,13 +172,15 @@ const getAllVendorStores = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, user_id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [vendorStores, total] = await Promise.all([
-      populateVendorStore(VendorStore.find(filter))
+    const [vendorStoresData, total] = await Promise.all([
+      VendorStore.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorStore.countDocuments(filter)
     ]);
+    
+    const vendorStores = await populateVendorStore(vendorStoresData);
     sendPaginated(res, vendorStores, paginateMeta(numericPage, numericLimit, total), 'Vendor stores retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor stores', { error: error.message });
@@ -180,7 +231,7 @@ const updateVendorStore = asyncHandler(async (req, res) => {
     if (!vendorStore) {
       return sendNotFound(res, 'Vendor store not found');
     }
-    const populated = await populateVendorStore(VendorStore.findById(vendorStore._id));
+    const populated = await populateVendorStore(vendorStore);
     sendSuccess(res, populated, 'Vendor store updated successfully');
   } catch (error) {
     console.error('Error updating vendor store', { error: error.message, id: req.params.id });
@@ -238,13 +289,15 @@ const getVendorStoresByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [vendorStores, total] = await Promise.all([
-      populateVendorStore(VendorStore.find(filter))
+    const [vendorStoresData, total] = await Promise.all([
+      VendorStore.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorStore.countDocuments(filter)
     ]);
+    
+    const vendorStores = await populateVendorStore(vendorStoresData);
     sendPaginated(res, vendorStores, paginateMeta(numericPage, numericLimit, total), 'Vendor stores retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor stores by auth', { error: error.message, userId: req.userIdNumber });
