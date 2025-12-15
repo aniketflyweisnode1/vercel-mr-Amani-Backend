@@ -1,5 +1,4 @@
 const VendorProductsBrand = require('../models/Vendor_Products_brand.model');
-const VendorProducts = require('../models/Vendor_Products.model');
 const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
@@ -75,10 +74,6 @@ const findByIdentifier = async (identifier) => {
 
 const createVendorProductsBrand = asyncHandler(async (req, res) => {
   try {
-    const { Vendor_Products_id } = req.body;
-    if (!(await ensureProductExists(Vendor_Products_id))) {
-      return sendError(res, 'Vendor product not found or inactive', 400);
-    }
     const payload = {
       ...req.body,
       created_by: req.userIdNumber || null
