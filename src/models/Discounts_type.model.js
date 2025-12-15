@@ -19,7 +19,6 @@ const discountsTypeSchema = new mongoose.Schema({
   },
   business_Branch_id: {
     type: Number,
-    ref: 'Business_Branch',
     required: [true, 'Business branch ID is required']
   },
   Status: {
@@ -28,7 +27,6 @@ const discountsTypeSchema = new mongoose.Schema({
   },
   created_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   created_at: {
@@ -37,7 +35,6 @@ const discountsTypeSchema = new mongoose.Schema({
   },
   updated_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   updated_at: {

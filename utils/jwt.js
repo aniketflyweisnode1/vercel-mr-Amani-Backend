@@ -25,7 +25,7 @@ const generateAccessToken = (user) => {
     type: 'access'
   };
   
-  const secret = process.env.JWT_SECRET || 'newuserToken';
+  const secret = 'newuserToken';
   return generateToken(
     payload, 
     secret, 
@@ -75,7 +75,8 @@ const verifyToken = (token, secret) => {
   try {
     return jwt.verify(token, secret);
   } catch (error) {
-    throw new Error('Invalid token');
+    // Preserve the original error so we can check error.name in auth middleware
+    throw error;
   }
 };
 

@@ -21,7 +21,7 @@ const {
   getDiscountsTypesByBusinessBranchIdQuerySchema
 } = require('../../../validators/Discounts_type.validator');
 
-router.post('/create', auth, validateBody(createDiscountsTypeSchema), createDiscountsType);
+router.post('/create', auth, createDiscountsType);
 router.get('/getAll', validateQuery(getAllDiscountsTypesSchema), getAllDiscountsTypes);
 router.get('/getById/:id', auth, validateParams(getDiscountsTypeByIdSchema), getDiscountsTypeById);
 router.put('/update/:id', auth, validateParams(getDiscountsTypeByIdSchema), validateBody(updateDiscountsTypeSchema), updateDiscountsType);

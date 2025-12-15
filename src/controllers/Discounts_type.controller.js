@@ -1,5 +1,6 @@
 const Discounts_type = require('../models/Discounts_type.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -39,10 +40,50 @@ const buildFilterFromQuery = ({ search, status, business_Branch_id }) => {
   return filter;
 };
 
-const populateDiscountsType = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id name address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateDiscountsType = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id name address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by.user_id : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by.user_id : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const createDiscountsType = asyncHandler(async (req, res) => {
   try {
@@ -61,7 +102,7 @@ const createDiscountsType = asyncHandler(async (req, res) => {
     const discountsType = await Discounts_type.create(payload);
     console.info('Discounts type created successfully', { id: discountsType._id, Discounts_type_id: discountsType.Discounts_type_id });
 
-    const populated = await populateDiscountsType(Discounts_type.findById(discountsType._id));
+    const populated = await populateDiscountsType(discountsType);
     sendSuccess(res, populated, 'Discounts type created successfully', 201);
   } catch (error) {
     console.error('Error creating discounts type', { error: error.message, stack: error.stack });
@@ -90,13 +131,15 @@ const getAllDiscountsTypes = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [discountsTypes, total] = await Promise.all([
-      populateDiscountsType(Discounts_type.find(filter))
+    const [discountsTypesRaw, total] = await Promise.all([
+      Discounts_type.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts_type.countDocuments(filter)
     ]);
+    
+    const discountsTypes = await populateDiscountsType(discountsTypesRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -119,23 +162,25 @@ const getAllDiscountsTypes = asyncHandler(async (req, res) => {
 const getDiscountsTypeById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    let discountsType;
-
+    let discountsTypeRaw;
+    
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      discountsType = await populateDiscountsType(Discounts_type.findById(id));
+      discountsTypeRaw = await Discounts_type.findById(id);
     } else {
       const discountsTypeId = parseInt(id, 10);
       if (isNaN(discountsTypeId)) {
         return sendNotFound(res, 'Invalid discounts type ID format');
       }
-      discountsType = await populateDiscountsType(Discounts_type.findOne({ Discounts_type_id: discountsTypeId }));
+      discountsTypeRaw = await Discounts_type.findOne({ Discounts_type_id: discountsTypeId });
     }
-
-    if (!discountsType) {
+    
+    if (!discountsTypeRaw) {
       return sendNotFound(res, 'Discounts type not found');
     }
+    
+    const discountsType = await populateDiscountsType(discountsTypeRaw);
 
-    console.info('Discounts type retrieved successfully', { id: discountsType._id });
+    console.info('Discounts type retrieved successfully', { id: discountsTypeRaw._id });
     sendSuccess(res, discountsType, 'Discounts type retrieved successfully');
   } catch (error) {
     console.error('Error retrieving discounts type', { error: error.message, id: req.params.id });
@@ -175,7 +220,7 @@ const updateDiscountsType = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Discounts type not found');
     }
 
-    const populated = await populateDiscountsType(Discounts_type.findById(discountsType._id));
+    const populated = await populateDiscountsType(discountsType);
     console.info('Discounts type updated successfully', { id: discountsType._id });
     sendSuccess(res, populated, 'Discounts type updated successfully');
   } catch (error) {
@@ -241,13 +286,15 @@ const getDiscountsTypesByAuth = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [discountsTypes, total] = await Promise.all([
-      populateDiscountsType(Discounts_type.find(filter))
+    const [discountsTypesRaw, total] = await Promise.all([
+      Discounts_type.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts_type.countDocuments(filter)
     ]);
+    
+    const discountsTypes = await populateDiscountsType(discountsTypesRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -301,13 +348,15 @@ const getDiscountsTypesByBusinessBranchId = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [discountsTypes, total] = await Promise.all([
-      populateDiscountsType(Discounts_type.find(filter))
+    const [discountsTypesRaw, total] = await Promise.all([
+      Discounts_type.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts_type.countDocuments(filter)
     ]);
+    
+    const discountsTypes = await populateDiscountsType(discountsTypesRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
