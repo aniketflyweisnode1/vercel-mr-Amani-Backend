@@ -156,6 +156,7 @@ const VendorProductsBrandRoutes = require('./routes/ShopingVendor/Vendor_Product
 const VendorProductsTypesRoutes = require('./routes/ShopingVendor/Vendor_Products_types.routes');
 const VendorProductsFeaturesRoutes = require('./routes/ShopingVendor/Vendor_Products_features.routes');
 const RecentAcitvitysRoutes = require('./routes/ShopingVendor/RecentAcitvitys.routes');
+const MarketingRewordRoutes = require('./routes/ShopingVendor/Marketing_Reword.routes');
 // SocketChat routes - includes both REST API and Socket.io WebSocket
 const SocketChatRoutes = require('./routes/Chat/SocketChat.routes');
 const ChatFileUploadRoutes = require('./routes/Chat/ChatFileUpload.routes');
@@ -345,6 +346,7 @@ router.use('/Vendor_Products_brand', VendorProductsBrandRoutes);
 router.use('/Vendor_Products_types', VendorProductsTypesRoutes);
 router.use('/Vendor_Products_features', VendorProductsFeaturesRoutes);
 router.use('/RecentAcitvitys', RecentAcitvitysRoutes);
+router.use('/Marketing_Reword', MarketingRewordRoutes);
 // SocketChat routes - REST API endpoints
 router.use('/SocketChat', SocketChatRoutes);
 // Chat file upload routes - REST API endpoints for file uploads
