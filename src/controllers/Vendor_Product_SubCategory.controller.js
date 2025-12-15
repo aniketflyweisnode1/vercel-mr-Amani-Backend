@@ -1,12 +1,40 @@
 const VendorProductSubCategory = require('../models/Vendor_Product_SubCategory.model');
 const VendorProductCategory = require('../models/Vendor_Product_Category.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateVendorProductSubCategory = (query) => query
-  .populate('Vendor_Product_Category_id', 'Vendor_Product_Category_id CategoryName')
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateVendorProductSubCategory = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Vendor_Product_Category_id
+      if (recordObj.Vendor_Product_Category_id) {
+        const category = await VendorProductCategory.findOne({ Vendor_Product_Category_id: recordObj.Vendor_Product_Category_id }).select('Vendor_Product_Category_id CategoryName');
+        if (category) recordObj.Vendor_Product_Category_id = category.toObject();
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const user = await User.findOne({ user_id: recordObj.created_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.created_by = user.toObject();
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const user = await User.findOne({ user_id: recordObj.updated_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.updated_by = user.toObject();
+      }
+      
+      return recordObj;
+    })
+  );
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Vendor_Product_Category_id }) => {
   const filter = {};
@@ -56,15 +84,18 @@ const ensureCategoryExists = async (Vendor_Product_Category_id) => {
   return Boolean(category);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let subCategory;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateVendorProductSubCategory(VendorProductSubCategory.findById(identifier));
+    subCategory = await VendorProductSubCategory.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      subCategory = await VendorProductSubCategory.findOne({ Vendor_Product_SubCategory_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateVendorProductSubCategory(VendorProductSubCategory.findOne({ Vendor_Product_SubCategory_id: numericId }));
-  }
-  return null;
+  if (!subCategory) return null;
+  return await populateVendorProductSubCategory(subCategory);
 };
 
 const createVendorProductSubCategory = asyncHandler(async (req, res) => {
@@ -78,7 +109,7 @@ const createVendorProductSubCategory = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const subCategory = await VendorProductSubCategory.create(payload);
-    const populated = await populateVendorProductSubCategory(VendorProductSubCategory.findById(subCategory._id));
+    const populated = await populateVendorProductSubCategory(subCategory);
     sendSuccess(res, populated, 'Vendor product sub category created successfully', 201);
   } catch (error) {
     console.error('Error creating vendor product sub category', { error: error.message });
@@ -103,13 +134,14 @@ const getAllVendorProductSubCategories = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, Vendor_Product_Category_id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [subCategories, total] = await Promise.all([
-      populateVendorProductSubCategory(VendorProductSubCategory.find(filter))
+    const [subCategoriesRaw, total] = await Promise.all([
+      VendorProductSubCategory.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorProductSubCategory.countDocuments(filter)
     ]);
+    const subCategories = await populateVendorProductSubCategory(subCategoriesRaw);
     sendPaginated(res, subCategories, paginateMeta(numericPage, numericLimit, total), 'Vendor product sub categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor product sub categories', { error: error.message });
@@ -120,11 +152,7 @@ const getAllVendorProductSubCategories = asyncHandler(async (req, res) => {
 const getVendorProductSubCategoryById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const subCategoryQuery = findByIdentifier(id);
-    if (!subCategoryQuery) {
-      return sendError(res, 'Invalid vendor product sub category identifier', 400);
-    }
-    const subCategory = await subCategoryQuery;
+    const subCategory = await findByIdentifier(id);
     if (!subCategory) {
       return sendNotFound(res, 'Vendor product sub category not found');
     }
@@ -160,7 +188,7 @@ const updateVendorProductSubCategory = asyncHandler(async (req, res) => {
     if (!subCategory) {
       return sendNotFound(res, 'Vendor product sub category not found');
     }
-    const populated = await populateVendorProductSubCategory(VendorProductSubCategory.findById(subCategory._id));
+    const populated = await populateVendorProductSubCategory(subCategory);
     sendSuccess(res, populated, 'Vendor product sub category updated successfully');
   } catch (error) {
     console.error('Error updating vendor product sub category', { error: error.message, id: req.params.id });
@@ -218,13 +246,14 @@ const getVendorProductSubCategoriesByCategoryId = asyncHandler(async (req, res) 
     filter.Vendor_Product_Category_id = categoryId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [subCategories, total] = await Promise.all([
-      populateVendorProductSubCategory(VendorProductSubCategory.find(filter))
+    const [subCategoriesRaw, total] = await Promise.all([
+      VendorProductSubCategory.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorProductSubCategory.countDocuments(filter)
     ]);
+    const subCategories = await populateVendorProductSubCategory(subCategoriesRaw);
     sendPaginated(res, subCategories, paginateMeta(numericPage, numericLimit, total), 'Vendor product sub categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor product sub categories by category', { error: error.message, Vendor_Product_Category_id: req.params.Vendor_Product_Category_id });

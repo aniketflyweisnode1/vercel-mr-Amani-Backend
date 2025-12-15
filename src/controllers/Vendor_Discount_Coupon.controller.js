@@ -4,11 +4,43 @@ const VendorProductCategory = require('../models/Vendor_Product_Category.model')
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateVendorDiscountCoupon = (query) => query
-  .populate('user_id', 'user_id firstName lastName phoneNo BusinessName Email')
-  .populate('Category_id', 'Vendor_Product_Category_id CategoryName')
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateVendorDiscountCoupon = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate user_id
+      if (recordObj.user_id) {
+        const user = await User.findOne({ user_id: recordObj.user_id }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.user_id = user.toObject();
+      }
+      
+      // Populate Category_id
+      if (recordObj.Category_id) {
+        const category = await VendorProductCategory.findOne({ Vendor_Product_Category_id: recordObj.Category_id }).select('Vendor_Product_Category_id CategoryName');
+        if (category) recordObj.Category_id = category.toObject();
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const user = await User.findOne({ user_id: recordObj.created_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.created_by = user.toObject();
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const user = await User.findOne({ user_id: recordObj.updated_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.updated_by = user.toObject();
+      }
+      
+      return recordObj;
+    })
+  );
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, user_id, Category_id, DiscountType, Coupontype }) => {
   const filter = {};
@@ -85,15 +117,18 @@ const ensureCategoryExists = async (Category_id) => {
   return Boolean(category);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let coupon;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateVendorDiscountCoupon(VendorDiscountCoupon.findById(identifier));
+    coupon = await VendorDiscountCoupon.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      coupon = await VendorDiscountCoupon.findOne({ Vendor_Discount_Coupon_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateVendorDiscountCoupon(VendorDiscountCoupon.findOne({ Vendor_Discount_Coupon_id: numericId }));
-  }
-  return null;
+  if (!coupon) return null;
+  return await populateVendorDiscountCoupon(coupon);
 };
 
 const createVendorDiscountCoupon = asyncHandler(async (req, res) => {
@@ -110,7 +145,7 @@ const createVendorDiscountCoupon = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const coupon = await VendorDiscountCoupon.create(payload);
-    const populated = await populateVendorDiscountCoupon(VendorDiscountCoupon.findById(coupon._id));
+    const populated = await populateVendorDiscountCoupon(coupon);
     sendSuccess(res, populated, 'Vendor discount coupon created successfully', 201);
   } catch (error) {
     console.error('Error creating vendor discount coupon', { error: error.message });
@@ -138,13 +173,14 @@ const getAllVendorDiscountCoupons = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, user_id, Category_id, DiscountType, Coupontype });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [coupons, total] = await Promise.all([
-      populateVendorDiscountCoupon(VendorDiscountCoupon.find(filter))
+    const [couponsRaw, total] = await Promise.all([
+      VendorDiscountCoupon.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorDiscountCoupon.countDocuments(filter)
     ]);
+    const coupons = await populateVendorDiscountCoupon(couponsRaw);
     sendPaginated(res, coupons, paginateMeta(numericPage, numericLimit, total), 'Vendor discount coupons retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor discount coupons', { error: error.message });
@@ -155,11 +191,7 @@ const getAllVendorDiscountCoupons = asyncHandler(async (req, res) => {
 const getVendorDiscountCouponById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const couponQuery = findByIdentifier(id);
-    if (!couponQuery) {
-      return sendError(res, 'Invalid vendor discount coupon identifier', 400);
-    }
-    const coupon = await couponQuery;
+    const coupon = await findByIdentifier(id);
     if (!coupon) {
       return sendNotFound(res, 'Vendor discount coupon not found');
     }
@@ -198,7 +230,7 @@ const updateVendorDiscountCoupon = asyncHandler(async (req, res) => {
     if (!coupon) {
       return sendNotFound(res, 'Vendor discount coupon not found');
     }
-    const populated = await populateVendorDiscountCoupon(VendorDiscountCoupon.findById(coupon._id));
+    const populated = await populateVendorDiscountCoupon(coupon);
     sendSuccess(res, populated, 'Vendor discount coupon updated successfully');
   } catch (error) {
     console.error('Error updating vendor discount coupon', { error: error.message, id: req.params.id });
@@ -258,13 +290,14 @@ const getVendorDiscountCouponsByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [coupons, total] = await Promise.all([
-      populateVendorDiscountCoupon(VendorDiscountCoupon.find(filter))
+    const [couponsRaw, total] = await Promise.all([
+      VendorDiscountCoupon.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorDiscountCoupon.countDocuments(filter)
     ]);
+    const coupons = await populateVendorDiscountCoupon(couponsRaw);
     sendPaginated(res, coupons, paginateMeta(numericPage, numericLimit, total), 'Vendor discount coupons retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor discount coupons by auth', { error: error.message, userId: req.userIdNumber });
@@ -297,13 +330,14 @@ const getVendorDiscountCouponsByCategoryId = asyncHandler(async (req, res) => {
     filter.Category_id = categoryId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [coupons, total] = await Promise.all([
-      populateVendorDiscountCoupon(VendorDiscountCoupon.find(filter))
+    const [couponsRaw, total] = await Promise.all([
+      VendorDiscountCoupon.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorDiscountCoupon.countDocuments(filter)
     ]);
+    const coupons = await populateVendorDiscountCoupon(couponsRaw);
     sendPaginated(res, coupons, paginateMeta(numericPage, numericLimit, total), 'Vendor discount coupons retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor discount coupons by category', { error: error.message, Category_id: req.params.Category_id });
@@ -335,13 +369,14 @@ const getVendorDiscountCouponsByDiscountType = asyncHandler(async (req, res) => 
     filter.DiscountType = DiscountType;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [coupons, total] = await Promise.all([
-      populateVendorDiscountCoupon(VendorDiscountCoupon.find(filter))
+    const [couponsRaw, total] = await Promise.all([
+      VendorDiscountCoupon.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorDiscountCoupon.countDocuments(filter)
     ]);
+    const coupons = await populateVendorDiscountCoupon(couponsRaw);
     sendPaginated(res, coupons, paginateMeta(numericPage, numericLimit, total), 'Vendor discount coupons retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor discount coupons by discount type', { error: error.message, DiscountType: req.params.DiscountType });
@@ -373,13 +408,14 @@ const getVendorDiscountCouponsByCouponType = asyncHandler(async (req, res) => {
     filter.Coupontype = Coupontype;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [coupons, total] = await Promise.all([
-      populateVendorDiscountCoupon(VendorDiscountCoupon.find(filter))
+    const [couponsRaw, total] = await Promise.all([
+      VendorDiscountCoupon.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorDiscountCoupon.countDocuments(filter)
     ]);
+    const coupons = await populateVendorDiscountCoupon(couponsRaw);
     sendPaginated(res, coupons, paginateMeta(numericPage, numericLimit, total), 'Vendor discount coupons retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor discount coupons by coupon type', { error: error.message, Coupontype: req.params.Coupontype });

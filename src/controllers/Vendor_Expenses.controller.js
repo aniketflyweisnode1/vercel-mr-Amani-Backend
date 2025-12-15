@@ -4,11 +4,43 @@ const VendorProductCategory = require('../models/Vendor_Product_Category.model')
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateVendorExpenses = (query) => query
-  .populate('user_id', 'user_id firstName lastName phoneNo BusinessName Email')
-  .populate('Category_id', 'Vendor_Product_Category_id CategoryName')
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateVendorExpenses = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate user_id
+      if (recordObj.user_id) {
+        const user = await User.findOne({ user_id: recordObj.user_id }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.user_id = user.toObject();
+      }
+      
+      // Populate Category_id
+      if (recordObj.Category_id) {
+        const category = await VendorProductCategory.findOne({ Vendor_Product_Category_id: recordObj.Category_id }).select('Vendor_Product_Category_id CategoryName');
+        if (category) recordObj.Category_id = category.toObject();
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const user = await User.findOne({ user_id: recordObj.created_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.created_by = user.toObject();
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const user = await User.findOne({ user_id: recordObj.updated_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.updated_by = user.toObject();
+      }
+      
+      return recordObj;
+    })
+  );
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, user_id, Category_id, startDate, endDate, date }) => {
   const filter = {};
@@ -95,15 +127,18 @@ const ensureCategoryExists = async (Category_id) => {
   return Boolean(category);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let expense;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateVendorExpenses(VendorExpenses.findById(identifier));
+    expense = await VendorExpenses.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      expense = await VendorExpenses.findOne({ Vendor_Expenses_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateVendorExpenses(VendorExpenses.findOne({ Vendor_Expenses_id: numericId }));
-  }
-  return null;
+  if (!expense) return null;
+  return await populateVendorExpenses(expense);
 };
 
 const createVendorExpenses = asyncHandler(async (req, res) => {
@@ -120,7 +155,7 @@ const createVendorExpenses = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const expense = await VendorExpenses.create(payload);
-    const populated = await populateVendorExpenses(VendorExpenses.findById(expense._id));
+    const populated = await populateVendorExpenses(expense);
     sendSuccess(res, populated, 'Vendor expense created successfully', 201);
   } catch (error) {
     console.error('Error creating vendor expense', { error: error.message });
@@ -148,13 +183,14 @@ const getAllVendorExpenses = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, user_id, Category_id, startDate, endDate });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [expenses, total] = await Promise.all([
-      populateVendorExpenses(VendorExpenses.find(filter))
+    const [expensesRaw, total] = await Promise.all([
+      VendorExpenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorExpenses.countDocuments(filter)
     ]);
+    const expenses = await populateVendorExpenses(expensesRaw);
     sendPaginated(res, expenses, paginateMeta(numericPage, numericLimit, total), 'Vendor expenses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor expenses', { error: error.message });
@@ -165,11 +201,7 @@ const getAllVendorExpenses = asyncHandler(async (req, res) => {
 const getVendorExpensesById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const expenseQuery = findByIdentifier(id);
-    if (!expenseQuery) {
-      return sendError(res, 'Invalid vendor expense identifier', 400);
-    }
-    const expense = await expenseQuery;
+    const expense = await findByIdentifier(id);
     if (!expense) {
       return sendNotFound(res, 'Vendor expense not found');
     }
@@ -208,7 +240,7 @@ const updateVendorExpenses = asyncHandler(async (req, res) => {
     if (!expense) {
       return sendNotFound(res, 'Vendor expense not found');
     }
-    const populated = await populateVendorExpenses(VendorExpenses.findById(expense._id));
+    const populated = await populateVendorExpenses(expense);
     sendSuccess(res, populated, 'Vendor expense updated successfully');
   } catch (error) {
     console.error('Error updating vendor expense', { error: error.message, id: req.params.id });
@@ -269,13 +301,14 @@ const getVendorExpensesByTypeId = asyncHandler(async (req, res) => {
     filter.Category_id = typeId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [expenses, total] = await Promise.all([
-      populateVendorExpenses(VendorExpenses.find(filter))
+    const [expensesRaw, total] = await Promise.all([
+      VendorExpenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorExpenses.countDocuments(filter)
     ]);
+    const expenses = await populateVendorExpenses(expensesRaw);
     sendPaginated(res, expenses, paginateMeta(numericPage, numericLimit, total), 'Vendor expenses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor expenses by type', { error: error.message, Type_id: req.params.Type_id });
@@ -307,13 +340,14 @@ const getVendorExpensesByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [expenses, total] = await Promise.all([
-      populateVendorExpenses(VendorExpenses.find(filter))
+    const [expensesRaw, total] = await Promise.all([
+      VendorExpenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorExpenses.countDocuments(filter)
     ]);
+    const expenses = await populateVendorExpenses(expensesRaw);
     sendPaginated(res, expenses, paginateMeta(numericPage, numericLimit, total), 'Vendor expenses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor expenses by auth', { error: error.message, userId: req.userIdNumber });
@@ -346,13 +380,14 @@ const getVendorExpensesByCategoryId = asyncHandler(async (req, res) => {
     filter.Category_id = categoryId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [expenses, total] = await Promise.all([
-      populateVendorExpenses(VendorExpenses.find(filter))
+    const [expensesRaw, total] = await Promise.all([
+      VendorExpenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorExpenses.countDocuments(filter)
     ]);
+    const expenses = await populateVendorExpenses(expensesRaw);
     sendPaginated(res, expenses, paginateMeta(numericPage, numericLimit, total), 'Vendor expenses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor expenses by category', { error: error.message, Category_id: req.params.Category_id });
@@ -382,13 +417,14 @@ const getVendorExpensesByDate = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, user_id, Category_id, date });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [expenses, total] = await Promise.all([
-      populateVendorExpenses(VendorExpenses.find(filter))
+    const [expensesRaw, total] = await Promise.all([
+      VendorExpenses.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorExpenses.countDocuments(filter)
     ]);
+    const expenses = await populateVendorExpenses(expensesRaw);
     sendPaginated(res, expenses, paginateMeta(numericPage, numericLimit, total), 'Vendor expenses retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor expenses by date', { error: error.message });

@@ -17,6 +17,12 @@ const discountsSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Name cannot exceed 200 characters']
   },
+  code:{
+    type: String,
+    unique: true,
+    trim: true,
+    maxlength: [50, 'Code cannot exceed 50 characters']
+  },
   pricefix: {
     type: Number,
     required: [true, 'Fixed price is required'],

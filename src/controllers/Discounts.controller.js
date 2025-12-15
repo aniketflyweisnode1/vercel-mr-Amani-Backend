@@ -53,6 +53,40 @@ const buildFilterFromQuery = ({ search, status, Discounts_type_id, business_Bran
   return filter;
 };
 
+// Generate a random 10-character alphanumeric code
+const generateDiscountCode = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 10; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+// Generate unique discount code
+const generateUniqueDiscountCode = async () => {
+  let code;
+  let isUnique = false;
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  while (!isUnique && attempts < maxAttempts) {
+    code = generateDiscountCode();
+    const existing = await Discounts.findOne({ code });
+    if (!existing) {
+      isUnique = true;
+    }
+    attempts++;
+  }
+  
+  if (!isUnique) {
+    // Fallback: use timestamp-based code if random generation fails
+    code = `DISC${Date.now().toString().slice(-6)}`.toUpperCase();
+  }
+  
+  return code;
+};
+
 const populateDiscounts = (query) => query
   .populate('Discounts_type_id', 'Discounts_type_id name Description Status')
   .populate('business_Branch_id', 'business_Branch_id name address')
@@ -75,8 +109,15 @@ const createDiscount = asyncHandler(async (req, res) => {
       return sendError(res, 'No active business branch found for authenticated user', 404);
     }
 
+    // Auto-generate code if not provided
+    let code = req.body.code;
+    if (!code || code.trim() === '') {
+      code = await generateUniqueDiscountCode();
+    }
+
     const payload = {
       ...req.body,
+      code: code.trim().toUpperCase(), // Ensure uppercase and trimmed
       business_Branch_id,
       created_by: req.userIdNumber || null
     };
@@ -175,6 +216,16 @@ const updateDiscount = asyncHandler(async (req, res) => {
       updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
+
+    // Format code if provided (uppercase and trimmed)
+    if (updateData.code !== undefined) {
+      if (updateData.code && updateData.code.trim() !== '') {
+        updateData.code = updateData.code.trim().toUpperCase();
+      } else {
+        // If code is empty, remove it from update (don't update)
+        delete updateData.code;
+      }
+    }
 
     // Validate discount type if being updated
     if (updateData.Discounts_type_id !== undefined) {
