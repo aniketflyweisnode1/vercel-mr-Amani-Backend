@@ -3,10 +3,37 @@ const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateVendorBank = (query) => query
-  .populate('user_id', 'user_id firstName lastName phoneNo BusinessName Email')
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateVendorBank = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate user_id
+      if (recordObj.user_id) {
+        const user = await User.findOne({ user_id: recordObj.user_id }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.user_id = user.toObject();
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const user = await User.findOne({ user_id: recordObj.created_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.created_by = user.toObject();
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const user = await User.findOne({ user_id: recordObj.updated_by }).select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) recordObj.updated_by = user.toObject();
+      }
+      
+      return recordObj;
+    })
+  );
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, user_id }) => {
   const filter = {};
@@ -58,15 +85,18 @@ const ensureUserExists = async (user_id) => {
   return Boolean(user);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let vendorBank;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateVendorBank(VendorBank.findById(identifier));
+    vendorBank = await VendorBank.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      vendorBank = await VendorBank.findOne({ Vendor_Bank_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateVendorBank(VendorBank.findOne({ Vendor_Bank_id: numericId }));
-  }
-  return null;
+  if (!vendorBank) return null;
+  return await populateVendorBank(vendorBank);
 };
 
 const createVendorBank = asyncHandler(async (req, res) => {
@@ -80,7 +110,7 @@ const createVendorBank = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const vendorBank = await VendorBank.create(payload);
-    const populated = await populateVendorBank(VendorBank.findById(vendorBank._id));
+    const populated = await populateVendorBank(vendorBank);
     sendSuccess(res, populated, 'Vendor bank created successfully', 201);
   } catch (error) {
     console.error('Error creating vendor bank', { error: error.message });
@@ -105,13 +135,14 @@ const getAllVendorBanks = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status, user_id });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [vendorBanks, total] = await Promise.all([
-      populateVendorBank(VendorBank.find(filter))
+    const [vendorBanksRaw, total] = await Promise.all([
+      VendorBank.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorBank.countDocuments(filter)
     ]);
+    const vendorBanks = await populateVendorBank(vendorBanksRaw);
     sendPaginated(res, vendorBanks, paginateMeta(numericPage, numericLimit, total), 'Vendor banks retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor banks', { error: error.message });
@@ -122,11 +153,7 @@ const getAllVendorBanks = asyncHandler(async (req, res) => {
 const getVendorBankById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const vendorBankQuery = findByIdentifier(id);
-    if (!vendorBankQuery) {
-      return sendError(res, 'Invalid vendor bank identifier', 400);
-    }
-    const vendorBank = await vendorBankQuery;
+    const vendorBank = await findByIdentifier(id);
     if (!vendorBank) {
       return sendNotFound(res, 'Vendor bank not found');
     }
@@ -162,7 +189,7 @@ const updateVendorBank = asyncHandler(async (req, res) => {
     if (!vendorBank) {
       return sendNotFound(res, 'Vendor bank not found');
     }
-    const populated = await populateVendorBank(VendorBank.findById(vendorBank._id));
+    const populated = await populateVendorBank(vendorBank);
     sendSuccess(res, populated, 'Vendor bank updated successfully');
   } catch (error) {
     console.error('Error updating vendor bank', { error: error.message, id: req.params.id });
@@ -220,13 +247,14 @@ const getVendorBanksByAuth = asyncHandler(async (req, res) => {
     filter.created_by = userId;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [vendorBanks, total] = await Promise.all([
-      populateVendorBank(VendorBank.find(filter))
+    const [vendorBanksRaw, total] = await Promise.all([
+      VendorBank.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       VendorBank.countDocuments(filter)
     ]);
+    const vendorBanks = await populateVendorBank(vendorBanksRaw);
     sendPaginated(res, vendorBanks, paginateMeta(numericPage, numericLimit, total), 'Vendor banks retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor banks by auth', { error: error.message, userId: req.userIdNumber });

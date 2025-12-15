@@ -8,7 +8,6 @@ const vendorBankSchema = new mongoose.Schema({
   },
   user_id: {
     type: Number,
-    ref: 'User',
     required: [true, 'User ID is required']
   },
   BankName: {
@@ -45,7 +44,6 @@ const vendorBankSchema = new mongoose.Schema({
   },
   created_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   created_at: {
@@ -54,7 +52,6 @@ const vendorBankSchema = new mongoose.Schema({
   },
   updated_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   updated_at: {
