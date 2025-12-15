@@ -152,6 +152,9 @@ const VendorExpensesRoutes = require('./routes/ShopingVendor/Vendor_Expenses.rou
 const VendorManagerRoutes = require('./routes/ShopingVendor/Vendor_Manager.routes');
 const VendorDiscountCouponRoutes = require('./routes/ShopingVendor/Vendor_Discount_Coupon.routes');
 const VendorProductsRoutes = require('./routes/ShopingVendor/Vendor_Products.routes');
+const VendorProductsBrandRoutes = require('./routes/ShopingVendor/Vendor_Products_brand.routes');
+const VendorProductsTypesRoutes = require('./routes/ShopingVendor/Vendor_Products_types.routes');
+const VendorProductsFeaturesRoutes = require('./routes/ShopingVendor/Vendor_Products_features.routes');
 const RecentAcitvitysRoutes = require('./routes/ShopingVendor/RecentAcitvitys.routes');
 // SocketChat routes - includes both REST API and Socket.io WebSocket
 const SocketChatRoutes = require('./routes/Chat/SocketChat.routes');
@@ -338,6 +341,9 @@ router.use('/Vendor_Expenses', VendorExpensesRoutes);
 router.use('/Vendor_Manager', VendorManagerRoutes);
 router.use('/Vendor_Discount_Coupon', VendorDiscountCouponRoutes);
 router.use('/Vendor_Products', VendorProductsRoutes);
+router.use('/Vendor_Products_brand', VendorProductsBrandRoutes);
+router.use('/Vendor_Products_types', VendorProductsTypesRoutes);
+router.use('/Vendor_Products_features', VendorProductsFeaturesRoutes);
 router.use('/RecentAcitvitys', RecentAcitvitysRoutes);
 // SocketChat routes - REST API endpoints
 router.use('/SocketChat', SocketChatRoutes);

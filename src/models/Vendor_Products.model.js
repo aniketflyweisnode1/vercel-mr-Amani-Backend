@@ -8,7 +8,6 @@ const vendorProductsSchema = new mongoose.Schema({
   },
   user_id: {
     type: Number,
-    ref: 'User',
     required: [true, 'User ID is required']
   },
   Products_image: {
@@ -39,9 +38,8 @@ const vendorProductsSchema = new mongoose.Schema({
     trim: true
   },
   brand: {
-    type: String,
-    trim: true,
-    maxlength: [100, 'Brand cannot exceed 100 characters']
+    type: Number,
+    default: null
   },
   Color: {
     type: String,
@@ -77,13 +75,95 @@ const vendorProductsSchema = new mongoose.Schema({
     trim: true,
     maxlength: [5000, 'Description cannot exceed 5000 characters']
   },
+  SelectCondition: {
+    type: String,
+    default: 'New',
+    trim: true
+  },
+  type: {
+    type: Number,
+    default: null
+  },
+  features: {
+    type: Number,
+    default: null
+  },
+  tax: {
+    type: Number,
+    default: 0,
+    min: [0, 'Tax cannot be negative'],
+    max: [100, 'Tax cannot exceed 100']
+  },
+  PriceFormat: {
+    type: [String],
+    default: []
+  },
+  PriceCurrency: {
+    type: String,
+    trim: true,
+    maxlength: [10, 'Currency code cannot exceed 10 characters']
+  },
+  autoPriceReduction: {
+    type: Boolean,
+    default: false
+  },
+  autoPriceReductionTrue: {
+    type: [{
+      lowerPrice: { type: String, default: '' },
+      MinimumPrice: { type: String, default: '' }
+    }],
+    default: []
+  },
+  BuyItNewSetting: {
+    type: [{
+      AllowOfferabouve: { type: String, default: '' },
+      Quantity: { type: Number, default: 0 },
+      ScheduleListingStartTime: { type: String, default: '' }
+    }],
+    default: []
+  },
+  DeliveryMethod: {
+    type: [String],
+    default: []
+  },
+  PackageDetails: {
+    type: [String],
+    default: []
+  },
+  DomesticShipping: {
+    type: [String],
+    default: []
+  },
+  whoPays: {
+    type: [{
+      BuyerPay: { type: String, default: '' },
+      sellerPays: { type: String, default: '' }
+    }],
+    default: []
+  },
+  InternationalShipping: {
+    type: Boolean,
+    default: false
+  },
+  InternationalShippingDestination: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'International shipping destination cannot exceed 200 characters']
+  },
+  DeliveryDetails: {
+    type: [{
+      Loactied: { type: String, default: '' },
+      HandilingTime: { type: String, default: '' },
+      ReturnPolicy: { type: String, default: '' }
+    }],
+    default: []
+  },
   Status: {
     type: Boolean,
     default: true
   },
   created_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   created_at: {
@@ -92,7 +172,6 @@ const vendorProductsSchema = new mongoose.Schema({
   },
   updated_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   updated_at: {

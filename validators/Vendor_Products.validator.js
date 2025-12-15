@@ -7,13 +7,51 @@ const createVendorProductsSchema = Joi.object({
   Category_id: Joi.number().integer().positive().required(),
   Subcategory_id: Joi.number().integer().positive().optional().allow(null),
   Coupontype: Joi.string().valid('Public', 'Private').default('Public').optional(),
-  brand: Joi.string().trim().max(100).optional().allow(''),
+  brand: Joi.number().integer().positive().optional().allow(null),
   Color: Joi.string().trim().max(50).optional().allow(''),
   Waranty: Joi.string().trim().max(200).optional().allow(''),
   inStock: Joi.number().integer().min(0).optional().default(0),
   Size: Joi.string().trim().max(100).optional().allow(''),
   Material: Joi.string().trim().max(200).optional().allow(''),
   Description: Joi.string().trim().max(5000).optional().allow(''),
+  SelectCondition: Joi.string().valid('New', 'Used', 'Refurbished').default('New').optional(),
+  type: Joi.number().integer().positive().optional().allow(null),
+  features: Joi.number().integer().positive().optional().allow(null),
+  tax: Joi.number().min(0).max(100).optional().default(0),
+  PriceFormat: Joi.array().items(Joi.string().trim()).optional().default([]),
+  PriceCurrency: Joi.string().trim().max(10).optional().allow(''),
+  autoPriceReduction: Joi.boolean().optional().default(false),
+  autoPriceReductionTrue: Joi.array().items(
+    Joi.object({
+      lowerPrice: Joi.string().optional().allow(''),
+      MinimumPrice: Joi.string().optional().allow('')
+    })
+  ).optional().default([]),
+  BuyItNewSetting: Joi.array().items(
+    Joi.object({
+      AllowOfferabouve: Joi.string().optional().allow(''),
+      Quantity: Joi.number().integer().min(0).optional().default(0),
+      ScheduleListingStartTime: Joi.string().optional().allow('')
+    })
+  ).optional().default([]),
+  DeliveryMethod: Joi.array().items(Joi.string().trim()).optional().default([]),
+  PackageDetails: Joi.array().items(Joi.string().trim()).optional().default([]),
+  DomesticShipping: Joi.array().items(Joi.string().trim()).optional().default([]),
+  whoPays: Joi.array().items(
+    Joi.object({
+      BuyerPay: Joi.string().optional().allow(''),
+      sellerPays: Joi.string().optional().allow('')
+    })
+  ).optional().default([]),
+  InternationalShipping: Joi.boolean().optional().default(false),
+  InternationalShippingDestination: Joi.string().trim().max(200).optional().allow(''),
+  DeliveryDetails: Joi.array().items(
+    Joi.object({
+      Loactied: Joi.string().optional().allow(''),
+      HandilingTime: Joi.string().optional().allow(''),
+      ReturnPolicy: Joi.string().optional().allow('')
+    })
+  ).optional().default([]),
   Status: Joi.boolean().optional().default(true)
 });
 
@@ -24,13 +62,51 @@ const updateVendorProductsSchema = Joi.object({
   Category_id: Joi.number().integer().positive().optional(),
   Subcategory_id: Joi.number().integer().positive().optional().allow(null),
   Coupontype: Joi.string().valid('Public', 'Private').optional(),
-  brand: Joi.string().trim().max(100).optional().allow(''),
+  brand: Joi.number().integer().positive().optional().allow(null),
   Color: Joi.string().trim().max(50).optional().allow(''),
   Waranty: Joi.string().trim().max(200).optional().allow(''),
   inStock: Joi.number().integer().min(0).optional(),
   Size: Joi.string().trim().max(100).optional().allow(''),
   Material: Joi.string().trim().max(200).optional().allow(''),
   Description: Joi.string().trim().max(5000).optional().allow(''),
+  SelectCondition: Joi.string().valid('New', 'Used', 'Refurbished').optional(),
+  type: Joi.number().integer().positive().optional().allow(null),
+  features: Joi.number().integer().positive().optional().allow(null),
+  tax: Joi.number().min(0).max(100).optional(),
+  PriceFormat: Joi.array().items(Joi.string().trim()).optional(),
+  PriceCurrency: Joi.string().trim().max(10).optional().allow(''),
+  autoPriceReduction: Joi.boolean().optional(),
+  autoPriceReductionTrue: Joi.array().items(
+    Joi.object({
+      lowerPrice: Joi.string().optional().allow(''),
+      MinimumPrice: Joi.string().optional().allow('')
+    })
+  ).optional(),
+  BuyItNewSetting: Joi.array().items(
+    Joi.object({
+      AllowOfferabouve: Joi.string().optional().allow(''),
+      Quantity: Joi.number().integer().min(0).optional(),
+      ScheduleListingStartTime: Joi.string().optional().allow('')
+    })
+  ).optional(),
+  DeliveryMethod: Joi.array().items(Joi.string().trim()).optional(),
+  PackageDetails: Joi.array().items(Joi.string().trim()).optional(),
+  DomesticShipping: Joi.array().items(Joi.string().trim()).optional(),
+  whoPays: Joi.array().items(
+    Joi.object({
+      BuyerPay: Joi.string().optional().allow(''),
+      sellerPays: Joi.string().optional().allow('')
+    })
+  ).optional(),
+  InternationalShipping: Joi.boolean().optional(),
+  InternationalShippingDestination: Joi.string().trim().max(200).optional().allow(''),
+  DeliveryDetails: Joi.array().items(
+    Joi.object({
+      Loactied: Joi.string().optional().allow(''),
+      HandilingTime: Joi.string().optional().allow(''),
+      ReturnPolicy: Joi.string().optional().allow('')
+    })
+  ).optional(),
   Status: Joi.boolean().optional()
 }).min(1);
 

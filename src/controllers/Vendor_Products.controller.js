@@ -2,6 +2,9 @@ const VendorProducts = require('../models/Vendor_Products.model');
 const User = require('../models/User.model');
 const VendorProductCategory = require('../models/Vendor_Product_Category.model');
 const VendorProductSubCategory = require('../models/Vendor_Product_SubCategory.model');
+const VendorProductsBrand = require('../models/Vendor_Products_brand.model');
+const VendorProductsTypes = require('../models/Vendor_Products_types.model');
+const VendorProductsFeatures = require('../models/Vendor_Products_features.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -44,6 +47,36 @@ const populateVendorProducts = async (records) => {
         }
       }
       
+      // Populate brand (Vendor_Products_brand_id)
+      if (recordObj.brand) {
+        const brandId = typeof recordObj.brand === 'object' ? recordObj.brand : recordObj.brand;
+        const brand = await VendorProductsBrand.findOne({ Vendor_Products_brand_id: brandId })
+          .select('Vendor_Products_brand_id name');
+        if (brand) {
+          recordObj.brand = brand.toObject ? brand.toObject() : brand;
+        }
+      }
+      
+      // Populate type (Vendor_Products_types_id)
+      if (recordObj.type) {
+        const typeId = typeof recordObj.type === 'object' ? recordObj.type : recordObj.type;
+        const type = await VendorProductsTypes.findOne({ Vendor_Products_types_id: typeId })
+          .select('Vendor_Products_types_id name');
+        if (type) {
+          recordObj.type = type.toObject ? type.toObject() : type;
+        }
+      }
+      
+      // Populate features (Vendor_Products_features_id)
+      if (recordObj.features) {
+        const featuresId = typeof recordObj.features === 'object' ? recordObj.features : recordObj.features;
+        const features = await VendorProductsFeatures.findOne({ Vendor_Products_features_id: featuresId })
+          .select('Vendor_Products_features_id name');
+        if (features) {
+          recordObj.features = features.toObject ? features.toObject() : features;
+        }
+      }
+      
       // Populate created_by
       if (recordObj.created_by) {
         const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
@@ -78,7 +111,6 @@ const buildFilter = ({ search, status, user_id, Category_id, Subcategory_id, Cou
     filter.$or = [
       { Title: { $regex: search, $options: 'i' } },
       { Description: { $regex: search, $options: 'i' } },
-      { brand: { $regex: search, $options: 'i' } },
       { Color: { $regex: search, $options: 'i' } },
       { Material: { $regex: search, $options: 'i' } }
     ];
@@ -166,6 +198,42 @@ const ensureSubCategoryExists = async (Subcategory_id) => {
   }
   const subcategory = await VendorProductSubCategory.findOne({ Vendor_Product_SubCategory_id: subcategoryId, Status: true });
   return Boolean(subcategory);
+};
+
+const ensureBrandExists = async (brand) => {
+  if (brand === undefined || brand === null) {
+    return true;
+  }
+  const brandId = parseInt(brand, 10);
+  if (Number.isNaN(brandId)) {
+    return false;
+  }
+  const brandRecord = await VendorProductsBrand.findOne({ Vendor_Products_brand_id: brandId, Status: true });
+  return Boolean(brandRecord);
+};
+
+const ensureTypeExists = async (type) => {
+  if (type === undefined || type === null) {
+    return true;
+  }
+  const typeId = parseInt(type, 10);
+  if (Number.isNaN(typeId)) {
+    return false;
+  }
+  const typeRecord = await VendorProductsTypes.findOne({ Vendor_Products_types_id: typeId, Status: true });
+  return Boolean(typeRecord);
+};
+
+const ensureFeaturesExists = async (features) => {
+  if (features === undefined || features === null) {
+    return true;
+  }
+  const featuresId = parseInt(features, 10);
+  if (Number.isNaN(featuresId)) {
+    return false;
+  }
+  const featuresRecord = await VendorProductsFeatures.findOne({ Vendor_Products_features_id: featuresId, Status: true });
+  return Boolean(featuresRecord);
 };
 
 const findByIdentifier = async (identifier) => {
@@ -269,7 +337,7 @@ const getVendorProductsById = asyncHandler(async (req, res) => {
 const updateVendorProducts = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { user_id, Category_id, Subcategory_id } = req.body;
+    const { user_id, Category_id, Subcategory_id, brand, type, features } = req.body;
     if (user_id !== undefined && !(await ensureUserExists(user_id))) {
       return sendError(res, 'User not found', 400);
     }
@@ -278,6 +346,15 @@ const updateVendorProducts = asyncHandler(async (req, res) => {
     }
     if (Subcategory_id !== null && Subcategory_id !== undefined && !(await ensureSubCategoryExists(Subcategory_id))) {
       return sendError(res, 'Subcategory not found', 400);
+    }
+    if (brand !== null && brand !== undefined && !(await ensureBrandExists(brand))) {
+      return sendError(res, 'Brand not found or inactive', 400);
+    }
+    if (type !== null && type !== undefined && !(await ensureTypeExists(type))) {
+      return sendError(res, 'Type not found or inactive', 400);
+    }
+    if (features !== null && features !== undefined && !(await ensureFeaturesExists(features))) {
+      return sendError(res, 'Features not found or inactive', 400);
     }
     const updatePayload = {
       ...req.body,
