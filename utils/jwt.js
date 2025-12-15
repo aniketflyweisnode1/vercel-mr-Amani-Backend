@@ -25,9 +25,10 @@ const generateAccessToken = (user) => {
     type: 'access'
   };
   
+  const secret = process.env.JWT_SECRET || 'newuserToken';
   return generateToken(
     payload, 
-    'newuserToken', 
+    secret, 
     '7d'
   );
 };
@@ -44,9 +45,10 @@ const generateRefreshToken = (user) => {
     type: 'refresh'
   };
   
+  const secret = process.env.JWT_SECRET || 'newuserToken';
   return generateToken(
     payload, 
-    'newuserToken', 
+    secret, 
     '30d'
   );
 };
@@ -83,7 +85,8 @@ const verifyToken = (token, secret) => {
  * @returns {Object} Decoded token payload
  */
 const verifyAccessToken = (token) => {
-  return verifyToken(token, 'newuserToken');
+  const secret = process.env.JWT_SECRET || 'newuserToken';
+  return verifyToken(token, secret);
 };
 
 /**
@@ -92,7 +95,8 @@ const verifyAccessToken = (token) => {
  * @returns {Object} Decoded token payload
  */
 const verifyRefreshToken = (token) => {
-  return verifyToken(token, 'newuserToken');
+  const secret = process.env.JWT_SECRET || 'newuserToken';
+  return verifyToken(token, secret);
 };
 
 /**

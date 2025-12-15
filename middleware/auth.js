@@ -30,6 +30,16 @@ const auth = async (req, res, next) => {
       decoded = verifyAccessToken(token);
     } catch (error) {
       logger.error('Token verification failed', { error: error.message, token: token.substring(0, 20) + '...' });
+      
+      // Provide more specific error messages
+      if (error.name === 'TokenExpiredError') {
+        return sendUnauthorized(res, 'Token has expired. Please login again.');
+      } else if (error.name === 'JsonWebTokenError') {
+        return sendUnauthorized(res, 'Invalid token. Please check your token and try again.');
+      } else if (error.name === 'NotBeforeError') {
+        return sendUnauthorized(res, 'Token not active yet.');
+      }
+      
       return sendUnauthorized(res, 'Invalid or expired token');
     }
 
