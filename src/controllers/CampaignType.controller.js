@@ -1,10 +1,42 @@
 const CampaignType = require('../models/CampaignType.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateCampaignType = (query) => query
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateCampaignType = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by.user_id : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by.user_id : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status }) => {
   const filter = {};
@@ -24,16 +56,22 @@ const buildFilter = ({ search, status }) => {
 };
 
 const findCampaignTypeByIdentifier = async (identifier) => {
+  let campaignTypeRaw;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateCampaignType(CampaignType.findById(identifier));
+    campaignTypeRaw = await CampaignType.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!isNaN(numericId)) {
+      campaignTypeRaw = await CampaignType.findOne({ CampaignType_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!isNaN(numericId)) {
-    return populateCampaignType(CampaignType.findOne({ CampaignType_id: numericId }));
+  
+  if (!campaignTypeRaw) {
+    return null;
   }
-
-  return null;
+  
+  return await populateCampaignType(campaignTypeRaw);
 };
 
 const createCampaignType = asyncHandler(async (req, res) => {
@@ -44,7 +82,7 @@ const createCampaignType = asyncHandler(async (req, res) => {
     };
 
     const campaignType = await CampaignType.create(payload);
-    const populated = await populateCampaignType(CampaignType.findById(campaignType._id));
+    const populated = await populateCampaignType(campaignType);
 
     sendSuccess(res, populated, 'Campaign type created successfully', 201);
   } catch (error) {
@@ -73,13 +111,15 @@ const getAllCampaignTypes = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [campaignTypes, total] = await Promise.all([
-      populateCampaignType(CampaignType.find(filter))
+    const [campaignTypesRaw, total] = await Promise.all([
+      CampaignType.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       CampaignType.countDocuments(filter)
     ]);
+    
+    const campaignTypes = await populateCampaignType(campaignTypesRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -143,7 +183,7 @@ const updateCampaignType = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Campaign type not found');
     }
 
-    const populated = await populateCampaignType(CampaignType.findById(campaignType._id));
+    const populated = await populateCampaignType(campaignType);
     sendSuccess(res, populated, 'Campaign type updated successfully');
   } catch (error) {
     console.error('Error updating campaign type', { error: error.message, id: req.params.id });
@@ -208,13 +248,15 @@ const getCampaignTypesByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [campaignTypes, total] = await Promise.all([
-      populateCampaignType(CampaignType.find(filter))
+    const [campaignTypesRaw, total] = await Promise.all([
+      CampaignType.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       CampaignType.countDocuments(filter)
     ]);
+    
+    const campaignTypes = await populateCampaignType(campaignTypesRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -242,11 +284,13 @@ const getCampaignTypeByTypeId = asyncHandler(async (req, res) => {
       return sendError(res, 'Invalid campaign type ID format', 400);
     }
 
-    const campaignType = await populateCampaignType(CampaignType.findOne({ CampaignType_id: numericId }));
+    const campaignTypeRaw = await CampaignType.findOne({ CampaignType_id: numericId });
 
-    if (!campaignType) {
+    if (!campaignTypeRaw) {
       return sendNotFound(res, 'Campaign type not found');
     }
+    
+    const campaignType = await populateCampaignType(campaignTypeRaw);
 
     sendSuccess(res, campaignType, 'Campaign type retrieved successfully');
   } catch (error) {

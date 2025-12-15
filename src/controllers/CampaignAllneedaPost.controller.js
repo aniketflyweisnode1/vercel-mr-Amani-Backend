@@ -1,5 +1,6 @@
 const CampaignAllneedaPost = require('../models/CampaignAllneedaPost.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -19,10 +20,50 @@ const ensureBusinessBranchExists = async (business_Branch_id) => {
   return !!branch;
 };
 
-const populateCampaign = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateCampaign = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by.user_id : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by.user_id : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({ search, status, business_Branch_id }) => {
   const filter = {};
@@ -70,13 +111,15 @@ const listCampaigns = async ({ query, res, successMessage, filterOverrides = {} 
   const sort = {};
   sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-  const [campaigns, total] = await Promise.all([
-    populateCampaign(CampaignAllneedaPost.find(filter))
+  const [campaignsRaw, total] = await Promise.all([
+    CampaignAllneedaPost.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(numericLimit),
     CampaignAllneedaPost.countDocuments(filter)
   ]);
+  
+  const campaigns = await populateCampaign(campaignsRaw);
 
   const totalPages = Math.ceil(total / numericLimit) || 1;
   const pagination = {
@@ -92,16 +135,22 @@ const listCampaigns = async ({ query, res, successMessage, filterOverrides = {} 
 };
 
 const findCampaignByIdentifier = async (identifier) => {
+  let campaignRaw;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateCampaign(CampaignAllneedaPost.findById(identifier));
+    campaignRaw = await CampaignAllneedaPost.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      campaignRaw = await CampaignAllneedaPost.findOne({ CampaignAllneedaPost_id: numericId });
+    }
   }
-
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateCampaign(CampaignAllneedaPost.findOne({ CampaignAllneedaPost_id: numericId }));
+  
+  if (!campaignRaw) {
+    return null;
   }
-
-  return null;
+  
+  return await populateCampaign(campaignRaw);
 };
 
 const createCampaignAllneedaPost = asyncHandler(async (req, res) => {
@@ -127,7 +176,7 @@ const createCampaignAllneedaPost = asyncHandler(async (req, res) => {
     };
 
     const campaign = await CampaignAllneedaPost.create(payload);
-    const populated = await populateCampaign(CampaignAllneedaPost.findById(campaign._id));
+    const populated = await populateCampaign(campaign);
 
     sendSuccess(res, populated, 'Campaign all need a post created successfully', 201);
   } catch (error) {
@@ -152,13 +201,8 @@ const getAllCampaignAllneedaPosts = asyncHandler(async (req, res) => {
 const getCampaignAllneedaPostById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const campaignQuery = await findCampaignByIdentifier(id);
+    const campaign = await findCampaignByIdentifier(id);
 
-    if (!campaignQuery) {
-      return sendNotFound(res, 'Campaign all need a post not found');
-    }
-
-    const campaign = await campaignQuery;
     if (!campaign) {
       return sendNotFound(res, 'Campaign all need a post not found');
     }
@@ -205,7 +249,7 @@ const updateCampaignAllneedaPost = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Campaign all need a post not found');
     }
 
-    const populated = await populateCampaign(CampaignAllneedaPost.findById(campaign._id));
+    const populated = await populateCampaign(campaign);
     sendSuccess(res, populated, 'Campaign all need a post updated successfully');
   } catch (error) {
     console.error('Error updating campaign all need a post', { error: error.message, id: req.params.id });

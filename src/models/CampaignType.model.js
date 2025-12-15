@@ -24,7 +24,6 @@ const campaignTypeSchema = new mongoose.Schema({
   },
   created_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   created_at: {
@@ -33,7 +32,6 @@ const campaignTypeSchema = new mongoose.Schema({
   },
   updated_by: {
     type: Number,
-    ref: 'User',
     default: null
   },
   updated_at: {
