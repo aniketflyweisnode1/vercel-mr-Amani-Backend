@@ -6,31 +6,30 @@
 const nodemailer = require('nodemailer');
 const logger = require('./logger');
 
+// Email configuration from environment variables
+const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587', 10);
+const EMAIL_SECURE = process.env.EMAIL_SECURE === 'true' || process.env.EMAIL_PORT === '465';
+const EMAIL_USER = process.env.EMAIL_USER || '';
+const EMAIL_PASS = process.env.EMAIL_PASS || '';
+const EMAIL_FROM = process.env.EMAIL_FROM || EMAIL_USER || '';
+
 // Create transporter (configure based on your email service)
 const createTransporter = () => {
   // Configure based on environment variables
   // Supports Gmail, SendGrid, AWS SES, etc.
   const config = {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    host: EMAIL_HOST,
+    port: EMAIL_PORT,
+    secure: EMAIL_SECURE, // true for 465, false for other ports
     auth: {
-      user: process.env.SMTP_USER || '',
-      pass: process.env.SMTP_PASS || ''
+      user: EMAIL_USER,
+      pass: EMAIL_PASS
     }
   };
 
   // If using OAuth2 (for Gmail)
-  if (process.env.SMTP_OAUTH_CLIENT_ID && process.env.SMTP_OAUTH_CLIENT_SECRET) {
-    config.auth = {
-      type: 'OAuth2',
-      user: process.env.SMTP_USER,
-      clientId: process.env.SMTP_OAUTH_CLIENT_ID,
-      clientSecret: process.env.SMTP_OAUTH_CLIENT_SECRET,
-      refreshToken: process.env.SMTP_OAUTH_REFRESH_TOKEN,
-      accessToken: process.env.SMTP_OAUTH_ACCESS_TOKEN
-    };
-  }
+  // You can add OAuth2 configuration here if needed
 
   return nodemailer.createTransport(config);
 };
@@ -51,13 +50,18 @@ const sendEmail = async (options) => {
     const transporter = createTransporter();
 
     const mailOptions = {
-      from: options.from || process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: options.from || EMAIL_FROM,
       to: options.to,
       subject: options.subject,
       text: options.text || '',
       html: options.html || options.text || '',
       attachments: options.attachments || []
     };
+
+    // Validate that from email is set
+    if (!mailOptions.from) {
+      throw new Error('Sender email address is required. Set EMAIL_FROM or EMAIL_USER in .env file, or provide "from" parameter');
+    }
 
     const info = await transporter.sendMail(mailOptions);
     

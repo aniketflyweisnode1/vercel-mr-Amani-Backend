@@ -45,7 +45,7 @@ const generateRefreshToken = (user) => {
     type: 'refresh'
   };
   
-  const secret = process.env.JWT_SECRET || 'newuserToken';
+  const secret = 'newuserToken';
   return generateToken(
     payload, 
     secret, 
@@ -86,7 +86,7 @@ const verifyToken = (token, secret) => {
  * @returns {Object} Decoded token payload
  */
 const verifyAccessToken = (token) => {
-  const secret = process.env.JWT_SECRET || 'newuserToken';
+  const secret = 'newuserToken';
   return verifyToken(token, secret);
 };
 
@@ -96,7 +96,7 @@ const verifyAccessToken = (token) => {
  * @returns {Object} Decoded token payload
  */
 const verifyRefreshToken = (token) => {
-  const secret = process.env.JWT_SECRET || 'newuserToken';
+  const secret = 'newuserToken';
   return verifyToken(token, secret);
 };
 

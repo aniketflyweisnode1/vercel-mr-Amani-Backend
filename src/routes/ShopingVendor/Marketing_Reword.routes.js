@@ -2,21 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../../../middleware/auth');
 const { validateBody, validateQuery, validateParams } = require('../../../middleware/validation');
-const {
-  createMarketingReword,
-  getAllMarketingRewords,
-  getMarketingRewordById,
-  updateMarketingReword,
-  deleteMarketingReword,
-  getMarketingRewordsByAuth
-} = require('../../controllers/Marketing_Reword.controller');
-const {
-  createMarketingRewordSchema,
-  updateMarketingRewordSchema,
-  getMarketingRewordByIdSchema,
-  getAllMarketingRewordsSchema,
-  getMarketingRewordsByAuthSchema
-} = require('../../../validators/Marketing_Reword.validator');
+const { createMarketingReword, getAllMarketingRewords, getMarketingRewordById, updateMarketingReword, deleteMarketingReword, getMarketingRewordsByAuth } = require('../../controllers/Marketing_Reword.controller');
+const { createMarketingRewordSchema, updateMarketingRewordSchema, getMarketingRewordByIdSchema, getAllMarketingRewordsSchema, getMarketingRewordsByAuthSchema } = require('../../../validators/Marketing_Reword.validator');
 
 router.post('/create', auth, validateBody(createMarketingRewordSchema), createMarketingReword);
 router.get('/getAll', validateQuery(getAllMarketingRewordsSchema), getAllMarketingRewords);

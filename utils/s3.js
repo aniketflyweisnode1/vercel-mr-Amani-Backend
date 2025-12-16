@@ -17,7 +17,7 @@ const s3 = new AWS.S3({
   signatureVersion: 'v4' // Ensure v4 signature is used
 });
 
-const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || 'triaxxss';
+  const BUCKET_NAME = 'triaxxss';
 
 /**
  * Upload file to S3

@@ -221,8 +221,8 @@ const verifyOTPHandler = asyncHandler(async (req, res) => {
     };
 
     const tokens = {
-      accessToken: generateToken(accessTokenPayload, process.env.JWT_SECRET || 'newuserToken', '7d'),
-      refreshToken: generateToken(refreshTokenPayload, process.env.JWT_SECRET || 'newuserToken', '30d')
+      accessToken: generateToken(accessTokenPayload, 'newuserToken', '7d'),
+      refreshToken: generateToken(refreshTokenPayload, 'newuserToken', '30d')
     };
 
     // Remove OTP from user object

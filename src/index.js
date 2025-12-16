@@ -157,11 +157,19 @@ const VendorProductsTypesRoutes = require('./routes/ShopingVendor/Vendor_Product
 const VendorProductsFeaturesRoutes = require('./routes/ShopingVendor/Vendor_Products_features.routes');
 const RecentAcitvitysRoutes = require('./routes/ShopingVendor/RecentAcitvitys.routes');
 const MarketingRewordRoutes = require('./routes/ShopingVendor/Marketing_Reword.routes');
+const VendorFlashSaleRoutes = require('./routes/ShopingVendor/Vendor_Flash_sale.routes');
 // SocketChat routes - includes both REST API and Socket.io WebSocket
 const SocketChatRoutes = require('./routes/Chat/SocketChat.routes');
 const ChatFileUploadRoutes = require('./routes/Chat/ChatFileUpload.routes');
 const ChatOTPRoutes = require('./routes/Chat/ChatOTP.routes');
-const FileUploadRoutes = require('./routes/Upload/FileUpload.routes');
+const FileUploadRoutes = require('./routes/ThirdParty/FileUpload.routes');
+const GoogleMapsRoutes = require('./routes/ThirdParty/GoogleMaps.routes');
+const MealMeRoutes = require('./routes/ThirdParty/MealMe.routes');
+const RestreamRoutes = require('./routes/ThirdParty/Restream.routes');
+const StripeRoutes = require('./routes/ThirdParty/Stripe.routes');
+const TwilioRoutes = require('./routes/ThirdParty/Twilio.routes');
+const EmailRoutes = require('./routes/ThirdParty/Email.routes');
+const FirebaseRoutes = require('./routes/ThirdParty/Firebase.routes');
 const { sendSuccess } = require('../utils/response');
 
 /**
@@ -347,6 +355,7 @@ router.use('/Vendor_Products_types', VendorProductsTypesRoutes);
 router.use('/Vendor_Products_features', VendorProductsFeaturesRoutes);
 router.use('/RecentAcitvitys', RecentAcitvitysRoutes);
 router.use('/Marketing_Reword', MarketingRewordRoutes);
+router.use('/Vendor_Flash_sale', VendorFlashSaleRoutes);
 // SocketChat routes - REST API endpoints
 router.use('/SocketChat', SocketChatRoutes);
 // Chat file upload routes - REST API endpoints for file uploads
@@ -355,4 +364,18 @@ router.use('/chat', ChatFileUploadRoutes);
 router.use('/chat', ChatOTPRoutes);
 // File upload routes - Direct S3 upload using AWS SDK v3
 router.use('/upload', FileUploadRoutes);
+// Google Maps API routes
+router.use('/googlemaps', GoogleMapsRoutes);
+// MealMe.ai API routes
+router.use('/mealme', MealMeRoutes);
+// Restream.io OAuth2 API routes
+router.use('/restream', RestreamRoutes);
+// Stripe Payment API routes
+router.use('/stripe', StripeRoutes);
+// Twilio SMS/Voice API routes
+router.use('/twilio', TwilioRoutes);
+// Email API routes
+router.use('/email', EmailRoutes);
+// Firebase Cloud Messaging API routes
+router.use('/firebase', FirebaseRoutes);
 module.exports = router;

@@ -16,7 +16,10 @@ const initializeFirebase = () => {
 
   try {
     // Check if Firebase credentials are provided
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    const firebaseServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT || '';
+    const firebaseServiceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '';
+    
+    if (!firebaseServiceAccount && !firebaseServiceAccountPath) {
       logger.warn('Firebase service account key not found. Push notifications will be disabled.');
       return;
     }
@@ -24,11 +27,17 @@ const initializeFirebase = () => {
     // Parse service account key (can be JSON string or path to JSON file)
     let serviceAccount;
     try {
-      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      // Try parsing as JSON string first
+      if (firebaseServiceAccount) {
+        serviceAccount = JSON.parse(firebaseServiceAccount);
+      } else if (firebaseServiceAccountPath) {
+        // If parsing fails, treat as file path
+        const fs = require('fs');
+        serviceAccount = JSON.parse(fs.readFileSync(firebaseServiceAccountPath, 'utf8'));
+      }
     } catch (e) {
-      // If parsing fails, treat as file path
-      const fs = require('fs');
-      serviceAccount = JSON.parse(fs.readFileSync(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'utf8'));
+      logger.error('Error parsing Firebase service account', { error: e.message });
+      throw new Error(`Failed to parse Firebase service account: ${e.message}`);
     }
 
     // Initialize Firebase Admin
@@ -63,7 +72,7 @@ initializeFirebase();
 const sendNotification = async (token, notification, data = {}) => {
   try {
     if (!firebaseInitialized) {
-      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT_KEY.');
+      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_PATH in .env file.');
     }
 
     const message = {
@@ -140,7 +149,7 @@ const sendNotification = async (token, notification, data = {}) => {
 const sendMulticastNotification = async (tokens, notification, data = {}) => {
   try {
     if (!firebaseInitialized) {
-      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT_KEY.');
+      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_PATH in .env file.');
     }
 
     if (!Array.isArray(tokens) || tokens.length === 0) {
@@ -212,7 +221,7 @@ const sendMulticastNotification = async (tokens, notification, data = {}) => {
 const sendTopicNotification = async (topic, notification, data = {}) => {
   try {
     if (!firebaseInitialized) {
-      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT_KEY.');
+      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_PATH in .env file.');
     }
 
     const message = {
@@ -277,7 +286,7 @@ const sendTopicNotification = async (topic, notification, data = {}) => {
 const subscribeToTopic = async (tokens, topic) => {
   try {
     if (!firebaseInitialized) {
-      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT_KEY.');
+      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_PATH in .env file.');
     }
 
     const response = await admin.messaging().subscribeToTopic(tokens, topic);
@@ -314,7 +323,7 @@ const subscribeToTopic = async (tokens, topic) => {
 const unsubscribeFromTopic = async (tokens, topic) => {
   try {
     if (!firebaseInitialized) {
-      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT_KEY.');
+      throw new Error('Firebase is not initialized. Please configure FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_PATH in .env file.');
     }
 
     const response = await admin.messaging().unsubscribeFromTopic(tokens, topic);

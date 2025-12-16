@@ -62,7 +62,7 @@ const initializeSocket = (server) => {
       }
 
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, 'newuserToken');
         const user = await User.findOne({ user_id: decoded.userId || decoded.user_id, status: true });
 
         if (!user) {

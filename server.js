@@ -146,7 +146,7 @@ process.on('uncaughtException', (err) => {
 });
 
 // Check if running on Vercel (serverless)
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+const isVercel = false;
 
 // Start server only if not on Vercel
 let server = null;
@@ -154,9 +154,9 @@ let io = null;
 
 if (!isVercel) {
   // Start server for local development
-  const PORT = process.env.PORT || 3030;
+  const PORT = 3030;
   server = app.listen(PORT, () => {
-    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    logger.info(`Server running in 'development' mode on port ${PORT}`);
     logger.info(`API Documentation: http://localhost:${PORT}/api/v2`);
     logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
   });
