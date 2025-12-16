@@ -2,6 +2,7 @@ const MarketingSmsCampaign = require('../models/Marketing_Promotions_SMSCampaign
 const CampaignType = require('../models/CampaignType.model');
 const City = require('../models/city.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -50,13 +51,81 @@ const normalizeBoolean = (value, defaultValue = false) => {
   return defaultValue;
 };
 
-const populateSmsCampaign = (query) => query
-  .populate('CampaignType_id', 'CampaignType_id CampaignTypeName')
-  .populate('City_id', 'city_id name stateCode countryCode')
-  .populate('Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateSmsCampaign = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate CampaignType_id
+      if (recordObj.CampaignType_id) {
+        const typeId = typeof recordObj.CampaignType_id === 'object' ? recordObj.CampaignType_id : recordObj.CampaignType_id;
+        const campaignType = await CampaignType.findOne({ CampaignType_id: typeId })
+          .select('CampaignType_id CampaignTypeName');
+        if (campaignType) {
+          recordObj.CampaignType_id = campaignType.toObject ? campaignType.toObject() : campaignType;
+        }
+      }
+      
+      // Populate City_id
+      if (recordObj.City_id) {
+        const cityId = typeof recordObj.City_id === 'object' ? recordObj.City_id : recordObj.City_id;
+        const city = await City.findOne({ city_id: cityId })
+          .select('city_id name stateCode countryCode');
+        if (city) {
+          recordObj.City_id = city.toObject ? city.toObject() : city;
+        }
+      }
+      
+      // Populate Branch_id
+      if (recordObj.Branch_id) {
+        const branchId = typeof recordObj.Branch_id === 'object' ? recordObj.Branch_id : recordObj.Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({
   search,
@@ -157,13 +226,15 @@ const listSmsCampaigns = async ({ query, res, successMessage, filterOverrides = 
   const sort = {};
   sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-  const [campaigns, total] = await Promise.all([
-    populateSmsCampaign(MarketingSmsCampaign.find(filter))
+  const [campaignsData, total] = await Promise.all([
+    MarketingSmsCampaign.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(numericLimit),
     MarketingSmsCampaign.countDocuments(filter)
   ]);
+
+  const campaigns = await populateSmsCampaign(campaignsData);
 
   const totalPages = Math.ceil(total / numericLimit) || 1;
   const pagination = {
@@ -179,16 +250,22 @@ const listSmsCampaigns = async ({ query, res, successMessage, filterOverrides = 
 };
 
 const findSmsCampaignByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateSmsCampaign(MarketingSmsCampaign.findById(identifier));
+    recordData = await MarketingSmsCampaign.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await MarketingSmsCampaign.findOne({ Marketing_Promotions_SMSCampaign_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!isNaN(numericId)) {
-    return populateSmsCampaign(MarketingSmsCampaign.findOne({ Marketing_Promotions_SMSCampaign_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateSmsCampaign(recordData);
 };
 
 const createSmsCampaign = asyncHandler(async (req, res) => {
@@ -240,7 +317,7 @@ const createSmsCampaign = asyncHandler(async (req, res) => {
     };
 
     const campaign = await MarketingSmsCampaign.create(payload);
-    const populated = await populateSmsCampaign(MarketingSmsCampaign.findById(campaign._id));
+    const populated = await populateSmsCampaign(campaign);
 
     sendSuccess(res, populated, 'Marketing promotions SMS campaign created successfully', 201);
   } catch (error) {
@@ -265,13 +342,8 @@ const getAllSmsCampaigns = asyncHandler(async (req, res) => {
 const getSmsCampaignById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const campaignQuery = await findSmsCampaignByIdentifier(id);
+    const campaign = await findSmsCampaignByIdentifier(id);
 
-    if (!campaignQuery) {
-      return sendNotFound(res, 'Marketing promotions SMS campaign not found');
-    }
-
-    const campaign = await campaignQuery;
     if (!campaign) {
       return sendNotFound(res, 'Marketing promotions SMS campaign not found');
     }
@@ -343,7 +415,7 @@ const updateSmsCampaign = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Marketing promotions SMS campaign not found');
     }
 
-    const populated = await populateSmsCampaign(MarketingSmsCampaign.findById(campaign._id));
+    const populated = await populateSmsCampaign(campaign);
     sendSuccess(res, populated, 'Marketing promotions SMS campaign updated successfully');
   } catch (error) {
     console.error('Error updating marketing SMS campaign', { error: error.message, id: req.params.id });

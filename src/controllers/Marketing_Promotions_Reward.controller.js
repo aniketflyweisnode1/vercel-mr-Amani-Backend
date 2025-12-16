@@ -1,5 +1,6 @@
 const MarketingReward = require('../models/Marketing_Promotions_Reward.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -30,10 +31,51 @@ const normalizeBoolean = (value, defaultValue = false) => {
   return defaultValue;
 };
 
-const populateReward = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs
+const populateReward = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address City state country');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({ search, status, loyaltyRewords, business_Branch_id }) => {
   const filter = {};
@@ -85,13 +127,15 @@ const listRewards = async ({ query, res, successMessage, filterOverrides = {} })
   const sort = {};
   sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-  const [rewards, total] = await Promise.all([
-    populateReward(MarketingReward.find(filter))
+  const [rewardsData, total] = await Promise.all([
+    MarketingReward.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(numericLimit),
     MarketingReward.countDocuments(filter)
   ]);
+
+  const rewards = await populateReward(rewardsData);
 
   const totalPages = Math.ceil(total / numericLimit) || 1;
   const pagination = {
@@ -107,16 +151,22 @@ const listRewards = async ({ query, res, successMessage, filterOverrides = {} })
 };
 
 const findRewardByIdentifier = async (identifier) => {
+  let recordData;
+  
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateReward(MarketingReward.findById(identifier));
+    recordData = await MarketingReward.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await MarketingReward.findOne({ Marketing_Promotions_Reward_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!isNaN(numericId)) {
-    return populateReward(MarketingReward.findOne({ Marketing_Promotions_Reward_id: numericId }));
+  if (!recordData) {
+    return null;
   }
 
-  return null;
+  return await populateReward(recordData);
 };
 
 const createReward = asyncHandler(async (req, res) => {
@@ -143,7 +193,7 @@ const createReward = asyncHandler(async (req, res) => {
     };
 
     const reward = await MarketingReward.create(payload);
-    const populated = await populateReward(MarketingReward.findById(reward._id));
+    const populated = await populateReward(reward);
 
     sendSuccess(res, populated, 'Marketing promotions reward created successfully', 201);
   } catch (error) {
@@ -168,13 +218,8 @@ const getAllRewards = asyncHandler(async (req, res) => {
 const getRewardById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const rewardQuery = await findRewardByIdentifier(id);
+    const reward = await findRewardByIdentifier(id);
 
-    if (!rewardQuery) {
-      return sendNotFound(res, 'Marketing promotions reward not found');
-    }
-
-    const reward = await rewardQuery;
     if (!reward) {
       return sendNotFound(res, 'Marketing promotions reward not found');
     }
@@ -225,7 +270,7 @@ const updateReward = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Marketing promotions reward not found');
     }
 
-    const populated = await populateReward(MarketingReward.findById(reward._id));
+    const populated = await populateReward(reward);
     sendSuccess(res, populated, 'Marketing promotions reward updated successfully');
   } catch (error) {
     console.error('Error updating marketing reward', { error: error.message, id: req.params.id });

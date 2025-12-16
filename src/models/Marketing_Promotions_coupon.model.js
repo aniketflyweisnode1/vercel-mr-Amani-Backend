@@ -49,6 +49,11 @@ const marketingPromotionsCouponSchema = new mongoose.Schema({
     ref: 'Marketing_Promotions_coupon_Category',
     required: [true, 'Coupon category is required']
   },
+  Product_category_id: {
+    type: Number,
+    ref: 'Restaurant_item_Category',
+    default: null
+  },
   business_Branch_id: {
     type: Number,
     ref: 'Business_Branch',
@@ -143,6 +148,7 @@ const marketingPromotionsCouponSchema = new mongoose.Schema({
 marketingPromotionsCouponSchema.index({ Marketing_Promotions_coupon_id: 1 });
 marketingPromotionsCouponSchema.index({ DiscountCode: 1 });
 marketingPromotionsCouponSchema.index({ Marketing_Promotions_coupon_Category_id: 1 });
+marketingPromotionsCouponSchema.index({ Product_category_id: 1 });
 marketingPromotionsCouponSchema.index({ business_Branch_id: 1 });
 marketingPromotionsCouponSchema.index({ Status: 1 });
 marketingPromotionsCouponSchema.index({ 'CouponType.PublicCoupon': 1 });

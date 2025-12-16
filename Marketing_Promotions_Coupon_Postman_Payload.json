@@ -1,0 +1,29 @@
+{
+  "Offername": "Summer Sale 2024",
+  "DiscountCode": "SUMMER2024",
+  "Image": "https://example.com/coupon-image.jpg",
+  "Description": "Get amazing discounts on all items during our summer sale",
+  "Marketing_Promotions_coupon_Category_id": 1,
+  "Product_category_id": 5,
+  "business_Branch_id": 1,
+  "SelectanyProduct": [1, 2, 3, 4],
+  "CouponType": {
+    "PublicCoupon": true,
+    "PrivateCoupon": false
+  },
+  "UseNoofTime": 100,
+  "setUnlimitedTimeUse": false,
+  "Visibility": true,
+  "DiscountType": {
+    "FlatDiscount": false,
+    "PercentageDiscoount": true
+  },
+  "flatDiscountAmount": 0,
+  "StartDate": "2024-06-01T00:00:00.000Z",
+  "StartTime": "09:00",
+  "ExpirationDate": "2024-08-31T23:59:59.000Z",
+  "ExpirationTime": "18:00",
+  "ValidityLifeTime": false,
+  "Status": true
+}
+

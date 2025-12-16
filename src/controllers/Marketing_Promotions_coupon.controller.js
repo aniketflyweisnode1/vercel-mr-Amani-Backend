@@ -2,6 +2,7 @@ const MarketingCoupon = require('../models/Marketing_Promotions_coupon.model');
 const MarketingCouponCategory = require('../models/Marketing_Promotions_coupon_Category.model');
 const Business_Branch = require('../models/business_Branch.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
+const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
 const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
@@ -65,6 +66,21 @@ const ensureCategoryExists = async (categoryId) => {
   return !!category;
 };
 
+const ensureProductCategoryExists = async (productCategoryId) => {
+  if (productCategoryId === undefined || productCategoryId === null) {
+    return true; // Optional field, so return true if not provided
+  }
+  const categoryId = parseInt(productCategoryId, 10);
+  if (Number.isNaN(categoryId)) {
+    return false;
+  }
+  const category = await RestaurantItemCategory.findOne({
+    Restaurant_item_Category_id: categoryId,
+    Status: true
+  });
+  return !!category;
+};
+
 const validateProductsExist = async (productIds = []) => {
   if (!Array.isArray(productIds) || productIds.length === 0) {
     return { valid: true };
@@ -109,6 +125,16 @@ const populateCoupon = async (records) => {
           .select('Marketing_Promotions_coupon_Category_id CategoryName');
         if (category) {
           recordObj.Marketing_Promotions_coupon_Category_id = category.toObject ? category.toObject() : category;
+        }
+      }
+      
+      // Populate Product_category_id
+      if (recordObj.Product_category_id) {
+        const productCategoryId = typeof recordObj.Product_category_id === 'object' ? recordObj.Product_category_id : recordObj.Product_category_id;
+        const productCategory = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: productCategoryId })
+          .select('Restaurant_item_Category_id CategoryName Description');
+        if (productCategory) {
+          recordObj.Product_category_id = productCategory.toObject ? productCategory.toObject() : productCategory;
         }
       }
       
@@ -183,6 +209,13 @@ const buildFilterFromQuery = ({
     }
   }
 
+  if (productCategoryId !== undefined && productCategoryId !== null) {
+    const numericProductCategoryId = parseInt(productCategoryId, 10);
+    if (!Number.isNaN(numericProductCategoryId)) {
+      filter.Product_category_id = numericProductCategoryId;
+    }
+  }
+
   if (couponType) {
     filter[`CouponType.${couponType}`] = true;
   }
@@ -230,6 +263,7 @@ const buildListingOptions = (query = {}) => ({
   search: query.search ?? '',
   status: query.status,
   categoryId: query.categoryId,
+  productCategoryId: query.productCategoryId,
   couponType: query.couponType,
   discountType: query.discountType,
   visibility: query.visibility,
@@ -304,6 +338,7 @@ const createMarketingCoupon = asyncHandler(async (req, res) => {
   try {
     const {
       Marketing_Promotions_coupon_Category_id,
+      Product_category_id,
       SelectanyProduct = [],
       business_Branch_id: bodyBusinessBranchId
     } = req.body;
@@ -311,6 +346,13 @@ const createMarketingCoupon = asyncHandler(async (req, res) => {
     const categoryExists = await ensureCategoryExists(Marketing_Promotions_coupon_Category_id);
     if (!categoryExists) {
       return sendError(res, 'Associated coupon category not found or inactive', 400);
+    }
+
+    if (Product_category_id !== undefined && Product_category_id !== null) {
+      const productCategoryExists = await ensureProductCategoryExists(Product_category_id);
+      if (!productCategoryExists) {
+        return sendError(res, 'Associated product category not found or inactive', 400);
+      }
     }
 
     let business_Branch_id = bodyBusinessBranchId;
@@ -335,16 +377,22 @@ const createMarketingCoupon = asyncHandler(async (req, res) => {
 
     const payload = {
       ...req.body,
+      Marketing_Promotions_coupon_Category_id,
       business_Branch_id,
       SelectanyProduct: sanitizedProducts,
       CouponType: buildCouponTypePayload(req.body.CouponType),
       DiscountType: buildDiscountTypePayload(req.body.DiscountType),
+      UseNoofTime: req.body.UseNoofTime !== undefined ? Math.max(0, parseInt(req.body.UseNoofTime, 10) || 0) : (req.body.UseNoofTime ?? 0),
       setUnlimitedTimeUse: normalizeBoolean(req.body.setUnlimitedTimeUse, false),
       Visibility: normalizeBoolean(req.body.Visibility, false),
       ValidityLifeTime: normalizeBoolean(req.body.ValidityLifeTime, false),
-      created_by: req.userIdNumber || null,
+      flatDiscountAmount: req.body.flatDiscountAmount !== undefined ? Math.max(0, parseFloat(req.body.flatDiscountAmount) || 0) : (req.body.flatDiscountAmount ?? 0),
       StartDate: parseDateInput(req.body.StartDate),
-      ExpirationDate: parseDateInput(req.body.ExpirationDate)
+      ExpirationDate: parseDateInput(req.body.ExpirationDate),
+      StartTime: req.body.StartTime || undefined,
+      ExpirationTime: req.body.ExpirationTime || undefined,
+      Status: normalizeBoolean(req.body.Status, true),
+      created_by: req.userIdNumber || null
     };
 
     const coupon = await MarketingCoupon.create(payload);
@@ -404,6 +452,13 @@ const updateMarketingCoupon = asyncHandler(async (req, res) => {
       const categoryExists = await ensureCategoryExists(updateData.Marketing_Promotions_coupon_Category_id);
       if (!categoryExists) {
         return sendError(res, 'Associated coupon category not found or inactive', 400);
+      }
+    }
+
+    if (updateData.Product_category_id !== undefined && updateData.Product_category_id !== null) {
+      const productCategoryExists = await ensureProductCategoryExists(updateData.Product_category_id);
+      if (!productCategoryExists) {
+        return sendError(res, 'Associated product category not found or inactive', 400);
       }
     }
 
