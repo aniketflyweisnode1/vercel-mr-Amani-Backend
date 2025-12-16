@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     trim: true,
-    match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit phone number']
+    match: [/^[0-9]{10,15}$/, 'Please enter a valid mobile number (10-15 digits)']
   },
   dob: {
     type: Date,

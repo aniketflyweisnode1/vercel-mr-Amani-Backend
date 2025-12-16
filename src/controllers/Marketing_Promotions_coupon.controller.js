@@ -179,6 +179,7 @@ const buildFilterFromQuery = ({
   search,
   status,
   categoryId,
+  productCategoryId,
   couponType,
   discountType,
   visibility,

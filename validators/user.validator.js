@@ -18,11 +18,11 @@ const commonValidations = {
     }),
 
   mobile: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(/^[0-9]{10,15}$/)
     .required()
     .messages({
       'string.empty': 'Mobile number is required',
-      'string.pattern.base': 'Please enter a valid 10-digit mobile number'
+      'string.pattern.base': 'Please enter a valid mobile number (10-15 digits)'
     }),
 
   email: Joi.string()
@@ -135,11 +135,11 @@ const createUserSchema = Joi.object({
       'string.max': 'Business registration number cannot exceed 100 characters'
     }),
   phoneNo: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(/^[0-9]{10,15}$/)
     .required()
     .messages({
       'string.empty': 'Phone number is required',
-      'string.pattern.base': 'Please enter a valid 10-digit phone number'
+      'string.pattern.base': 'Please enter a valid phone number (10-15 digits)'
     }),
   dob: Joi.date()
     .required()
@@ -280,10 +280,10 @@ const updateUserSchema = Joi.object({
       'string.max': 'Business registration number cannot exceed 100 characters'
     }),
   phoneNo: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(/^[0-9]{10,15}$/)
     .optional()
     .messages({
-      'string.pattern.base': 'Please enter a valid 10-digit phone number'
+      'string.pattern.base': 'Please enter a valid phone number (10-15 digits)'
     }),
   dob: Joi.date()
     .optional()
@@ -416,10 +416,10 @@ const userLoginSchema = Joi.object({
 // Verify OTP validation schema
 const verifyOTPSchema = Joi.object({
   phoneNo: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(/^[0-9]{10,15}$/)
     .optional()
     .messages({
-      'string.pattern.base': 'Please enter a valid 10-digit phone number'
+      'string.pattern.base': 'Please enter a valid phone number (10-15 digits)'
     }),
   email: Joi.string()
     .email()
@@ -449,10 +449,10 @@ const verifyOTPSchema = Joi.object({
 
 const resendOTPSchema = Joi.object({
   phoneNo: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(/^[0-9]{10,15}$/)
     .optional()
     .messages({
-      'string.pattern.base': 'Please enter a valid 10-digit phone number'
+      'string.pattern.base': 'Please enter a valid phone number (10-15 digits)'
     }),
   email: Joi.string()
     .email()
@@ -594,10 +594,10 @@ const updateUserByIdBodySchema = Joi.object({
       'string.max': 'Business registration number cannot exceed 100 characters'
     }),
   phoneNo: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(/^[0-9]{10,15}$/)
     .optional()
     .messages({
-      'string.pattern.base': 'Please enter a valid 10-digit phone number'
+      'string.pattern.base': 'Please enter a valid phone number (10-15 digits)'
     }),
   dob: Joi.date()
     .optional()
