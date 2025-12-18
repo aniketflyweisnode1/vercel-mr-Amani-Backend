@@ -3,6 +3,8 @@ const { generateOTPWithExpiry } = require('../../utils/otp');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 const { ensureRoleMatch } = require('../../utils/role.js');
+const { sendOTPEmail } = require('../../utils/email');
+const { sendSMS } = require('../../utils/twilio');
 
 const buildRoleBasedLoginHandler = (allowedRoleNames = [], successMessage = 'OTP sent successfully') => asyncHandler(async (req, res) => {
   const { email, phoneNo } = req.body;
@@ -43,11 +45,66 @@ const buildRoleBasedLoginHandler = (allowedRoleNames = [], successMessage = 'OTP
   user.otpExpiresAt = expiresAt;
   await user.save();
 
-  console.info('OTP generated for role-based login', {
-    userId: user._id,
-    user_id: user.user_id,
-    role: roleValidation.role?.name
-  });
+  // Determine target email (prefer request email, then user.Email)
+  const targetEmail =
+    (email && email.toLowerCase().trim()) ||
+    (user.Email && user.Email.toLowerCase().trim());
+
+  if (targetEmail) {
+    // Prefer email when available
+    try {
+      await sendOTPEmail(targetEmail, generatedOtp);
+      console.info('OTP email sent for role-based login', {
+        userId: user._id,
+        user_id: user.user_id,
+        role: roleValidation.role?.name,
+        email: targetEmail
+      });
+    } catch (emailError) {
+      console.error('Error sending OTP email for role-based login', {
+        error: emailError.message,
+        userId: user._id,
+        user_id: user.user_id,
+        role: roleValidation.role?.name,
+        email: targetEmail
+      });
+      // Continue and still return OTP in response as fallback
+    }
+  } else {
+    // Fallback to SMS via Twilio when no email is available
+    const targetPhone =
+      (phoneNo && phoneNo.trim()) ||
+      (user.phoneNo && user.phoneNo.trim());
+
+    if (targetPhone) {
+      try {
+        await sendSMS({
+          to: targetPhone,
+          body: `Your OTP code is: ${generatedOtp}. This code will expire in 5 minutes.`
+        });
+        console.info('OTP SMS sent for role-based login', {
+          userId: user._id,
+          user_id: user.user_id,
+          role: roleValidation.role?.name,
+          phoneNo: targetPhone
+        });
+      } catch (smsError) {
+        console.error('Error sending OTP SMS for role-based login', {
+          error: smsError.message,
+          userId: user._id,
+          user_id: user.user_id,
+          role: roleValidation.role?.name,
+          phoneNo: targetPhone
+        });
+      }
+    } else {
+      console.warn('No email or phone number found for user during role-based login, OTP notification not sent', {
+        userId: user._id,
+        user_id: user.user_id,
+        role: roleValidation.role?.name
+      });
+    }
+  }
 
   sendSuccess(res, {
     message: 'OTP sent successfully',

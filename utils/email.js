@@ -10,8 +10,8 @@ const logger = require('./logger');
 const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587', 10);
 const EMAIL_SECURE = process.env.EMAIL_SECURE === 'true' || process.env.EMAIL_PORT === '465';
-const EMAIL_USER = process.env.EMAIL_USER || '';
-const EMAIL_PASS = process.env.EMAIL_PASS || '';
+const EMAIL_USER = process.env.EMAIL_USER || 'node1@flyweis.technology';
+const EMAIL_PASS = process.env.EMAIL_PASS || 'mkpvafpjcnnvtblm';
 const EMAIL_FROM = process.env.EMAIL_FROM || EMAIL_USER || '';
 
 // Create transporter (configure based on your email service)

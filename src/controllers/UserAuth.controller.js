@@ -3,6 +3,8 @@ const { generateOTPWithExpiry, verifyOTP } = require('../../utils/otp');
 const { generateToken } = require('../../utils/jwt');
 const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
+const { sendOTPEmail } = require('../../utils/email');
+const { sendSMS } = require('../../utils/twilio');
 
 const { ensureRoleMatch } = require('../../utils/role.js');
 
@@ -65,14 +67,63 @@ const userLogin = asyncHandler(async (req, res) => {
     user.otpExpiresAt = expiresAt;
     await user.save();
 
-    console.info('OTP sent successfully', { userId: user._id, phoneNo: user.phoneNo });
+    // Determine target email for sending OTP
+    const targetEmail =
+      (req.body.email && req.body.email.toLowerCase().trim()) ||
+      (user.Email && user.Email.toLowerCase().trim());
 
-    // In production, send OTP via SMS/Email
-    // For now, we'll return it in response (remove in production)
+    if (targetEmail) {
+      // Prefer email when available
+      try {
+        await sendOTPEmail(targetEmail, otp);
+        console.info('OTP email sent successfully', {
+          userId: user._id,
+          phoneNo: user.phoneNo,
+          email: targetEmail
+        });
+      } catch (emailError) {
+        console.error('Error sending OTP email', {
+          error: emailError.message,
+          userId: user._id,
+          email: targetEmail
+        });
+        // We still return success with OTP for fallback usage
+      }
+    } else {
+      // Fallback to SMS via Twilio when no email is available
+      const targetPhone =
+        (req.body.phoneNo && req.body.phoneNo.trim()) ||
+        (user.phoneNo && user.phoneNo.trim());
+
+      if (targetPhone) {
+        try {
+          await sendSMS({
+            to: targetPhone,
+            body: `Your OTP code is: ${otp}. This code will expire in 5 minutes.`
+          });
+          console.info('OTP SMS sent successfully', {
+            userId: user._id,
+            phoneNo: targetPhone
+          });
+        } catch (smsError) {
+          console.error('Error sending OTP SMS', {
+            error: smsError.message,
+            userId: user._id,
+            phoneNo: targetPhone
+          });
+        }
+      } else {
+        console.warn('No email or phone number found for user, OTP notification not sent', {
+          userId: user._id
+        });
+      }
+    }
+
+    // Return OTP in response (useful for testing; remove in strict production)
     sendSuccess(res, {
       message: 'OTP sent successfully',
-      otp: otp, // Remove this in production
-      expiresAt: expiresAt
+      otp,
+      expiresAt
     }, 'OTP sent to your phone number');
   } catch (error) {
     console.error('Error in user login', { error: error.message, stack: error.stack });
@@ -111,13 +162,8 @@ const resendOTP = asyncHandler(async (req, res) => {
       return sendError(res, 'Login permissions are disabled', 403);
     }
 
-    const allowedRoles = normalizeRolesInput(role);
-    if (allowedRoles.length) {
-      const roleValidation = await ensureRoleMatch(user.role_id, allowedRoles);
-      if (!roleValidation.isValid) {
-        return sendError(res, roleValidation.message, 403);
-      }
-    }
+    // NOTE: For resend OTP, allow all roles (User, Admin, Vendor, Restaurant, etc.)
+    // We only check that the account is active and has login permissions.
 
     const { otp, expiresAt } = generateOTPWithExpiry(5);
 
@@ -125,11 +171,56 @@ const resendOTP = asyncHandler(async (req, res) => {
     user.otpExpiresAt = expiresAt;
     await user.save();
 
-    console.info('OTP resent successfully', {
-      userId: user._id,
-      phoneNo: user.phoneNo,
-      email: user.Email
-    });
+    // Determine target email (prefer body email, then user.Email)
+    const targetEmail =
+      (email && email.toLowerCase().trim()) ||
+      (user.Email && user.Email.toLowerCase().trim());
+
+    if (targetEmail) {
+      // Prefer email when available
+      try {
+        await sendOTPEmail(targetEmail, otp);
+        console.info('OTP resent and email sent successfully', {
+          userId: user._id,
+          phoneNo: user.phoneNo,
+          email: targetEmail
+        });
+      } catch (emailError) {
+        console.error('Error sending resent OTP email', {
+          error: emailError.message,
+          userId: user._id,
+          email: targetEmail
+        });
+      }
+    } else {
+      // Fallback to SMS via Twilio when no email is available
+      const targetPhone =
+        (phoneNo && phoneNo.trim()) ||
+        (user.phoneNo && user.phoneNo.trim());
+
+      if (targetPhone) {
+        try {
+          await sendSMS({
+            to: targetPhone,
+            body: `Your OTP code is: ${otp}. This code will expire in 5 minutes.`
+          });
+          console.info('OTP resent and SMS sent successfully', {
+            userId: user._id,
+            phoneNo: targetPhone
+          });
+        } catch (smsError) {
+          console.error('Error sending resent OTP SMS', {
+            error: smsError.message,
+            userId: user._id,
+            phoneNo: targetPhone
+          });
+        }
+      } else {
+        console.warn('No email or phone number found for user during resendOTP, OTP notification not sent', {
+          userId: user._id
+        });
+      }
+    }
 
     sendSuccess(res, {
       message: 'OTP resent successfully',
