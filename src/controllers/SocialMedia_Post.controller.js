@@ -1,6 +1,7 @@
 const SocialMediaPost = require('../models/SocialMedia_Post.model');
 const Business_Branch = require('../models/business_Branch.model');
 const Reel = require('../models/Reel.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -42,10 +43,69 @@ const buildReelPayloadFromPost = (payload, userIdNumber) => ({
   created_by: userIdNumber || null
 });
 
-const populatePost = (query) => query
-  .populate('business_Branch_id', 'business_Branch_id BusinessName Address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population for numeric refs (business_Branch_id, created_by, updated_by)
+const populatePosts = async (records) => {
+  if (!records) return records;
+
+  const recordsArray = Array.isArray(records) ? records : [records];
+
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+
+      const recordObj = record.toObject ? record.toObject() : record;
+
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId =
+          typeof recordObj.business_Branch_id === 'object'
+            ? recordObj.business_Branch_id.business_Branch_id || recordObj.business_Branch_id
+            : recordObj.business_Branch_id;
+
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id BusinessName Address');
+
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById =
+          typeof recordObj.created_by === 'object'
+            ? recordObj.created_by.user_id || recordObj.created_by
+            : recordObj.created_by;
+
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById =
+          typeof recordObj.updated_by === 'object'
+            ? recordObj.updated_by.user_id || recordObj.updated_by
+            : recordObj.updated_by;
+
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+
+      return recordObj;
+    })
+  );
+
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilterFromQuery = ({ search, status, business_Branch_id, ScheduleLater, Reel_Id }) => {
   const filter = {};
@@ -108,13 +168,15 @@ const listPosts = async ({ query, res, successMessage, filterOverrides = {} }) =
   const sort = {};
   sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-  const [posts, total] = await Promise.all([
-    populatePost(SocialMediaPost.find(filter))
+  const [postsRaw, total] = await Promise.all([
+    SocialMediaPost.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(numericLimit),
     SocialMediaPost.countDocuments(filter)
   ]);
+
+  const posts = await populatePosts(postsRaw);
 
   const totalPages = Math.ceil(total / numericLimit) || 1;
   const pagination = {
@@ -130,16 +192,19 @@ const listPosts = async ({ query, res, successMessage, filterOverrides = {} }) =
 };
 
 const findPostByIdentifier = async (identifier) => {
+  let post;
+
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populatePost(SocialMediaPost.findById(identifier));
+    post = await SocialMediaPost.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      post = await SocialMediaPost.findOne({ SocialMedia_Post_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populatePost(SocialMediaPost.findOne({ SocialMedia_Post_id: numericId }));
-  }
-
-  return null;
+  if (!post) return null;
+  return await populatePosts(post);
 };
 
 const createSocialMediaPost = asyncHandler(async (req, res) => {
@@ -166,7 +231,7 @@ const createSocialMediaPost = asyncHandler(async (req, res) => {
     const reel = await Reel.create(buildReelPayloadFromPost(payload, req.userIdNumber));
     await SocialMediaPost.findByIdAndUpdate(post._id, { Reel_Id: reel.Real_Post_id });
 
-    const populated = await populatePost(SocialMediaPost.findById(post._id));
+    const populated = await populatePosts(post);
 
     sendSuccess(res, populated, 'Social media post created successfully', 201);
   } catch (error) {
@@ -191,13 +256,8 @@ const getAllSocialMediaPosts = asyncHandler(async (req, res) => {
 const getSocialMediaPostById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const postQuery = await findPostByIdentifier(id);
+    const post = await findPostByIdentifier(id);
 
-    if (!postQuery) {
-      return sendNotFound(res, 'Social media post not found');
-    }
-
-    const post = await postQuery;
     if (!post) {
       return sendNotFound(res, 'Social media post not found');
     }
@@ -251,7 +311,7 @@ const updateSocialMediaPost = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Social media post not found');
     }
 
-    const populated = await populatePost(SocialMediaPost.findById(post._id));
+    const populated = await populatePosts(post);
     sendSuccess(res, populated, 'Social media post updated successfully');
   } catch (error) {
     console.error('Error updating social media post', { error: error.message, id: req.params.id });

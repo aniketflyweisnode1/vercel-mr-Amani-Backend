@@ -50,6 +50,16 @@ const socialMediaPostSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  ScheduleDate: {
+    type: Date,
+    default: null
+  },
+  ScheduleTime: {
+    type: String,
+    trim: true,
+    maxlength: [20, 'Schedule time cannot exceed 20 characters'],
+    default: null
+  },
   Status: {
     type: Boolean,
     default: true

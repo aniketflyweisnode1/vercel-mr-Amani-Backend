@@ -25,6 +25,26 @@ const createSocialMediaPostSchema = Joi.object({
   PostFrom: postFromSchema,
   Platforms: platformsSchema,
   ScheduleLater: Joi.boolean().optional(),
+  ScheduleDate: Joi.date()
+    .optional()
+    .allow(null)
+    .when('ScheduleLater', {
+      is: true,
+      then: Joi.required().messages({
+        'any.required': 'ScheduleDate is required when ScheduleLater is true'
+      })
+    }),
+  ScheduleTime: Joi.string()
+    .trim()
+    .max(20)
+    .optional()
+    .allow('', null)
+    .when('ScheduleLater', {
+      is: true,
+      then: Joi.required().messages({
+        'any.required': 'ScheduleTime is required when ScheduleLater is true'
+      })
+    }),
   Tag: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Music: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Caption: Joi.string().trim().max(500).optional().allow(''),
@@ -40,6 +60,8 @@ const updateSocialMediaPostSchema = Joi.object({
   PostFrom: postFromSchema,
   Platforms: platformsSchema,
   ScheduleLater: Joi.boolean().optional(),
+  ScheduleDate: Joi.date().optional().allow(null),
+  ScheduleTime: Joi.string().trim().max(20).optional().allow('', null),
   Tag: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Music: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Caption: Joi.string().trim().max(500).optional().allow(''),
