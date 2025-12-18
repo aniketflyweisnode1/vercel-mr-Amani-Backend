@@ -10,7 +10,7 @@ const {
 } = require('../../../validators/Vendor_Reportandanalytics.validator');
 
 // Vendor Report & Analytics for a specific store
-router.get('/getReportandanalytics', auth, validateQuery(getVendorReportandanalyticsSchema), getVendorReportandanalytics);
+router.get('/getReportandanalytics', auth,  getVendorReportandanalytics);
 
 module.exports = router;
 

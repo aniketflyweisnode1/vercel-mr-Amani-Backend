@@ -4,11 +4,84 @@ const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateReelDislikes = (query) => query
-  .populate('Real_Post_id', 'Real_Post_id title Discription image VideoUrl')
-  .populate('DislikesBy', 'firstName lastName phoneNo email')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population for Number refs (Real_Post_id, DislikesBy, created_by, updated_by)
+const populateReelDislikes = async (records) => {
+  if (!records) return records;
+
+  const recordsArray = Array.isArray(records) ? records : [records];
+
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+
+      const recordObj = record.toObject ? record.toObject() : record;
+
+      // Populate Real_Post_id -> Reel by numeric Real_Post_id
+      if (recordObj.Real_Post_id) {
+        const reelId =
+          typeof recordObj.Real_Post_id === 'object'
+            ? recordObj.Real_Post_id.Real_Post_id || recordObj.Real_Post_id
+            : recordObj.Real_Post_id;
+
+        const reel = await Reel.findOne({ Real_Post_id: reelId, Status: true })
+          .select('Real_Post_id title Discription image VideoUrl');
+
+        if (reel) {
+          recordObj.Real_Post_id = reel.toObject ? reel.toObject() : reel;
+        }
+      }
+
+      // Populate DislikesBy -> User by numeric user_id
+      if (recordObj.DislikesBy) {
+        const userId =
+          typeof recordObj.DislikesBy === 'object'
+            ? recordObj.DislikesBy.user_id || recordObj.DislikesBy
+            : recordObj.DislikesBy;
+
+        const user = await User.findOne({ user_id: userId })
+          .select('user_id firstName lastName phoneNo email BusinessName');
+
+        if (user) {
+          recordObj.DislikesBy = user.toObject ? user.toObject() : user;
+        }
+      }
+
+      // Populate created_by -> User
+      if (recordObj.created_by) {
+        const createdById =
+          typeof recordObj.created_by === 'object'
+            ? recordObj.created_by.user_id || recordObj.created_by
+            : recordObj.created_by;
+
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+
+      // Populate updated_by -> User
+      if (recordObj.updated_by) {
+        const updatedById =
+          typeof recordObj.updated_by === 'object'
+            ? recordObj.updated_by.user_id || recordObj.updated_by
+            : recordObj.updated_by;
+
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+
+      return recordObj;
+    })
+  );
+
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status, Real_Post_id, DislikesBy }) => {
   const filter = {};
@@ -73,21 +146,24 @@ const ensureUserExists = async (DislikesBy) => {
   if (Number.isNaN(userId)) {
     return false;
   }
-  const user = await User.findOne({ user_id: userId, Status: true });
+  const user = await User.findOne({ user_id: userId });
   return Boolean(user);
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let reelDislikes;
+
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateReelDislikes(Reel_Dislikes.findById(identifier));
+    reelDislikes = await Reel_Dislikes.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      reelDislikes = await Reel_Dislikes.findOne({ Reel_Dislikes_id: numericId });
+    }
   }
 
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateReelDislikes(Reel_Dislikes.findOne({ Reel_Dislikes_id: numericId }));
-  }
-
-  return null;
+  if (!reelDislikes) return null;
+  return reelDislikes;
 };
 
 const createReelDislikes = asyncHandler(async (req, res) => {
@@ -112,7 +188,7 @@ const createReelDislikes = asyncHandler(async (req, res) => {
     };
 
     const reelDislikes = await Reel_Dislikes.create(payload);
-    const populated = await populateReelDislikes(Reel_Dislikes.findById(reelDislikes._id));
+    const populated = await populateReelDislikes(reelDislikes);
 
     sendSuccess(res, populated, 'Reel dislikes created successfully', 201);
   } catch (error) {
@@ -143,13 +219,15 @@ const getAllReelDislikes = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [reelDislikes, total] = await Promise.all([
-      populateReelDislikes(Reel_Dislikes.find(filter))
+    const [reelDislikesRaw, total] = await Promise.all([
+      Reel_Dislikes.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reel_Dislikes.countDocuments(filter)
     ]);
+
+    const reelDislikes = await populateReelDislikes(reelDislikesRaw);
 
     sendPaginated(res, reelDislikes, paginateMeta(numericPage, numericLimit, total), 'Reel dislikes retrieved successfully');
   } catch (error) {
@@ -161,19 +239,15 @@ const getAllReelDislikes = asyncHandler(async (req, res) => {
 const getReelDislikesById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const reelDislikesQuery = findByIdentifier(id);
-
-    if (!reelDislikesQuery) {
-      return sendError(res, 'Invalid reel dislikes identifier', 400);
-    }
-
-    const reelDislikes = await reelDislikesQuery;
+    const reelDislikes = await findByIdentifier(id);
 
     if (!reelDislikes) {
       return sendNotFound(res, 'Reel dislikes not found');
     }
 
-    sendSuccess(res, reelDislikes, 'Reel dislikes retrieved successfully');
+    const populated = await populateReelDislikes(reelDislikes);
+
+    sendSuccess(res, populated, 'Reel dislikes retrieved successfully');
   } catch (error) {
     console.error('Error retrieving reel dislikes', { error: error.message, id: req.params.id });
     throw error;
@@ -218,7 +292,7 @@ const updateReelDislikes = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel dislikes not found');
     }
 
-    const populated = await populateReelDislikes(Reel_Dislikes.findById(reelDislikes._id));
+    const populated = await populateReelDislikes(reelDislikes);
     sendSuccess(res, populated, 'Reel dislikes updated successfully');
   } catch (error) {
     console.error('Error updating reel dislikes', { error: error.message, id: req.params.id });
@@ -285,13 +359,15 @@ const getReelDislikesByAuth = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [reelDislikes, total] = await Promise.all([
-      populateReelDislikes(Reel_Dislikes.find(filter))
+    const [reelDislikesRaw, total] = await Promise.all([
+      Reel_Dislikes.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reel_Dislikes.countDocuments(filter)
     ]);
+
+    const reelDislikes = await populateReelDislikes(reelDislikesRaw);
 
     sendPaginated(res, reelDislikes, paginateMeta(numericPage, numericLimit, total), 'Reel dislikes retrieved successfully');
   } catch (error) {
@@ -333,13 +409,15 @@ const getReelDislikesByReelId = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [reelDislikes, total] = await Promise.all([
-      populateReelDislikes(Reel_Dislikes.find(filter))
+    const [reelDislikesRaw, total] = await Promise.all([
+      Reel_Dislikes.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Reel_Dislikes.countDocuments(filter)
     ]);
+
+    const reelDislikes = await populateReelDislikes(reelDislikesRaw);
 
     sendPaginated(res, reelDislikes, paginateMeta(numericPage, numericLimit, total), 'Reel dislikes retrieved successfully');
   } catch (error) {
