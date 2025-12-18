@@ -257,7 +257,7 @@ const findByIdentifier = async (identifier) => {
 
 const createVendorProducts = asyncHandler(async (req, res) => {
   try {
-    const { user_id, Category_id, Subcategory_id } = req.body;
+    const { user_id, Category_id, Subcategory_id, price } = req.body;
     if (!(await ensureUserExists(user_id))) {
       return sendError(res, 'User not found', 400);
     }
@@ -271,6 +271,11 @@ const createVendorProducts = asyncHandler(async (req, res) => {
       ...req.body,
       created_by: req.userIdNumber || null
     };
+
+    // Normalize price/PriceFormat for simpler API usage
+    if (typeof price === 'number' && (payload.PriceFormat === undefined || payload.PriceFormat.length === 0)) {
+      payload.PriceFormat = [price.toString()];
+    }
     const product = await VendorProducts.create(payload);
     const populated = await populateVendorProducts(product);
     sendSuccess(res, populated, 'Vendor product created successfully', 201);
@@ -337,7 +342,7 @@ const getVendorProductsById = asyncHandler(async (req, res) => {
 const updateVendorProducts = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { user_id, Category_id, Subcategory_id, brand, type, features } = req.body;
+    const { user_id, Category_id, Subcategory_id, brand, type, features, price } = req.body;
     if (user_id !== undefined && !(await ensureUserExists(user_id))) {
       return sendError(res, 'User not found', 400);
     }
@@ -361,6 +366,11 @@ const updateVendorProducts = asyncHandler(async (req, res) => {
       updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
+
+    // Normalize price/PriceFormat when updating
+    if (typeof price === 'number' && (updatePayload.PriceFormat === undefined || updatePayload.PriceFormat.length === 0)) {
+      updatePayload.PriceFormat = [price.toString()];
+    }
     let product;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       product = await VendorProducts.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });

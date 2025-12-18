@@ -152,12 +152,16 @@ const VendorExpensesRoutes = require('./routes/ShopingVendor/Vendor_Expenses.rou
 const VendorManagerRoutes = require('./routes/ShopingVendor/Vendor_Manager.routes');
 const VendorDiscountCouponRoutes = require('./routes/ShopingVendor/Vendor_Discount_Coupon.routes');
 const VendorProductsRoutes = require('./routes/ShopingVendor/Vendor_Products.routes');
+const VendorProductsReviewsRoutes = require('./routes/ShopingVendor/Vendor_Products_Reviews.routes');
 const VendorProductsBrandRoutes = require('./routes/ShopingVendor/Vendor_Products_brand.routes');
 const VendorProductsTypesRoutes = require('./routes/ShopingVendor/Vendor_Products_types.routes');
 const VendorProductsFeaturesRoutes = require('./routes/ShopingVendor/Vendor_Products_features.routes');
 const RecentAcitvitysRoutes = require('./routes/ShopingVendor/RecentAcitvitys.routes');
 const MarketingRewordRoutes = require('./routes/ShopingVendor/Marketing_Reword.routes');
 const VendorFlashSaleRoutes = require('./routes/ShopingVendor/Vendor_Flash_sale.routes');
+const VendorReportAnIssueRoutes = require('./routes/ShopingVendor/Vendor_ReportAnIssue.routes');
+const VendorRateusRoutes = require('./routes/ShopingVendor/Vendor_Rateus.routes');
+const VendorReportandanalyticsRoutes = require('./routes/ShopingVendor/Vendor_Reportandanalytics.routes');
 // SocketChat routes - includes both REST API and Socket.io WebSocket
 const SocketChatRoutes = require('./routes/Chat/SocketChat.routes');
 const ChatFileUploadRoutes = require('./routes/Chat/ChatFileUpload.routes');
@@ -350,12 +354,16 @@ router.use('/Vendor_Expenses', VendorExpensesRoutes);
 router.use('/Vendor_Manager', VendorManagerRoutes);
 router.use('/Vendor_Discount_Coupon', VendorDiscountCouponRoutes);
 router.use('/Vendor_Products', VendorProductsRoutes);
+router.use('/Vendor_Products_Reviews', VendorProductsReviewsRoutes);
 router.use('/Vendor_Products_brand', VendorProductsBrandRoutes);
 router.use('/Vendor_Products_types', VendorProductsTypesRoutes);
 router.use('/Vendor_Products_features', VendorProductsFeaturesRoutes);
 router.use('/RecentAcitvitys', RecentAcitvitysRoutes);
 router.use('/Marketing_Reword', MarketingRewordRoutes);
 router.use('/Vendor_Flash_sale', VendorFlashSaleRoutes);
+router.use('/Vendor_Rateus', VendorRateusRoutes);
+router.use('/Vendor_ReportAnIssue', VendorReportAnIssueRoutes);
+router.use('/Vendor_Reportandanalytics', VendorReportandanalyticsRoutes);
 // SocketChat routes - REST API endpoints
 router.use('/SocketChat', SocketChatRoutes);
 // Chat file upload routes - REST API endpoints for file uploads

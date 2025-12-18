@@ -94,6 +94,11 @@ const vendorProductsSchema = new mongoose.Schema({
     min: [0, 'Tax cannot be negative'],
     max: [100, 'Tax cannot exceed 100']
   },
+  price: {
+    type: Number,
+    default: 0,
+    min: [0, 'Price cannot be negative']
+  },
   PriceFormat: {
     type: [String],
     default: []
