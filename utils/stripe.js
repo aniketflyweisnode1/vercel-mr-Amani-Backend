@@ -229,24 +229,52 @@ const verifyWebhookSignature = (payload, signature, webhookSecret) => {
 
 /**
  * Verify payment status using client secret
- * @param {String} clientSecret - Client secret from payment intent
+ * @param {String} clientSecret - Client secret from payment intent (format: pi_xxxxx_secret_xxxxx)
  * @returns {Object} Payment status result
  */
 const verifyPaymentStatus = async (clientSecret) => {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY in .env file');
+  }
+  
   try {
-    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret);
+    // Extract payment intent ID from client secret
+    // Client secret format: pi_xxxxx_secret_xxxxx
+    const paymentIntentIdMatch = clientSecret.match(/^pi_[a-zA-Z0-9]+/);
+    
+    if (!paymentIntentIdMatch) {
+      return {
+        success: false,
+        error: 'Invalid client secret format',
+        status: 'error'
+      };
+    }
+    
+    const paymentIntentId = paymentIntentIdMatch[0];
+    
+    // Retrieve payment intent to get its status
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     
     return {
       success: true,
-      paymentIntent,
-      error,
-      status: error ? 'error' : (paymentIntent ? paymentIntent.status : 'unknown')
+      paymentIntent: {
+        id: paymentIntent.id,
+        status: paymentIntent.status,
+        amount: paymentIntent.amount / 100,
+        currency: paymentIntent.currency,
+        client_secret: paymentIntent.client_secret,
+        created: new Date(paymentIntent.created * 1000),
+        metadata: paymentIntent.metadata
+      },
+      error: null,
+      status: paymentIntent.status
     };
   } catch (error) {
     return {
       success: false,
       error: error.message,
-      status: 'error'
+      status: 'error',
+      paymentIntent: null
     };
   }
 };
