@@ -1,4 +1,9 @@
 ﻿const Reel = require('../models/Reel.model');
+const Reel_Like = require('../models/Reel_Like.model');
+const Reel_Comment = require('../models/Reel_Comment.model');
+const Reel_share = require('../models/Reel_share.model');
+const Reel_Follow = require('../models/Reel_Follow.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -11,6 +16,79 @@ const normalizeToArray = (value) => {
     return trimmed ? [trimmed] : [];
   }
   return [];
+};
+
+/**
+ * Populate reel with additional fields
+ * @param {Array|Object} reels - Reel or array of reels
+ * @param {Number} currentUserId - Current authenticated user ID (optional)
+ * @returns {Promise<Array|Object>} - Populated reel(s)
+ */
+const populateReels = async (reels, currentUserId = null) => {
+  const reelsArray = Array.isArray(reels) ? reels : [reels];
+  
+  const populatedReels = await Promise.all(
+    reelsArray.map(async (reel) => {
+      if (!reel) return null;
+      
+      const reelObj = reel.toObject ? reel.toObject() : reel;
+      const reelId = reelObj.Real_Post_id;
+      
+      // Get counts
+      const [totalLike, totalComment, totalShare] = await Promise.all([
+        Reel_Like.countDocuments({ Real_Post_id: reelId, Status: true }),
+        Reel_Comment.countDocuments({ Real_Post_id: reelId, Status: true }),
+        Reel_share.countDocuments({ Real_Post_id: reelId, Status: true })
+      ]);
+      
+      // Get sender information (created_by)
+      let senderName = null;
+      let senderLogo = null;
+      let senderBio = null;
+      let senderIsFollowed = false;
+      
+      if (reelObj.created_by) {
+        const createdById = typeof reelObj.created_by === 'object' ? reelObj.created_by.user_id || reelObj.created_by : reelObj.created_by;
+        const sender = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName BusinessName user_image Bio');
+        
+        if (sender) {
+          senderName = sender.BusinessName || `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || null;
+          senderLogo = sender.user_image || null;
+          senderBio = sender.Bio || null;
+        }
+      }
+      
+      // Check if current user follows this reel
+      if (currentUserId) {
+        const followRecord = await Reel_Follow.findOne({
+          Follow_by: currentUserId,
+          Real_Post_id: reelId,
+          Status: true
+        });
+        senderIsFollowed = !!followRecord;
+      }
+      
+      // Add all the missing fields
+      return {
+        ...reelObj,
+        PostType: reelObj.ReelType || 'Post', // Post Type (using ReelType field)
+        TotalRemix: 0, // Total Remix (model doesn't exist, set to 0)
+        TotalLike: totalLike, // Total Like count
+        TotalComment: totalComment, // Total Comment count
+        TotalGifts: 0, // Total Gifts (model doesn't exist, set to 0)
+        TotalShare: totalShare, // Total Share count
+        SenderName: senderName, // Sender Name
+        SenderLogo: senderLogo, // Sender Logo
+        SenderBio: senderBio, // Sender Bio
+        SenderIsFollowed: senderIsFollowed, // Sender Is Followed
+        ChallenName: null, // Challenge name (model doesn't exist, set to null)
+        isProductToBuy: false // is Product to buy (no product link in model, set to false)
+      };
+    })
+  );
+  
+  return Array.isArray(reels) ? populatedReels : populatedReels[0];
 };
 
 /**
@@ -84,6 +162,12 @@ const getAllReels = asyncHandler(async (req, res) => {
       Reel.countDocuments(filter)
     ]);
 
+    // Get current user ID from auth (if available)
+    const currentUserId = req.userIdNumber || null;
+    
+    // Populate reels with additional fields
+    const populatedPosts = await populateReels(posts, currentUserId);
+
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
@@ -103,7 +187,7 @@ const getAllReels = asyncHandler(async (req, res) => {
       limit: parseInt(limit) 
     });
 
-    sendPaginated(res, posts, pagination, 'Reels retrieved successfully');
+    sendPaginated(res, populatedPosts, pagination, 'Reels retrieved successfully');
   } catch (error) {
     console.error('Error retrieving reels', { error: error.message, stack: error.stack });
     throw error;
@@ -137,9 +221,15 @@ const getReelById = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Reel not found');
     }
 
+    // Get current user ID from auth (if available)
+    const currentUserId = req.userIdNumber || null;
+    
+    // Populate reel with additional fields
+    const populatedPost = await populateReels(post, currentUserId);
+
     console.info('Reel retrieved successfully', { postId: post._id });
 
-    sendSuccess(res, post, 'Reel retrieved successfully');
+    sendSuccess(res, populatedPost, 'Reel retrieved successfully');
   } catch (error) {
     console.error('Error retrieving reel', { error: error.message, postId: req.params.id });
     throw error;
@@ -297,6 +387,12 @@ const getReelsByAuth = asyncHandler(async (req, res) => {
       Reel.countDocuments(filter)
     ]);
 
+    // Get current user ID from auth
+    const currentUserId = req.userIdNumber || null;
+    
+    // Populate reels with additional fields
+    const populatedPosts = await populateReels(posts, currentUserId);
+
     const totalPages = Math.ceil(total / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
@@ -317,7 +413,7 @@ const getReelsByAuth = asyncHandler(async (req, res) => {
       userId: req.userIdNumber
     });
 
-    sendPaginated(res, posts, pagination, 'Reels retrieved successfully');
+    sendPaginated(res, populatedPosts, pagination, 'Reels retrieved successfully');
   } catch (error) {
     console.error('Error retrieving reels by authenticated user', { error: error.message, userId: req.userIdNumber });
     throw error;
