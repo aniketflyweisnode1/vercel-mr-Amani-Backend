@@ -1,0 +1,43 @@
+{
+  "business_Branch_id": 1,
+  "Post": [
+    {
+      "Picture": "https://example.com/image1.jpg",
+      "Video": "https://example.com/video1.mp4",
+      "Live": "https://example.com/live-stream1"
+    },
+    {
+      "Picture": "https://example.com/image2.jpg",
+      "Video": "https://example.com/video2.mp4",
+      "Live": ""
+    },
+    {
+      "Picture": "https://example.com/image3.jpg",
+      "Video": "",
+      "Live": "https://example.com/live-stream2"
+    }
+  ],
+  "Caption": "🎉 Summer Sale 2024! Get amazing discounts on all products. Don't miss out on these incredible deals! #SummerSale #Discount #NewArrivals",
+  "Tag": [
+    "#SummerSale",
+    "#Discount",
+    "#NewArrivals",
+    "#Fashion",
+    "#Trending",
+    "#LimitedOffer"
+  ],
+  "Music": [
+    "Upbeat Summer Vibes",
+    "Happy Shopping Music",
+    "Trending Track 2024"
+  ],
+  "Description": "Join us for our biggest summer sale of 2024! Discover exclusive deals on fashion, electronics, home decor, and much more. Shop now and save up to 70% on selected items. Limited time offer - grab your favorites before they're gone! This campaign features our latest collection with premium quality products at unbeatable prices. Perfect for those looking to refresh their wardrobe or upgrade their lifestyle. Free shipping on orders above $50. Use promo code SUMMER2024 for additional 10% off!",
+  "CompaingName": "Summer Sale 2024 - Mega Discount Campaign",
+  "CompaingnType": "Seasonal Promotional Campaign",
+  "TargetCustomer": "Age 18-45, Fashion enthusiasts, Online shoppers, Deal seekers, Budget-conscious consumers, Style-conscious individuals",
+  "Region_city": "New York, Los Angeles, Chicago, Houston, Miami, San Francisco, Boston, Seattle",
+  "PromoCode": "SUMMER2024",
+  "CallToActivelink": "https://example.com/shop/summer-sale-2024",
+  "Status": true
+}
+

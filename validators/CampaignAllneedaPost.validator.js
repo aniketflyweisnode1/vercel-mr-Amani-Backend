@@ -19,6 +19,12 @@ const createCampaignAllneedaPostSchema = Joi.object({
   Tag: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Music: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Description: Joi.string().trim().max(2000).optional().allow(''),
+  CompaingName: Joi.string().trim().max(200).optional().allow(''),
+  CompaingnType: Joi.string().trim().max(100).optional().allow(''),
+  TargetCustomer: Joi.string().trim().max(500).optional().allow(''),
+  Region_city: Joi.string().trim().max(200).optional().allow(''),
+  PromoCode: Joi.string().trim().max(50).optional().allow(''),
+  CallToActivelink: Joi.string().trim().uri().max(500).optional().allow(''),
   Status: Joi.boolean().optional()
 });
 
@@ -29,6 +35,12 @@ const updateCampaignAllneedaPostSchema = Joi.object({
   Tag: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Music: Joi.array().items(Joi.string().trim().max(100)).optional(),
   Description: Joi.string().trim().max(2000).optional().allow(''),
+  CompaingName: Joi.string().trim().max(200).optional().allow(''),
+  CompaingnType: Joi.string().trim().max(100).optional().allow(''),
+  TargetCustomer: Joi.string().trim().max(500).optional().allow(''),
+  Region_city: Joi.string().trim().max(200).optional().allow(''),
+  PromoCode: Joi.string().trim().max(50).optional().allow(''),
+  CallToActivelink: Joi.string().trim().uri().max(500).optional().allow(''),
   Status: Joi.boolean().optional()
 }).min(1).messages({
   'object.min': 'At least one field must be provided for update'

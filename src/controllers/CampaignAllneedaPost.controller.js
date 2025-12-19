@@ -73,7 +73,12 @@ const buildFilterFromQuery = ({ search, status, business_Branch_id }) => {
       { Caption: { $regex: search, $options: 'i' } },
       { Description: { $regex: search, $options: 'i' } },
       { Tag: { $regex: search, $options: 'i' } },
-      { Music: { $regex: search, $options: 'i' } }
+      { Music: { $regex: search, $options: 'i' } },
+      { CompaingName: { $regex: search, $options: 'i' } },
+      { CompaingnType: { $regex: search, $options: 'i' } },
+      { TargetCustomer: { $regex: search, $options: 'i' } },
+      { Region_city: { $regex: search, $options: 'i' } },
+      { PromoCode: { $regex: search, $options: 'i' } }
     ];
   }
 

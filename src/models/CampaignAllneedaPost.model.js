@@ -62,6 +62,36 @@ const campaignAllneedaPostSchema = new mongoose.Schema({
     trim: true,
     maxlength: [2000, 'Description cannot exceed 2000 characters']
   },
+  CompaingName: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Campaign name cannot exceed 200 characters']
+  },
+  CompaingnType: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Campaign type cannot exceed 100 characters']
+  },
+  TargetCustomer: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Target customer cannot exceed 500 characters']
+  },
+  Region_city: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Region city cannot exceed 200 characters']
+  },
+  PromoCode: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Promo code cannot exceed 50 characters']
+  },
+  CallToActivelink: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Call to action link cannot exceed 500 characters']
+  },
   Status: {
     type: Boolean,
     default: true
@@ -90,6 +120,8 @@ const campaignAllneedaPostSchema = new mongoose.Schema({
 campaignAllneedaPostSchema.index({ CampaignAllneedaPost_id: 1 });
 campaignAllneedaPostSchema.index({ business_Branch_id: 1 });
 campaignAllneedaPostSchema.index({ Status: 1 });
+campaignAllneedaPostSchema.index({ CompaingName: 1 });
+campaignAllneedaPostSchema.index({ PromoCode: 1 });
 
 campaignAllneedaPostSchema.pre('save', function (next) {
   if (this.isModified() && !this.isNew) {
