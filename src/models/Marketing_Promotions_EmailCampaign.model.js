@@ -52,12 +52,17 @@ const marketingPromotionsEmailCampaignSchema = new mongoose.Schema({
   Branch_id: {
     type: Number,
     ref: 'Business_Branch',
-    required: [true, 'Business branch is required']
+    default: null
   },
   business_Branch_id: {
     type: Number,
     ref: 'Business_Branch',
-    required: [true, 'Business branch ID is required']
+    default: null
+  },
+  Vendor_Store_id: {
+    type: Number,
+    ref: 'Vendor_Store',
+    default: null
   },
   Status: {
     type: Boolean,
@@ -90,6 +95,7 @@ marketingPromotionsEmailCampaignSchema.index({ Marketing_Promotions_EmailCampaig
 marketingPromotionsEmailCampaignSchema.index({ CampaignType_id: 1 });
 marketingPromotionsEmailCampaignSchema.index({ Branch_id: 1 });
 marketingPromotionsEmailCampaignSchema.index({ business_Branch_id: 1 });
+marketingPromotionsEmailCampaignSchema.index({ Vendor_Store_id: 1 });
 marketingPromotionsEmailCampaignSchema.index({ TargetCustomerSegment: 1 });
 marketingPromotionsEmailCampaignSchema.index({ Status: 1 });
 

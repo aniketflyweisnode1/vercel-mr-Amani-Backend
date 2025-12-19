@@ -17,8 +17,10 @@ const createEmailCampaignSchema = Joi.object({
   PromoCode: Joi.string().trim().max(100).optional().allow(''),
   CallToActionLink: Joi.string().trim().uri().optional().allow(''),
   Notes: Joi.string().trim().max(2000).optional().allow(''),
-  Branch_id: Joi.number().integer().positive().required(),
+  Branch_id: Joi.number().integer().positive().optional(),
   business_Branch_id: Joi.number().integer().positive().optional(),
+  store_id: Joi.number().integer().positive().optional(),
+  Vendor_Store_id: Joi.number().integer().positive().optional(),
   Status: Joi.boolean().optional()
 });
 
@@ -33,6 +35,8 @@ const updateEmailCampaignSchema = Joi.object({
   Notes: Joi.string().trim().max(2000).optional().allow(''),
   Branch_id: Joi.number().integer().positive().optional(),
   business_Branch_id: Joi.number().integer().positive().optional(),
+  store_id: Joi.number().integer().positive().optional(),
+  Vendor_Store_id: Joi.number().integer().positive().optional(),
   Status: Joi.boolean().optional()
 }).min(1).messages({
   'object.min': 'At least one field must be provided for update'
@@ -51,6 +55,8 @@ const baseListQuery = {
   City_id: Joi.number().integer().positive().optional(),
   Branch_id: Joi.number().integer().positive().optional(),
   business_Branch_id: Joi.number().integer().positive().optional(),
+  Vendor_Store_id: Joi.number().integer().positive().optional(),
+  store_id: Joi.number().integer().positive().optional(),
   TargetCustomerSegment: Joi.string().valid(...TARGET_SEGMENTS).optional(),
   ScheduleSend: Joi.boolean().optional(),
   sortBy: Joi.string().valid(
