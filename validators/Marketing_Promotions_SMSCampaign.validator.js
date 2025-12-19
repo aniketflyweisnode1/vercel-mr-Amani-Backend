@@ -55,6 +55,8 @@ const baseListQuery = {
   City_id: Joi.number().integer().positive().optional(),
   Branch_id: Joi.number().integer().positive().optional(),
   business_Branch_id: Joi.number().integer().positive().optional(),
+  Vendor_Store_id: Joi.number().integer().positive().optional(),
+  store_id: Joi.number().integer().positive().optional(),
   TargetCustomerSegment: Joi.string().valid(...TARGET_SEGMENTS).optional(),
   ScheduleSend: Joi.boolean().optional(),
   sortBy: Joi.string().valid(
