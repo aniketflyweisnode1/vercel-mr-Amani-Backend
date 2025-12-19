@@ -4,7 +4,7 @@ const City = require('../models/city.model');
 const Business_Branch = require('../models/business_Branch.model');
 const Vendor_Store = require('../models/Vendor_Store.model');
 const User = require('../models/User.model');
-const role = require('../models/role.model');
+const Role = require('../models/role.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
