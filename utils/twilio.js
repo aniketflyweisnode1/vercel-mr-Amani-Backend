@@ -9,7 +9,7 @@ const logger = require('./logger');
 // Twilio configuration
 const accountSid = 'AC75cd3e730509edb4b5927cc0a5c2f753';
 const authToken = 'd311992ec429952c0442c27c700602e7';
-const twilioNumber = '';
+const twilioNumber = '+12202411779';
 
 // Initialize Twilio client
 const client = twilio(accountSid, authToken);
