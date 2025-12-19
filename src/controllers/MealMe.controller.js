@@ -34,7 +34,7 @@ const searchStoresByLocation = asyncHandler(async (req, res) => {
     }
 
     const result = await searchStores(lat, lng);
-console.log("===========================\n\n",result);
+// console.log("===========================\n\n",result);
     if (result.success) {
       return sendSuccess(res, result.data, 'Stores retrieved successfully', 200);
     } else {
