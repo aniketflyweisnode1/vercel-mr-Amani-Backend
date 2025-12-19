@@ -2,7 +2,9 @@ const MarketingSmsCampaign = require('../models/Marketing_Promotions_SMSCampaign
 const CampaignType = require('../models/CampaignType.model');
 const City = require('../models/city.model');
 const Business_Branch = require('../models/business_Branch.model');
+const Vendor_Store = require('../models/Vendor_Store.model');
 const User = require('../models/User.model');
+const Role = require('../models/role.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -14,6 +16,34 @@ const getBusinessBranchIdByAuth = async (userIdNumber) => {
   }
   const branch = await Business_Branch.findOne({ created_by: userIdNumber, Status: true });
   return branch ? branch.business_Branch_id : null;
+};
+
+const getVendorStoreIdByAuth = async (userIdNumber) => {
+  if (!userIdNumber) {
+    return null;
+  }
+  const store = await Vendor_Store.findOne({ created_by: userIdNumber, Status: true });
+  return store ? store.Vendor_Store_id : null;
+};
+
+const getUserRole = async (userIdNumber) => {
+  if (!userIdNumber) {
+    return null;
+  }
+  const user = await User.findOne({ user_id: userIdNumber }).select('role_id');
+  if (!user || !user.role_id) {
+    return null;
+  }
+  const role = await Role.findOne({ role_id: user.role_id, status: true }).select('name');
+  return role ? role.name : null;
+};
+
+const ensureVendorStoreExists = async (Vendor_Store_id) => {
+  if (Vendor_Store_id === undefined || Vendor_Store_id === null) {
+    return false;
+  }
+  const store = await Vendor_Store.findOne({ Vendor_Store_id, Status: true });
+  return !!store;
 };
 
 const ensureCampaignTypeExists = async (CampaignType_id) => {
@@ -100,6 +130,16 @@ const populateSmsCampaign = async (records) => {
         }
       }
       
+      // Populate Vendor_Store_id
+      if (recordObj.Vendor_Store_id) {
+        const storeId = typeof recordObj.Vendor_Store_id === 'object' ? recordObj.Vendor_Store_id : recordObj.Vendor_Store_id;
+        const store = await Vendor_Store.findOne({ Vendor_Store_id: storeId })
+          .select('Vendor_Store_id StoreName StoreAddress');
+        if (store) {
+          recordObj.Vendor_Store_id = store.toObject ? store.toObject() : store;
+        }
+      }
+      
       // Populate created_by
       if (recordObj.created_by) {
         const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
@@ -135,7 +175,9 @@ const buildFilterFromQuery = ({
   Branch_id,
   TargetCustomerSegment,
   ScheduleSend,
-  business_Branch_id
+  business_Branch_id,
+  Vendor_Store_id,
+  store_id
 }) => {
   const filter = {};
 
@@ -187,6 +229,14 @@ const buildFilterFromQuery = ({
     }
   }
 
+  const storeIdValue = Vendor_Store_id ?? store_id;
+  if (storeIdValue !== undefined) {
+    const numericStore = parseInt(storeIdValue, 10);
+    if (!isNaN(numericStore)) {
+      filter.Vendor_Store_id = numericStore;
+    }
+  }
+
   return filter;
 };
 
@@ -202,6 +252,8 @@ const listSmsCampaigns = async ({ query, res, successMessage, filterOverrides = 
     TargetCustomerSegment,
     ScheduleSend,
     business_Branch_id,
+    Vendor_Store_id,
+    store_id,
     sortBy = 'created_at',
     sortOrder = 'desc'
   } = query;
@@ -218,7 +270,9 @@ const listSmsCampaigns = async ({ query, res, successMessage, filterOverrides = 
     Branch_id,
     TargetCustomerSegment,
     ScheduleSend,
-    business_Branch_id
+    business_Branch_id,
+    Vendor_Store_id,
+    store_id
   });
 
   Object.assign(filter, filterOverrides);
@@ -274,13 +328,15 @@ const createSmsCampaign = asyncHandler(async (req, res) => {
       CampaignType_id,
       City_id,
       Branch_id,
-      business_Branch_id: bodyBusinessBranchId
+      business_Branch_id: bodyBusinessBranchId,
+      store_id,
+      Vendor_Store_id: bodyVendorStoreId
     } = req.body;
 
-    const [typeExists, cityExists, branchExists] = await Promise.all([
+    // Validate campaign type and city
+    const [typeExists, cityExists] = await Promise.all([
       ensureCampaignTypeExists(CampaignType_id),
-      ensureCityExists(City_id),
-      ensureBranchExists(Branch_id)
+      ensureCityExists(City_id)
     ]);
 
     if (!typeExists) {
@@ -291,30 +347,90 @@ const createSmsCampaign = asyncHandler(async (req, res) => {
       return sendError(res, 'Associated city not found or inactive', 400);
     }
 
-    if (!branchExists) {
-      return sendError(res, 'Associated business branch not found or inactive', 400);
-    }
+    // Get user role to determine if Vendor or Restaurant
+    const userRole = await getUserRole(req.userIdNumber);
+    const isVendor = userRole && (userRole.toLowerCase() === 'vendor' || userRole.toLowerCase().includes('vendor'));
+    const isRestaurant = userRole && (userRole.toLowerCase() === 'restaurant' || userRole.toLowerCase().includes('restaurant'));
 
-    let business_Branch_id = bodyBusinessBranchId ?? Branch_id;
-    if (business_Branch_id === undefined || business_Branch_id === null) {
-      business_Branch_id = await getBusinessBranchIdByAuth(req.userIdNumber);
-    }
+    let business_Branch_id = null;
+    let Vendor_Store_id = null;
 
-    if (!business_Branch_id) {
-      return sendError(res, 'Unable to determine business branch for authenticated user', 400);
-    }
+    if (isVendor) {
+      // Vendor: Use store_id or Vendor_Store_id
+      Vendor_Store_id = bodyVendorStoreId ?? store_id;
+      
+      if (Vendor_Store_id === undefined || Vendor_Store_id === null) {
+        Vendor_Store_id = await getVendorStoreIdByAuth(req.userIdNumber);
+      }
 
-    const associatedBranchExists = await ensureBranchExists(business_Branch_id);
-    if (!associatedBranchExists) {
-      return sendError(res, 'Associated business branch not found or inactive', 400);
+      if (!Vendor_Store_id) {
+        return sendError(res, 'Unable to determine vendor store for authenticated user. Please provide store_id.', 400);
+      }
+
+      const storeExists = await ensureVendorStoreExists(Vendor_Store_id);
+      if (!storeExists) {
+        return sendError(res, 'Associated vendor store not found or inactive', 400);
+      }
+    } else if (isRestaurant) {
+      // Restaurant: Use Branch_id or business_Branch_id
+      business_Branch_id = bodyBusinessBranchId ?? Branch_id;
+      
+      if (business_Branch_id === undefined || business_Branch_id === null) {
+        business_Branch_id = await getBusinessBranchIdByAuth(req.userIdNumber);
+      }
+
+      if (!business_Branch_id) {
+        return sendError(res, 'Unable to determine business branch for authenticated user. Please provide Branch_id.', 400);
+      }
+
+      const branchExists = await ensureBranchExists(business_Branch_id);
+      if (!branchExists) {
+        return sendError(res, 'Associated business branch not found or inactive', 400);
+      }
+    } else {
+      // If role is not determined, try to auto-detect from provided fields
+      if (bodyVendorStoreId || store_id) {
+        Vendor_Store_id = bodyVendorStoreId ?? store_id;
+        const storeExists = await ensureVendorStoreExists(Vendor_Store_id);
+        if (!storeExists) {
+          return sendError(res, 'Associated vendor store not found or inactive', 400);
+        }
+      } else if (bodyBusinessBranchId || Branch_id) {
+        business_Branch_id = bodyBusinessBranchId ?? Branch_id;
+        const branchExists = await ensureBranchExists(business_Branch_id);
+        if (!branchExists) {
+          return sendError(res, 'Associated business branch not found or inactive', 400);
+        }
+      } else {
+        // Try to auto-detect from auth
+        const autoBranchId = await getBusinessBranchIdByAuth(req.userIdNumber);
+        const autoStoreId = await getVendorStoreIdByAuth(req.userIdNumber);
+        
+        if (autoStoreId) {
+          Vendor_Store_id = autoStoreId;
+        } else if (autoBranchId) {
+          business_Branch_id = autoBranchId;
+        } else {
+          return sendError(res, 'Unable to determine store or branch. Please provide store_id (for Vendor) or Branch_id (for Restaurant).', 400);
+        }
+      }
     }
 
     const payload = {
       ...req.body,
-      business_Branch_id,
+      business_Branch_id: business_Branch_id || undefined,
+      Branch_id: business_Branch_id || Branch_id || undefined,
+      Vendor_Store_id: Vendor_Store_id || undefined,
       ScheduleSend: normalizeBoolean(req.body.ScheduleSend, false),
       created_by: req.userIdNumber || null
     };
+
+    // Remove undefined values
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
 
     const campaign = await MarketingSmsCampaign.create(payload);
     const populated = await populateSmsCampaign(campaign);
