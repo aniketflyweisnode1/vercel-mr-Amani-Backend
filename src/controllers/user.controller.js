@@ -21,7 +21,7 @@ const populateUserLocation = async (userObj) => {
   // Populate country_id
   if (user.country_id) {
     const countryId = typeof user.country_id === 'object' ? user.country_id : user.country_id;
-    const country = await Country.findOne({ country_id: countryId });
+    const country = await Country.findOne({ country_id: countryId }).select('country_id name');
     if (country) {
       user.country_id = country.toObject ? country.toObject() : country;
     }
@@ -30,7 +30,7 @@ const populateUserLocation = async (userObj) => {
   // Populate state_id
   if (user.state_id) {
     const stateId = typeof user.state_id === 'object' ? user.state_id : user.state_id;
-    const state = await State.findOne({ state_id: stateId });
+    const state = await State.findOne({ state_id: stateId }).select('state_id name');
     if (state) {
       user.state_id = state.toObject ? state.toObject() : state;
     }
@@ -39,13 +39,38 @@ const populateUserLocation = async (userObj) => {
   // Populate city_id
   if (user.city_id) {
     const cityId = typeof user.city_id === 'object' ? user.city_id : user.city_id;
-    const city = await City.findOne({ city_id: cityId });
+    const city = await City.findOne({ city_id: cityId }).select('city_id name');
     if (city) {
       user.city_id = city.toObject ? city.toObject() : city;
     }
   }
   
+  // Populate created_by
+  if (user.created_by) {
+    const createdById = typeof user.created_by === 'object' ? user.created_by : user.created_by;
+    const createdBy = await User.findOne({ user_id: createdById }).select('user_id firstName lastName Email phoneNo BusinessName');
+    if (createdBy) {
+      user.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+    }
+  }
+  
+  // Populate updated_by
+  if (user.updated_by) {
+    const updatedById = typeof user.updated_by === 'object' ? user.updated_by : user.updated_by;
+    const updatedBy = await User.findOne({ user_id: updatedById }).select('user_id firstName lastName Email phoneNo BusinessName');
+    if (updatedBy) {
+      user.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+    }
+  }
+  
   return user;
+};
+
+// Helper function to populate multiple users
+const populateUsers = async (users) => {
+  const usersArray = Array.isArray(users) ? users : [users];
+  const populatedUsers = await Promise.all(usersArray.map(user => populateUserLocation(user)));
+  return Array.isArray(users) ? populatedUsers : populatedUsers[0];
 };
 
 /**
@@ -148,14 +173,12 @@ const getAllUsers = asyncHandler(async (req, res) => {
         .select('-password')
         .sort(sort)
         .skip(skip)
-        .limit(parseInt(limit))
-        .populate('country_id', 'name')
-        .populate('state_id', 'name')
-        .populate('city_id', 'name')
-        .populate('created_by', 'name email')
-        .populate('updated_by', 'name email'),
+        .limit(parseInt(limit)),
       User.countDocuments(filter)
     ]);
+
+    // Manually populate related fields (numeric IDs)
+    const populatedUsers = await populateUsers(users);
 
     // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
@@ -177,7 +200,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
       limit: parseInt(limit) 
     });
 
-    sendPaginated(res, users, pagination, 'Users retrieved successfully');
+    sendPaginated(res, populatedUsers, pagination, 'Users retrieved successfully');
   } catch (error) {
     console.error('Error retrieving users', { error: error.message, stack: error.stack });
     throw error;

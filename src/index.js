@@ -162,6 +162,10 @@ const VendorFlashSaleRoutes = require('./routes/ShopingVendor/Vendor_Flash_sale.
 const VendorReportAnIssueRoutes = require('./routes/ShopingVendor/Vendor_ReportAnIssue.routes');
 const VendorRateusRoutes = require('./routes/ShopingVendor/Vendor_Rateus.routes');
 const VendorReportandanalyticsRoutes = require('./routes/ShopingVendor/Vendor_Reportandanalytics.routes');
+const VendorReviewsFormConttentCreatorRoutes = require('./routes/ShopingVendor/Vendor_ReviewsFormConttentCreator.routes');
+const VendorRequestReviewsFromCustomerRoutes = require('./routes/ShopingVendor/Vendor_RequestReviewsFromCustomer.routes');
+const VendorProductDisputeRoutes = require('./routes/ShopingVendor/Vendor_Prdocut_Dispute.routes');
+const VendorPaymentTabRoutes = require('./routes/ShopingVendor/Vendor_Payment_Tab.routes');
 // SocketChat routes - includes both REST API and Socket.io WebSocket
 const SocketChatRoutes = require('./routes/Chat/SocketChat.routes');
 const ChatFileUploadRoutes = require('./routes/Chat/ChatFileUpload.routes');
@@ -364,6 +368,10 @@ router.use('/Vendor_Flash_sale', VendorFlashSaleRoutes);
 router.use('/Vendor_Rateus', VendorRateusRoutes);
 router.use('/Vendor_ReportAnIssue', VendorReportAnIssueRoutes);
 router.use('/Vendor_Reportandanalytics', VendorReportandanalyticsRoutes);
+router.use('/Vendor_ReviewsFormConttentCreator', VendorReviewsFormConttentCreatorRoutes);
+router.use('/Vendor_RequestReviewsFromCustomer', VendorRequestReviewsFromCustomerRoutes);
+router.use('/Vendor_Prdocut_Dispute', VendorProductDisputeRoutes);
+router.use('/Vendor_Payment_Tab', VendorPaymentTabRoutes);
 // SocketChat routes - REST API endpoints
 router.use('/SocketChat', SocketChatRoutes);
 // Chat file upload routes - REST API endpoints for file uploads
