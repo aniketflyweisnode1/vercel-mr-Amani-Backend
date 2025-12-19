@@ -130,7 +130,7 @@ const searchStores = async (latitude, longitude) => {
     logger.info('Searching MealMe stores', { latitude, longitude, url: url.replace(MEALME_API_KEY, '***') });
 
     const response = await makeHttpRequest(url, { method: 'GET' });
-
+// console.log("===============123============\n\n",response);
     // Check if API returned HTML (wrong endpoint)
     if (response.isHtml) {
       const errorMsg = response.data?.error || 'MealMe API endpoint returned HTML instead of JSON. The endpoint may be incorrect.';

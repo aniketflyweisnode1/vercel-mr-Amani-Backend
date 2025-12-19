@@ -21,7 +21,7 @@ const {
 const searchStoresByLocation = asyncHandler(async (req, res) => {
   try {
     const { latitude, longitude } = req.query;
-
+// console.log("===========================\n\n",latitude, longitude);
     if (latitude === undefined || longitude === undefined) {
       return sendError(res, 'Latitude and longitude are required', 400);
     }
@@ -34,7 +34,7 @@ const searchStoresByLocation = asyncHandler(async (req, res) => {
     }
 
     const result = await searchStores(lat, lng);
-
+console.log("===========================\n\n",result);
     if (result.success) {
       return sendSuccess(res, result.data, 'Stores retrieved successfully', 200);
     } else {
