@@ -41,7 +41,8 @@ const populateReels = async (reels, currentUserId = null) => {
         Reel_share.countDocuments({ Real_Post_id: reelId, Status: true })
       ]);
       
-      // Get sender information (created_by)
+      // Populate created_by
+      let populatedCreatedBy = null;
       let senderName = null;
       let senderLogo = null;
       let senderBio = null;
@@ -50,17 +51,31 @@ const populateReels = async (reels, currentUserId = null) => {
       if (reelObj.created_by) {
         const createdById = typeof reelObj.created_by === 'object' ? reelObj.created_by.user_id || reelObj.created_by : reelObj.created_by;
         const sender = await User.findOne({ user_id: createdById })
-          .select('user_id firstName lastName BusinessName user_image Bio');
+          .select('user_id firstName lastName BusinessName Email phoneNo user_image Bio');
         
         if (sender) {
+          populatedCreatedBy = sender.toObject ? sender.toObject() : sender;
           senderName = sender.BusinessName || `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || null;
           senderLogo = sender.user_image || null;
           senderBio = sender.Bio || null;
         }
       }
       
+      // Populate updated_by
+      let populatedUpdatedBy = null;
+      if (reelObj.updated_by) {
+        const updatedById = typeof reelObj.updated_by === 'object' ? reelObj.updated_by.user_id || reelObj.updated_by : reelObj.updated_by;
+        const updater = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName BusinessName Email phoneNo user_image Bio');
+        
+        if (updater) {
+          populatedUpdatedBy = updater.toObject ? updater.toObject() : updater;
+        }
+      }
+      
       // Check if current user follows this reel
-      if (currentUserId) {
+      if (currentUserId && reelObj.created_by) {
+        const createdById = typeof reelObj.created_by === 'object' ? reelObj.created_by.user_id || reelObj.created_by : reelObj.created_by;
         const followRecord = await Reel_Follow.findOne({
           Follow_by: currentUserId,
           Real_Post_id: reelId,
@@ -69,9 +84,11 @@ const populateReels = async (reels, currentUserId = null) => {
         senderIsFollowed = !!followRecord;
       }
       
-      // Add all the missing fields
+      // Add all the missing fields and populate IDs
       return {
         ...reelObj,
+        created_by: populatedCreatedBy || reelObj.created_by, // Populated created_by user object
+        updated_by: populatedUpdatedBy || reelObj.updated_by, // Populated updated_by user object
         PostType: reelObj.ReelType || 'Post', // Post Type (using ReelType field)
         TotalRemix: 0, // Total Remix (model doesn't exist, set to 0)
         TotalLike: totalLike, // Total Like count
