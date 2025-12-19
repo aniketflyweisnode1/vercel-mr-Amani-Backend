@@ -1,10 +1,43 @@
 const EffectsCategorys = require('../models/Effects_Categorys.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
-const populateEffectsCategorys = (query) => query
-  .populate('created_by', 'user_id firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'user_id firstName lastName phoneNo BusinessName');
+// Manual population function for Number refs (created_by, updated_by)
+const populateEffectsCategorys = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by.user_id || recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by.user_id || recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const buildFilter = ({ search, status }) => {
   const filter = {};
@@ -35,15 +68,22 @@ const paginateMeta = (page, limit, total) => {
   };
 };
 
-const findByIdentifier = (identifier) => {
+const findByIdentifier = async (identifier) => {
+  let recordData;
   if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-    return populateEffectsCategorys(EffectsCategorys.findById(identifier));
+    recordData = await EffectsCategorys.findById(identifier);
+  } else {
+    const numericId = parseInt(identifier, 10);
+    if (!Number.isNaN(numericId)) {
+      recordData = await EffectsCategorys.findOne({ Effects_Categorys_id: numericId });
+    }
   }
-  const numericId = parseInt(identifier, 10);
-  if (!Number.isNaN(numericId)) {
-    return populateEffectsCategorys(EffectsCategorys.findOne({ Effects_Categorys_id: numericId }));
+  
+  if (!recordData) {
+    return null;
   }
-  return null;
+  
+  return await populateEffectsCategorys(recordData);
 };
 
 const createEffectsCategorys = asyncHandler(async (req, res) => {
@@ -53,7 +93,7 @@ const createEffectsCategorys = asyncHandler(async (req, res) => {
       created_by: req.userIdNumber || null
     };
     const category = await EffectsCategorys.create(payload);
-    const populated = await populateEffectsCategorys(EffectsCategorys.findById(category._id));
+    const populated = await populateEffectsCategorys(category);
     sendSuccess(res, populated, 'Effects category created successfully', 201);
   } catch (error) {
     console.error('Error creating effects category', { error: error.message });
@@ -77,13 +117,14 @@ const getAllEffectsCategorys = asyncHandler(async (req, res) => {
     const filter = buildFilter({ search, status });
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [categories, total] = await Promise.all([
-      populateEffectsCategorys(EffectsCategorys.find(filter))
+    const [categoriesData, total] = await Promise.all([
+      EffectsCategorys.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       EffectsCategorys.countDocuments(filter)
     ]);
+    const categories = await populateEffectsCategorys(categoriesData);
     sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Effects categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving effects categories', { error: error.message });
@@ -94,11 +135,7 @@ const getAllEffectsCategorys = asyncHandler(async (req, res) => {
 const getEffectsCategorysById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const categoryQuery = findByIdentifier(id);
-    if (!categoryQuery) {
-      return sendError(res, 'Invalid effects category identifier', 400);
-    }
-    const category = await categoryQuery;
+    const category = await findByIdentifier(id);
     if (!category) {
       return sendNotFound(res, 'Effects category not found');
     }
@@ -130,7 +167,7 @@ const updateEffectsCategorys = asyncHandler(async (req, res) => {
     if (!category) {
       return sendNotFound(res, 'Effects category not found');
     }
-    const populated = await populateEffectsCategorys(EffectsCategorys.findById(category._id));
+    const populated = await populateEffectsCategorys(category);
     sendSuccess(res, populated, 'Effects category updated successfully');
   } catch (error) {
     console.error('Error updating effects category', { error: error.message, id: req.params.id });
@@ -183,13 +220,14 @@ const getEffectsCategorysByAuth = asyncHandler(async (req, res) => {
     filter.created_by = req.userIdNumber || null;
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-    const [categories, total] = await Promise.all([
-      populateEffectsCategorys(EffectsCategorys.find(filter))
+    const [categoriesData, total] = await Promise.all([
+      EffectsCategorys.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       EffectsCategorys.countDocuments(filter)
     ]);
+    const categories = await populateEffectsCategorys(categoriesData);
     sendPaginated(res, categories, paginateMeta(numericPage, numericLimit, total), 'Effects categories retrieved successfully');
   } catch (error) {
     console.error('Error retrieving effects categories by auth', { error: error.message });
