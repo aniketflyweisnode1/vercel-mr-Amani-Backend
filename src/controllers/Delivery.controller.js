@@ -1,6 +1,9 @@
 const Delivery = require('../models/Delivery.model');
 const OrderNow = require('../models/Order_Now.model');
 const User = require('../models/User.model');
+const RestaurantItems = require('../models/Restaurant_Items.model');
+const BusinessBranch = require('../models/business_Branch.model');
+const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -13,18 +16,69 @@ const populateDeliveryData = async (deliveries) => {
       
       // Populate order_id
       if (deliveryObj.order_id) {
-        const orderId = typeof deliveryObj.order_id === 'object' ? deliveryObj.order_id : deliveryObj.order_id;
+        const orderId = typeof deliveryObj.order_id === 'object' 
+          ? (deliveryObj.order_id.Order_Now_id || deliveryObj.order_id.order_id || deliveryObj.order_id)
+          : deliveryObj.order_id;
         const order = await OrderNow.findOne({ Order_Now_id: orderId });
         if (order) {
-          deliveryObj.order_id = order.toObject ? order.toObject() : order;
+          const orderObj = order.toObject ? order.toObject() : order;
+          
+          // Populate Product array items (Item_id)
+          if (orderObj.Product && orderObj.Product.length > 0) {
+            orderObj.Product = await Promise.all(
+              orderObj.Product.map(async (product) => {
+                if (product.Item_id) {
+                  const itemId = typeof product.Item_id === 'object' 
+                    ? (product.Item_id.Restaurant_Items_id || product.Item_id.Item_id || product.Item_id)
+                    : product.Item_id;
+                  const item = await RestaurantItems.findOne({ Restaurant_Items_id: itemId });
+                  if (item) {
+                    const itemObj = item.toObject ? item.toObject() : item;
+                    
+                    // Populate business_Branch_id
+                    if (itemObj.business_Branch_id) {
+                      const branchId = typeof itemObj.business_Branch_id === 'object' 
+                        ? (itemObj.business_Branch_id.business_Branch_id || itemObj.business_Branch_id)
+                        : itemObj.business_Branch_id;
+                      const branch = await BusinessBranch.findOne({ business_Branch_id: branchId });
+                      if (branch) {
+                        itemObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+                      }
+                    }
+                    
+                    // Populate Restaurant_item_Category_id
+                    if (itemObj.Restaurant_item_Category_id) {
+                      const categoryId = typeof itemObj.Restaurant_item_Category_id === 'object' 
+                        ? (itemObj.Restaurant_item_Category_id.Restaurant_item_Category_id || itemObj.Restaurant_item_Category_id)
+                        : itemObj.Restaurant_item_Category_id;
+                      const category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: categoryId });
+                      if (category) {
+                        itemObj.Restaurant_item_Category_id = category.toObject ? category.toObject() : category;
+                      }
+                    }
+                    
+                    return {
+                      ...product,
+                      ItemDetails: itemObj
+                    };
+                  }
+                }
+                return product;
+              })
+            );
+          }
+          
+          deliveryObj.order_id = orderObj;
         }
       }
       
       // Populate created_by
       if (deliveryObj.created_by) {
-        const createdById = typeof deliveryObj.created_by === 'object' ? deliveryObj.created_by : deliveryObj.created_by;
+        const createdById = typeof deliveryObj.created_by === 'object' 
+          ? (deliveryObj.created_by.user_id || deliveryObj.created_by)
+          : deliveryObj.created_by;
         const createdBy = await User.findOne({ user_id: createdById })
-          .select('user_id firstName lastName phoneNo BusinessName');
+          .select('user_id firstName lastName phoneNo BusinessName Email');
         if (createdBy) {
           deliveryObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
         }
@@ -32,9 +86,11 @@ const populateDeliveryData = async (deliveries) => {
       
       // Populate updated_by
       if (deliveryObj.updated_by) {
-        const updatedById = typeof deliveryObj.updated_by === 'object' ? deliveryObj.updated_by : deliveryObj.updated_by;
+        const updatedById = typeof deliveryObj.updated_by === 'object' 
+          ? (deliveryObj.updated_by.user_id || deliveryObj.updated_by)
+          : deliveryObj.updated_by;
         const updatedBy = await User.findOne({ user_id: updatedById })
-          .select('user_id firstName lastName phoneNo BusinessName');
+          .select('user_id firstName lastName phoneNo BusinessName Email');
         if (updatedBy) {
           deliveryObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
         }
@@ -383,6 +439,53 @@ const getDeliveriesByItem = asyncHandler(async (req, res) => {
   }
 });
 
+const getDeliveriesByAuth = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.userIdNumber;
+    if (!userId) {
+      return sendError(res, 'Authenticated user ID not found', 401);
+    }
+
+    const {
+      page = 1,
+      limit = 10,
+      search = '',
+      status,
+      deliveryStatus,
+      startDate,
+      endDate,
+      sortBy = 'created_at',
+      sortOrder = 'desc'
+    } = req.query;
+    
+    const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
+    const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (numericPage - 1) * numericLimit;
+    
+    const filter = buildFilter({ search, status, deliveryStatus, startDate, endDate });
+    filter.created_by = userId;
+    
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    
+    const [deliveries, total] = await Promise.all([
+      Delivery.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(numericLimit),
+      Delivery.countDocuments(filter)
+    ]);
+    
+    const populatedDeliveries = await populateDeliveryData(deliveries);
+    
+    console.info('Deliveries retrieved for authenticated user', { userId, total, page: numericPage, limit: numericLimit });
+    sendPaginated(res, populatedDeliveries, paginateMeta(numericPage, numericLimit, total), 'Deliveries retrieved successfully');
+  } catch (error) {
+    console.error('Error retrieving deliveries for authenticated user', { error: error.message, userId: req.userIdNumber });
+    throw error;
+  }
+});
+
 module.exports = {
   createDelivery,
   getAllDeliveries,
@@ -390,6 +493,7 @@ module.exports = {
   updateDelivery,
   deleteDelivery,
   getDeliveriesByOrderId,
-  getDeliveriesByItem
+  getDeliveriesByItem,
+  getDeliveriesByAuth
 };
 

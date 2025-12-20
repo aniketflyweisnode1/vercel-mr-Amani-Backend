@@ -78,6 +78,27 @@ const getDeliveriesByItemQuerySchema = Joi.object({
   sortOrder: Joi.string().valid('asc', 'desc').default('desc')
 });
 
+const getDeliveriesByAuthSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  search: Joi.string().trim().max(200).optional(),
+  status: Joi.alternatives().try(
+    Joi.boolean(),
+    Joi.string().valid('true', 'false', '1', '0').optional()
+  ).optional(),
+  deliveryStatus: Joi.string().valid('Order Placed', 'Order Confirmed', 'Order Need to be Packed', 'Order Shipped', 'Out for Delivery', 'Delivered').optional(),
+  startDate: Joi.alternatives().try(
+    Joi.date(),
+    Joi.string().isoDate().optional()
+  ).optional(),
+  endDate: Joi.alternatives().try(
+    Joi.date(),
+    Joi.string().isoDate().optional()
+  ).optional(),
+  sortBy: Joi.string().valid('created_at', 'updated_at', 'Delivery_id', 'DeliveryDay').default('created_at'),
+  sortOrder: Joi.string().valid('asc', 'desc').default('desc')
+});
+
 module.exports = {
   createDeliverySchema,
   updateDeliverySchema,
@@ -86,6 +107,7 @@ module.exports = {
   getDeliveriesByOrderIdParamsSchema,
   getDeliveriesByOrderIdQuerySchema,
   getDeliveriesByItemParamsSchema,
-  getDeliveriesByItemQuerySchema
+  getDeliveriesByItemQuerySchema,
+  getDeliveriesByAuthSchema
 };
 
