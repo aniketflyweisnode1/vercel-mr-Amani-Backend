@@ -19,7 +19,7 @@ const ensureBusinessBranchExists = async (Branch_id) => {
     return false;
   }
   const branch = await Business_Branch.findOne({ business_Branch_id: Branch_id, Status: true });
-  console.log('branch', branch);
+  // console.log('branch', branch);
   return !!branch;
 };
 

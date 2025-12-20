@@ -187,7 +187,7 @@ const trimString = (value) => {
 };
 
 const createBusinessBranch = asyncHandler(async (req, res) => {
-  console.log("==========\n\n", req.body);
+  // console.log("==========\n\n", req.body);
   try {
     // Handle both Business_id and Business_Details_id field names
     const businessIdValue = req.body.Business_Details_id;
