@@ -4,6 +4,11 @@ const User = require('../models/User.model');
 const RestaurantItems = require('../models/Restaurant_Items.model');
 const BusinessBranch = require('../models/business_Branch.model');
 const RestaurantItemCategory = require('../models/Restaurant_item_Category.model');
+const Discounts = require('../models/Discounts.model');
+const Services = require('../models/services.model');
+const PaymentMethods = require('../models/payment_method.model');
+const UserAddress = require('../models/User_Address.model');
+const Transaction = require('../models/transaction.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -66,6 +71,98 @@ const populateDeliveryData = async (deliveries) => {
                 return product;
               })
             );
+          }
+          
+          // Populate applyDiscount_id
+          if (orderObj.applyDiscount_id) {
+            const discountId = typeof orderObj.applyDiscount_id === 'object' 
+              ? (orderObj.applyDiscount_id.Discounts_id || orderObj.applyDiscount_id)
+              : orderObj.applyDiscount_id;
+            const discount = await Discounts.findOne({ Discounts_id: discountId });
+            if (discount) {
+              orderObj.applyDiscount_id = discount.toObject ? discount.toObject() : discount;
+            }
+          }
+          
+          // Populate service_id
+          if (orderObj.service_id) {
+            const serviceId = typeof orderObj.service_id === 'object' 
+              ? (orderObj.service_id.service_id || orderObj.service_id)
+              : orderObj.service_id;
+            const service = await Services.findOne({ service_id: serviceId })
+              .select('service_id name description emozji status');
+            if (service) {
+              orderObj.service_id = service.toObject ? service.toObject() : service;
+            }
+          }
+          
+          // Populate payment_method_id
+          if (orderObj.payment_method_id) {
+            const paymentMethodId = typeof orderObj.payment_method_id === 'object' 
+              ? (orderObj.payment_method_id.payment_method_id || orderObj.payment_method_id)
+              : orderObj.payment_method_id;
+            const paymentMethod = await PaymentMethods.findOne({ payment_method_id: paymentMethodId });
+            if (paymentMethod) {
+              orderObj.payment_method_id = paymentMethod.toObject ? paymentMethod.toObject() : paymentMethod;
+            }
+          }
+          
+          // Populate Delivery_address_id
+          if (orderObj.Delivery_address_id) {
+            const addressId = typeof orderObj.Delivery_address_id === 'object' 
+              ? (orderObj.Delivery_address_id.User_Address_id || orderObj.Delivery_address_id)
+              : orderObj.Delivery_address_id;
+            const address = await UserAddress.findOne({ User_Address_id: addressId });
+            if (address) {
+              orderObj.Delivery_address_id = address.toObject ? address.toObject() : address;
+            }
+          }
+          
+          // Populate Trangection_Id
+          if (orderObj.Trangection_Id) {
+            const transactionId = typeof orderObj.Trangection_Id === 'object' 
+              ? (orderObj.Trangection_Id.transaction_id || orderObj.Trangection_Id)
+              : orderObj.Trangection_Id;
+            const transaction = await Transaction.findOne({ transaction_id: transactionId });
+            if (transaction) {
+              orderObj.Trangection_Id = transaction.toObject ? transaction.toObject() : transaction;
+            }
+          }
+          
+          // Populate User_Id
+          if (orderObj.User_Id) {
+            const userId = typeof orderObj.User_Id === 'object' 
+              ? (orderObj.User_Id.user_id || orderObj.User_Id)
+              : orderObj.User_Id;
+            const user = await User.findOne({ user_id: userId })
+              .select('user_id firstName lastName phoneNo BusinessName Email');
+            if (user) {
+              orderObj.User_Id = user.toObject ? user.toObject() : user;
+            }
+          }
+          
+          // Populate created_by in order
+          if (orderObj.created_by) {
+            const createdById = typeof orderObj.created_by === 'object' 
+              ? (orderObj.created_by.user_id || orderObj.created_by)
+              : orderObj.created_by;
+            const createdBy = await User.findOne({ user_id: createdById })
+              .select('user_id firstName lastName phoneNo BusinessName Email');
+            if (createdBy) {
+              orderObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+            }
+          }
+          
+          // Populate updated_by in order
+          if (orderObj.updated_by) {
+            const updatedById = typeof orderObj.updated_by === 'object' 
+              ? (orderObj.updated_by.user_id || orderObj.updated_by)
+              : orderObj.updated_by;
+            const updatedBy = await User.findOne({ user_id: updatedById })
+              .select('user_id firstName lastName phoneNo BusinessName Email');
+            if (updatedBy) {
+              orderObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+            }
           }
           
           deliveryObj.order_id = orderObj;
