@@ -48,12 +48,18 @@ const getDashboardByStoreParamsSchema = Joi.object({
   Vendor_Store_id: Joi.number().integer().positive().required()
 });
 
+const getDashboardByStoreQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10)
+});
+
 module.exports = {
   createDashboardSchema,
   updateDashboardSchema,
   getDashboardByIdSchema,
   getAllDashboardsSchema,
   getDashboardsByAuthSchema,
-  getDashboardByStoreParamsSchema
+  getDashboardByStoreParamsSchema,
+  getDashboardByStoreQuerySchema
 };
 

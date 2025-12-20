@@ -1,5 +1,7 @@
 const ReviewsDashboard = require('../models/Vendor_Items_Reviews_Dashboard.model');
 const VendorStore = require('../models/Vendor_Store.model');
+const VendorProductsReviews = require('../models/Vendor_Products_Reviews.model');
+const VendorProducts = require('../models/Vendor_Products.model');
 const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
@@ -47,6 +49,72 @@ const populateDashboard = async (records) => {
     })
   );
   
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
+
+// Manual population function for Reviews
+const populateReviews = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+
+      const recordObj = record.toObject ? record.toObject() : record;
+
+      // Populate Vendor_Store_id
+      if (recordObj.Vendor_Store_id) {
+        const storeId = typeof recordObj.Vendor_Store_id === 'object' ? recordObj.Vendor_Store_id : recordObj.Vendor_Store_id;
+        const store = await VendorStore.findOne({ Vendor_Store_id: storeId })
+          .select('Vendor_Store_id StoreName StoreAddress City State Country EmailAddress mobileno');
+        if (store) {
+          recordObj.Vendor_Store_id = store.toObject ? store.toObject() : store;
+        }
+      }
+
+      // Populate Vendor_Products_id
+      if (recordObj.Vendor_Products_id) {
+        const productId = typeof recordObj.Vendor_Products_id === 'object' ? recordObj.Vendor_Products_id : recordObj.Vendor_Products_id;
+        const product = await VendorProducts.findOne({ Vendor_Products_id: productId })
+          .select('Vendor_Products_id Title price PriceCurrency Category_id Subcategory_id');
+        if (product) {
+          recordObj.Vendor_Products_id = product.toObject ? product.toObject() : product;
+        }
+      }
+
+      // Populate User_id
+      if (recordObj.User_id) {
+        const userId = typeof recordObj.User_id === 'object' ? recordObj.User_id : recordObj.User_id;
+        const user = await User.findOne({ user_id: userId })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (user) {
+          recordObj.User_id = user.toObject ? user.toObject() : user;
+        }
+      }
+
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName Email');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+
+      return recordObj;
+    })
+  );
+
   return Array.isArray(records) ? populatedRecords : populatedRecords[0];
 };
 
@@ -353,6 +421,7 @@ const getDashboardsByAuth = asyncHandler(async (req, res) => {
 const getDashboardByStoreId = asyncHandler(async (req, res) => {
   try {
     const { Vendor_Store_id } = req.params;
+    const { page = 1, limit = 10 } = req.query;
     const storeId = parseInt(Vendor_Store_id, 10);
 
     if (Number.isNaN(storeId)) {
@@ -371,7 +440,43 @@ const getDashboardByStoreId = asyncHandler(async (req, res) => {
     
     const dashboard = await populateDashboard(dashboardData);
 
-    sendSuccess(res, dashboard, 'Vendor item reviews dashboard retrieved successfully');
+    // Get reviews for this store
+    const numericLimit = Math.min(parseInt(limit, 10) || 10, 100);
+    const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (numericPage - 1) * numericLimit;
+
+    const reviewsFilter = {
+      Vendor_Store_id: storeId,
+      Status: true
+    };
+
+    const [reviews, reviewsTotal] = await Promise.all([
+      VendorProductsReviews.find(reviewsFilter)
+        .sort({ created_at: -1 })
+        .skip(skip)
+        .limit(numericLimit),
+      VendorProductsReviews.countDocuments(reviewsFilter)
+    ]);
+
+    const populatedReviews = await populateReviews(reviews);
+
+    // Prepare response with dashboard and reviews
+    const responseData = {
+      ...dashboard,
+      reviews: {
+        data: populatedReviews,
+        pagination: {
+          currentPage: numericPage,
+          totalPages: Math.ceil(reviewsTotal / numericLimit) || 1,
+          totalItems: reviewsTotal,
+          itemsPerPage: numericLimit,
+          hasNextPage: numericPage < Math.ceil(reviewsTotal / numericLimit),
+          hasPrevPage: numericPage > 1
+        }
+      }
+    };
+
+    sendSuccess(res, responseData, 'Vendor item reviews dashboard retrieved successfully');
   } catch (error) {
     console.error('Error retrieving vendor item reviews dashboard by store ID', { error: error.message, Vendor_Store_id: req.params.Vendor_Store_id });
     throw error;

@@ -17,7 +17,8 @@ const {
   getDashboardByIdSchema,
   getAllDashboardsSchema,
   getDashboardsByAuthSchema,
-  getDashboardByStoreParamsSchema
+  getDashboardByStoreParamsSchema,
+  getDashboardByStoreQuerySchema
 } = require('../../../validators/Vendor_Items_Reviews_Dashboard.validator');
 
 router.post('/create', auth, validateBody(createDashboardSchema), createDashboard);
@@ -26,7 +27,7 @@ router.get('/getById/:id', auth, validateParams(getDashboardByIdSchema), getDash
 router.put('/update/:id', auth, validateParams(getDashboardByIdSchema), validateBody(updateDashboardSchema), updateDashboard);
 router.delete('/delete/:id', auth, validateParams(getDashboardByIdSchema), deleteDashboard);
 router.get('/getByAuth', auth, validateQuery(getDashboardsByAuthSchema), getDashboardsByAuth);
-router.get('/getByStoreId/:Vendor_Store_id', auth, validateParams(getDashboardByStoreParamsSchema), getDashboardByStoreId);
+router.get('/getByStoreId/:Vendor_Store_id', auth, validateParams(getDashboardByStoreParamsSchema), validateQuery(getDashboardByStoreQuerySchema), getDashboardByStoreId);
 
 module.exports = router;
 

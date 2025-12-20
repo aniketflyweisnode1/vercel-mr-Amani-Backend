@@ -168,6 +168,7 @@ const VendorRequestReviewsFromCustomerRoutes = require('./routes/ShopingVendor/V
 const VendorProductDisputeRoutes = require('./routes/ShopingVendor/Vendor_Prdocut_Dispute.routes');
 const VendorPaymentTabRoutes = require('./routes/ShopingVendor/Vendor_Payment_Tab.routes');
 // SocketChat - Socket.io WebSocket only (no REST API endpoints)
+const VendorItemsReviewsDashboardRoutes = require('./routes/ShopingVendor/Vendor_Items_Reviews_Dashboard.routes');
 const SocketChatSocket = require('./routes/Chat/SocketChat.routes');
 const ChatFileUploadRoutes = require('./routes/Chat/ChatFileUpload.routes');
 const ChatOTPRoutes = require('./routes/Chat/ChatOTP.routes');
@@ -374,6 +375,7 @@ router.use('/Vendor_ReviewsFormConttentCreator', VendorReviewsFormConttentCreato
 router.use('/Vendor_RequestReviewsFromCustomer', VendorRequestReviewsFromCustomerRoutes);
 router.use('/Vendor_Prdocut_Dispute', VendorProductDisputeRoutes);
 router.use('/Vendor_Payment_Tab', VendorPaymentTabRoutes);
+router.use('/Vendor_Reviews_Dashboard', VendorItemsReviewsDashboardRoutes);
 // Chat file upload routes - REST API endpoints for file uploads
 router.use('/chat', ChatFileUploadRoutes);
 // Chat OTP routes - REST API endpoints for OTP sending
