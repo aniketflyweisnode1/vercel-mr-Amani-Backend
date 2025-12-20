@@ -68,6 +68,7 @@ const OrderNowRoutes = require('./routes/User/Order_Now.routes');  // User Order
 const ReferralRoutes = require('./routes/User/Order_Food/Referral.routes');
 const OrderHistoryRoutes = require('./routes/User/Order_History.routes');  // User Order Food Routes
 const DeliveryRoutes = require('./routes/User/Delivery.routes');
+const OrderItemDeliveryStatusRoutes = require('./routes/User/orderItemDeliveryStatus.routes');
 const ProfileSettingRoutes = require('./routes/User/Order_Food/Profile_setting.routes');
 const CateringEventTypeRoutes = require('./routes/User/Order_Food/Catering/Catering_EventType.routes');
 const CateringEventRoutes = require('./routes/User/Order_Food/Catering/Catering_Event.routes');
@@ -223,6 +224,7 @@ router.use('/Order_Now', OrderNowRoutes);
 router.use('/Referral', ReferralRoutes);
 router.use('/Order_History', OrderHistoryRoutes);
 router.use('/Delivery', DeliveryRoutes);
+router.use('/orderItemDeliveryStatus', OrderItemDeliveryStatusRoutes);
 router.use('/Profile_setting', ProfileSettingRoutes);
 router.use('/Catering_EventType', CateringEventTypeRoutes);
 router.use('/Catering_Event', CateringEventRoutes);
