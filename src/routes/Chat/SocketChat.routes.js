@@ -15,7 +15,7 @@ let io = null;
  * @returns {Object} Socket.IO instance
  */
 const setupSocket = (server) => {
-  console.log('Setting up socket');
+  // console.log('Setting up socket');
   if (io) {
     return io; // Return existing instance if already initialized
   }
@@ -83,7 +83,7 @@ const setupSocket = (server) => {
 
   // Handle connection
   io.on('connection', (socket) => {
-    console.log('User connected to socket', socket);
+    // console.log('User connected to socket', socket);
     const userId = socket.userId;
     const userName = socket.userName;
 

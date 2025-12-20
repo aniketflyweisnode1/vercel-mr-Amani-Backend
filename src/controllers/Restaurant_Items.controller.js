@@ -180,7 +180,7 @@ const ensureCategoryExists = async (Restaurant_item_Category_id) => {
   }
 
   const category = await RestaurantItemCategory.findOne({ Restaurant_item_Category_id: categoryId });
-  console.log(category, 'category\n\n\n\n\n');
+  // console.log(category, 'category\n\n\n\n\n');
   return Boolean(category);
 };
 

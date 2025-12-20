@@ -254,7 +254,7 @@ const getUserById = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-console.log("---------------------------\n",req.body, req.userIdNumber);
+// console.log("---------------------------\n",req.body, req.userIdNumber);
     // Add update metadata
     const updateData = {
       ...req.body,

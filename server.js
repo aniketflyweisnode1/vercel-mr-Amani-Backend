@@ -165,7 +165,7 @@ if (!isVercel) {
   // Initialize Socket.io directly - Socket.io only (no REST API endpoints)
   // Must be initialized AFTER server starts to handle WebSocket upgrades
   try {
-    console.log('Initializing Socket.io');
+    // console.log('Initializing Socket.io');
     const { setupSocket } = require('./src/routes/Chat/SocketChat.routes');
     io = setupSocket(server);
     logger.info('Socket.io initialized successfully on path: /');

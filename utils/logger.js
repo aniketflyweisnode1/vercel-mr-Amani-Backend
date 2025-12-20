@@ -10,7 +10,7 @@ class Logger {
 
   info(message, meta = {}) {
     const formattedMessage = this.formatMessage('info', message, meta);
-    console.log("\n", formattedMessage);
+    // console.log("\n", formattedMessage);
   }
 
   error(message, meta = {}) {
@@ -26,7 +26,7 @@ class Logger {
   debug(message, meta = {}) {
     if ('development') {
       const formattedMessage = this.formatMessage('debug', message, meta);
-      console.log("\n", formattedMessage);
+      // console.log("\n", formattedMessage);
     }
   }
 }
