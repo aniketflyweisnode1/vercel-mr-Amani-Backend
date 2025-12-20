@@ -4,23 +4,23 @@ const User = require('../../models/User.model');
 const SocketChat = require('../../models/SocketChat.model');
 const logger = require('../../../utils/logger');
 
-const activeUsers = new Map();
-// Store socket tokens: { socketId: { userId, token } }
-const socketTokens = new Map();
+const activeUsers = new Map(); // Map<userId, socketId>
+const socketTokens = new Map(); // Map<socketId, { userId, token }>
 
 let io = null;
 
 /**
- * Initialize Socket.io directly with server
+ * Initialize Socket.IO server
  * @param {Object} server - HTTP server instance
- * @returns {Object} Socket.io instance
+ * @returns {Object} Socket.IO instance
  */
 const setupSocket = (server) => {
+  console.log('Setting up socket');
   if (io) {
     return io; // Return existing instance if already initialized
   }
 
-  // Initialize Socket.io directly - connect at root path
+  // Initialize Socket.IO with root path
   io = socketIo(server, {
     path: '/',
     cors: {
@@ -28,21 +28,32 @@ const setupSocket = (server) => {
       methods: ['GET', 'POST'],
       credentials: true
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000
   });
 
-  // Socket.io authentication middleware
+  // Socket.IO authentication middleware
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+      // Get token from multiple sources (auth object, Authorization header, or query parameter)
+      const token = socket.handshake.auth.token || 
+                   socket.handshake.headers.authorization?.replace('Bearer ', '') ||
+                   socket.handshake.query.token;
 
       if (!token) {
         return next(new Error('Authentication token required'));
       }
 
       try {
-        const decoded = jwt.verify(token, 'newuserToken');
-        const user = await User.findOne({ user_id: decoded.userId || decoded.user_id, status: true });
+        // Verify JWT token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'newuserToken');
+        
+        // Find user by user_id
+        const user = await User.findOne({ 
+          user_id: decoded.userId || decoded.user_id, 
+          status: true 
+        });
 
         if (!user) {
           return next(new Error('User not found or inactive'));
@@ -72,6 +83,7 @@ const setupSocket = (server) => {
 
   // Handle connection
   io.on('connection', (socket) => {
+    console.log('User connected to socket', socket);
     const userId = socket.userId;
     const userName = socket.userName;
 
@@ -89,14 +101,16 @@ const setupSocket = (server) => {
       message: 'Connected to chat server',
       userId,
       userName,
-      socketId: socket.id
+      socketId: socket.id,
+      timestamp: new Date().toISOString()
     });
 
     // Notify other users about new connection (optional)
     socket.broadcast.emit('user_connected', {
       userId,
       userName,
-      socketId: socket.id
+      socketId: socket.id,
+      timestamp: new Date().toISOString()
     });
 
     /**
@@ -112,13 +126,14 @@ const setupSocket = (server) => {
       try {
         const { receiverId, message, fileImage, emozi } = data;
 
+        // Validation
         if (!receiverId) {
           socket.emit('error', { message: 'Receiver ID is required' });
           return;
         }
 
-        if (!message && !fileImage) {
-          socket.emit('error', { message: 'Message or file image is required' });
+        if (!message && !fileImage && !emozi) {
+          socket.emit('error', { message: 'Message, file image, or emoji is required' });
           return;
         }
 
@@ -150,6 +165,7 @@ const setupSocket = (server) => {
           TextMessage: message || '',
           fileImage: fileImage || null,
           emozi: emozi || null,
+          receiverId: receiverId,
           created_at: chatRecord.created_at,
           timestamp: new Date().toISOString()
         };
@@ -190,26 +206,36 @@ const setupSocket = (server) => {
      * @param {boolean} data.isTyping - Is typing status
      */
     socket.on('typing', (data) => {
-      const { receiverId, isTyping } = data;
-      if (receiverId) {
+      try {
+        const { receiverId, isTyping } = data;
+        
+        if (!receiverId) {
+          socket.emit('error', { message: 'Receiver ID is required' });
+          return;
+        }
+
         const receiverSocketId = activeUsers.get(receiverId);
         if (receiverSocketId) {
           io.to(receiverSocketId).emit('user_typing', {
             userId,
             userName,
-            isTyping
+            isTyping: isTyping !== false,
+            timestamp: new Date().toISOString()
           });
         }
+      } catch (error) {
+        logger.error('Error handling typing indicator', { error: error.message, userId });
+        socket.emit('error', { message: 'Failed to send typing indicator' });
       }
     });
 
     /**
-     * Handle getting chat history
+     * Handle getting chat history between two users
      * @event get_chat_history
      * @param {Object} data - Request data
      * @param {number} data.otherUserId - Other user ID
-     * @param {number} data.page - Page number (optional)
-     * @param {number} data.limit - Limit per page (optional)
+     * @param {number} data.page - Page number (optional, default: 1)
+     * @param {number} data.limit - Limit per page (optional, default: 50)
      */
     socket.on('get_chat_history', async (data) => {
       try {
@@ -220,11 +246,13 @@ const setupSocket = (server) => {
           return;
         }
 
-        const pageNum = parseInt(page, 10);
-        const limitNum = parseInt(limit, 10);
+        const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+        const limitNum = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 100);
         const skip = (pageNum - 1) * limitNum;
 
-        // Get messages where current user is sender or receiver
+        // Get messages where current user is sender
+        // Note: In your current model, User_id is the sender
+        // For a proper chat system, you might want to add a receiverId field
         const chats = await SocketChat.find({
           $or: [
             { User_id: userId },
@@ -238,9 +266,10 @@ const setupSocket = (server) => {
 
         socket.emit('chat_history', {
           success: true,
-          data: chats,
+          data: chats.reverse(), // Reverse to show oldest first
           page: pageNum,
-          limit: limitNum
+          limit: limitNum,
+          total: chats.length
         });
       } catch (error) {
         logger.error('Error getting chat history', {
@@ -248,6 +277,58 @@ const setupSocket = (server) => {
           userId
         });
         socket.emit('error', { message: 'Failed to get chat history', error: error.message });
+      }
+    });
+
+    /**
+     * Handle getting online users
+     * @event get_online_users
+     */
+    socket.on('get_online_users', async () => {
+      try {
+        const onlineUserIds = Array.from(activeUsers.keys());
+        
+        // Get user details for online users
+        const onlineUsers = await User.find({
+          user_id: { $in: onlineUserIds },
+          status: true
+        }).select('user_id firstName lastName BusinessName');
+
+        socket.emit('online_users', {
+          success: true,
+          data: onlineUsers,
+          count: onlineUsers.length
+        });
+      } catch (error) {
+        logger.error('Error getting online users', { error: error.message, userId });
+        socket.emit('error', { message: 'Failed to get online users' });
+      }
+    });
+
+    /**
+     * Handle checking if user is online
+     * @event check_user_online
+     * @param {Object} data - Request data
+     * @param {number} data.userId - User ID to check
+     */
+    socket.on('check_user_online', (data) => {
+      try {
+        const { userId: checkUserId } = data;
+        
+        if (!checkUserId) {
+          socket.emit('error', { message: 'User ID is required' });
+          return;
+        }
+
+        const isOnline = activeUsers.has(checkUserId);
+        socket.emit('user_online_status', {
+          userId: checkUserId,
+          isOnline,
+          socketId: isOnline ? activeUsers.get(checkUserId) : null
+        });
+      } catch (error) {
+        logger.error('Error checking user online status', { error: error.message });
+        socket.emit('error', { message: 'Failed to check user online status' });
       }
     });
 
@@ -264,7 +345,8 @@ const setupSocket = (server) => {
       // Notify other users about disconnection
       socket.broadcast.emit('user_disconnected', {
         userId,
-        userName
+        userName,
+        timestamp: new Date().toISOString()
       });
     });
 
@@ -306,19 +388,53 @@ const getUserSocketId = (userId) => {
 };
 
 /**
- * Get Socket.io instance
- * @returns {Object|null} Socket.io instance or null
+ * Send message to specific user (server-side)
+ * @param {number} userId - Target user ID
+ * @param {string} event - Event name
+ * @param {Object} data - Message data
+ */
+const sendToUser = (userId, event, data) => {
+  if (!io) {
+    logger.warn('Socket.IO not initialized');
+    return false;
+  }
+
+  const socketId = activeUsers.get(userId);
+  if (socketId) {
+    io.to(socketId).emit(event, data);
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Broadcast message to all connected users
+ * @param {string} event - Event name
+ * @param {Object} data - Message data
+ */
+const broadcast = (event, data) => {
+  if (!io) {
+    logger.warn('Socket.IO not initialized');
+    return;
+  }
+  io.emit(event, data);
+};
+
+/**
+ * Get Socket.IO instance
+ * @returns {Object|null} Socket.IO instance or null
  */
 const getIO = () => {
   return io;
 };
 
-// Export Socket.io functions and instance
-// Socket.io only - no REST API endpoints
 module.exports = {
   setupSocket,
   getIO,
   getActiveUsersCount,
   isUserOnline,
-  getUserSocketId
+  getUserSocketId,
+  sendToUser,
+  broadcast
 };
+

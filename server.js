@@ -159,13 +159,16 @@ if (!isVercel) {
     logger.info(`Server running in 'development' mode on port ${PORT}`);
     logger.info(`API Documentation: http://localhost:${PORT}/api/v2`);
     logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
+    logger.info(`WebSocket: ws://localhost:${PORT}/`);
   });
 
   // Initialize Socket.io directly - Socket.io only (no REST API endpoints)
+  // Must be initialized AFTER server starts to handle WebSocket upgrades
   try {
+    console.log('Initializing Socket.io');
     const { setupSocket } = require('./src/routes/Chat/SocketChat.routes');
     io = setupSocket(server);
-    logger.info('Socket.io initialized successfully');
+    logger.info('Socket.io initialized successfully on path: /');
   } catch (error) {
     logger.warn('Socket.io initialization skipped', { error: error.message });
   }
