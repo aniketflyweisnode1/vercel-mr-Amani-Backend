@@ -1,0 +1,304 @@
+{
+	"info": {
+		"name": "SocketChat Socket.IO Collection",
+		"description": "Postman collection for SocketChat Socket.io events - Real-time chat with connection setup",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "amani",
+			"value": "http://localhost:3030",
+			"type": "string"
+		},
+		{
+			"key": "auth",
+			"value": "",
+			"type": "string",
+			"description": "JWT Bearer token for Socket.io authentication"
+		}
+	],
+	"item": [
+		{
+			"name": "Connection",
+			"item": [
+				{
+					"name": "Connect to Socket Server",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "ws://{{amani}}/?token={{auth}}",
+							"protocol": "ws",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "{{auth}}",
+									"description": "JWT token for authentication"
+								}
+							]
+						},
+						"description": "**Connect to Socket.io Server**\n\nConnect to the Socket.io chat server with authentication.\n\n**Authentication Methods:**\n1. **Via query parameter:** `token={{auth}}`\n2. **Via auth object in handshake:** `auth: { token: '{{auth}}' }`\n3. **Via Authorization header:** `Authorization: Bearer {{auth}}`\n\n**Client Connection Example (JavaScript):**\n```javascript\nconst socket = io('{{amani}}', {\n  path: '/',\n  auth: {\n    token: '{{auth}}'\n  },\n  transports: ['websocket', 'polling']\n});\n```\n\n**Connection URL:** `ws://localhost:3030` (root path, no /socket.io/)"\n\n**Response Events:**\n- `connected` - Connection successful with user details\n- `user_connected` - Broadcasted to other users when you connect\n- `error` - Connection failed or authentication error\n\n**Expected Response (connected event):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Connected to chat server\",\n  \"userId\": 55,\n  \"userName\": \"John Doe\",\n  \"socketId\": \"socket-id-123\"\n}\n```"
+					}
+				}
+			]
+		},
+		{
+			"name": "Send Message",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Socket.io emit: send_message",
+							"// This event sends a message to another user",
+							"",
+							"// Note: This requires an active Socket.io connection",
+							"// socket.emit('send_message', {",
+							"//   receiverId: 56,",
+							"//   message: 'Hello! How are you?',",
+							"//   fileImage: null,",
+							"//   emozi: '😊'",
+							"// });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"receiverId\": 56,\n  \"message\": \"Hello! How are you?\",\n  \"fileImage\": null,\n  \"emozi\": \"😊\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "ws://{{amani}}/",
+					"protocol": "ws",
+					"host": [
+						"{{amani}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "**Socket Event: `send_message`**\n\nSend a message to another user via Socket.io.\n\n**Event Name:** `send_message`\n\n**Emit Example:**\n```javascript\nsocket.emit('send_message', {\n  receiverId: 56,              // Required: Receiver user ID (number)\n  message: 'Hello!',           // Required: Message text (or fileImage)\n  fileImage: 'https://...',    // Optional: Image/file URL (string, max 500 chars)\n  emozi: '😊'                  // Optional: Emoji (string, max 10 chars)\n});\n```\n\n**Response Events:**\n- `message_sent` - Confirmation sent to sender\n- `receive_message` - Message received by receiver (if online)\n- `error` - Error occurred\n\n**Payload Examples:**\n- Text only: `{ \"receiverId\": 56, \"message\": \"Hello!\" }`\n- With emoji: `{ \"receiverId\": 56, \"message\": \"Hello!\", \"emozi\": \"😊\" }`\n- With image: `{ \"receiverId\": 56, \"message\": \"Check this\", \"fileImage\": \"https://example.com/image.jpg\" }`\n- Image only: `{ \"receiverId\": 56, \"fileImage\": \"https://example.com/image.jpg\" }`"
+			}
+		},
+		{
+			"name": "Typing Indicator",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Socket.io emit: typing",
+							"// This event sends typing indicator to receiver",
+							"",
+							"// socket.emit('typing', {",
+							"//   receiverId: 56,",
+							"//   isTyping: true",
+							"// });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"receiverId\": 56,\n  \"isTyping\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "ws://{{amani}}/",
+					"protocol": "ws",
+					"host": [
+						"{{amani}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "**Socket Event: `typing`**\n\nSend typing indicator to receiver.\n\n**Event Name:** `typing`\n\n**Emit Example:**\n```javascript\nsocket.emit('typing', {\n  receiverId: 56,    // Required: Receiver user ID (number)\n  isTyping: true     // Required: Typing status (boolean)\n});\n```\n\n**Response Event:**\n- `user_typing` - Sent to receiver with typing status\n\n**Payload Examples:**\n- Start typing: `{ \"receiverId\": 56, \"isTyping\": true }`\n- Stop typing: `{ \"receiverId\": 56, \"isTyping\": false }`"
+			}
+		},
+		{
+			"name": "Get Chat History",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Socket.io emit: get_chat_history",
+							"// This event requests chat history with another user",
+							"",
+							"// socket.emit('get_chat_history', {",
+							"//   otherUserId: 56,",
+							"//   page: 1,",
+							"//   limit: 50",
+							"// });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"otherUserId\": 56,\n  \"page\": 1,\n  \"limit\": 50\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "ws://{{amani}}/",
+					"protocol": "ws",
+					"host": [
+						"{{amani}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "**Socket Event: `get_chat_history`**\n\nGet chat history with another user.\n\n**Event Name:** `get_chat_history`\n\n**Emit Example:**\n```javascript\nsocket.emit('get_chat_history', {\n  otherUserId: 56,   // Required: Other user ID (number)\n  page: 1,           // Optional: Page number (default: 1)\n  limit: 50          // Optional: Messages per page (default: 50)\n});\n```\n\n**Response Event:**\n- `chat_history` - Chat history data with messages array\n- `error` - Error occurred\n\n**Payload Examples:**\n- Default pagination: `{ \"otherUserId\": 56 }`\n- Custom pagination: `{ \"otherUserId\": 56, \"page\": 2, \"limit\": 20 }`"
+			}
+		},
+		{
+			"name": "Server Events (Listen)",
+			"item": [
+				{
+					"name": "Connected Event",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "ws://{{amani}}/",
+							"protocol": "ws",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "**Socket Event: `connected`**\n\nEmitted when connection is successful.\n\n**Listen:**\n```javascript\nsocket.on('connected', (data) => {\n  console.log('Connected:', data);\n});\n```\n\n**Payload:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Connected to chat server\",\n  \"userId\": 55,\n  \"userName\": \"John Doe\",\n  \"socketId\": \"socket-id-123\"\n}\n```"
+					}
+				},
+				{
+					"name": "Receive Message",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "ws://{{amani}}/",
+							"protocol": "ws",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "**Socket Event: `receive_message`**\n\nEmitted when a message is received from another user.\n\n**Listen:**\n```javascript\nsocket.on('receive_message', (message) => {\n  console.log('Received:', message);\n});\n```\n\n**Payload:**\n```json\n{\n  \"Chat_id\": 1,\n  \"UserName\": \"John Doe\",\n  \"User_id\": 55,\n  \"TextMessage\": \"Hello!\",\n  \"fileImage\": null,\n  \"emozi\": \"😊\",\n  \"created_at\": \"2025-01-19T12:00:00.000Z\",\n  \"timestamp\": \"2025-01-19T12:00:00.000Z\"\n}\n```"
+					}
+				},
+				{
+					"name": "Message Sent",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/socket.io/",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								"socket.io"
+							]
+						},
+						"description": "**Socket Event: `message_sent`**\n\nEmitted to sender as confirmation that message was sent.\n\n**Listen:**\n```javascript\nsocket.on('message_sent', (data) => {\n  console.log('Message sent:', data);\n});\n```\n\n**Payload:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Message sent successfully\",\n  \"data\": {\n    \"Chat_id\": 1,\n    \"UserName\": \"John Doe\",\n    \"User_id\": 55,\n    \"TextMessage\": \"Hello!\",\n    \"created_at\": \"2025-01-19T12:00:00.000Z\"\n  }\n}\n```"
+					}
+				},
+				{
+					"name": "User Typing",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/socket.io/",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								"socket.io"
+							]
+						},
+						"description": "**Socket Event: `user_typing`**\n\nEmitted when another user is typing.\n\n**Listen:**\n```javascript\nsocket.on('user_typing', (data) => {\n  console.log('User typing:', data);\n});\n```\n\n**Payload:**\n```json\n{\n  \"userId\": 55,\n  \"userName\": \"John Doe\",\n  \"isTyping\": true\n}\n```"
+					}
+				},
+				{
+					"name": "Chat History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/socket.io/",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								"socket.io"
+							]
+						},
+						"description": "**Socket Event: `chat_history`**\n\nEmitted in response to `get_chat_history` event.\n\n**Listen:**\n```javascript\nsocket.on('chat_history', (data) => {\n  console.log('Chat history:', data);\n});\n```\n\n**Payload:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"Chat_id\": 1,\n      \"UserName\": \"John Doe\",\n      \"User_id\": 55,\n      \"TextMessage\": \"Hello!\",\n      \"created_at\": \"2025-01-19T12:00:00.000Z\"\n    }\n  ],\n  \"page\": 1,\n  \"limit\": 50\n}\n```"
+					}
+				},
+				{
+					"name": "Error",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{amani}}/socket.io/",
+							"host": [
+								"{{amani}}"
+							],
+							"path": [
+								"socket.io"
+							]
+						},
+						"description": "**Socket Event: `error`**\n\nEmitted when an error occurs.\n\n**Listen:**\n```javascript\nsocket.on('error', (error) => {\n  console.error('Socket error:', error);\n});\n```\n\n**Payload:**\n```json\n{\n  \"message\": \"Error message here\"\n}\n```\n\n**Common Errors:**\n- `\"Authentication token required\"`\n- `\"User not found or inactive\"`\n- `\"Invalid authentication token\"`\n- `\"Receiver ID is required\"`\n- `\"Message or file image is required\"`\n- `\"Receiver not found or inactive\"`\n- `\"Failed to send message\"`\n- `\"Other user ID is required\"`\n- `\"Failed to get chat history\"`"
+					}
+				}
+			]
+		}
+	]
+}
+

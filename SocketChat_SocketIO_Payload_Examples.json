@@ -1,0 +1,364 @@
+{
+	"Collection_Info": {
+		"name": "SocketChat Socket.IO Payload Examples",
+		"description": "Payload examples for SocketChat Socket.io events based on SocketChat model fields",
+		"usage": "Use these examples as reference when testing Socket.io events. Requires active Socket.io connection.",
+		"collection_file": "SocketChat_SocketIO_Postman_Collection.json",
+		"base_url": "{{amani}} = http://localhost:3030",
+		"auth_variable": "{{auth}} = JWT Bearer token"
+	},
+	"Connection": {
+		"Authentication_Methods": {
+			"Method_1_Auth_Object": {
+				"description": "Pass token in auth object during connection (Recommended)",
+				"code_example": "const socket = io('http://localhost:3030', { auth: { token: 'your-jwt-token' } })"
+			},
+			"Method_2_Query_Parameter": {
+				"description": "Pass token as query parameter",
+				"code_example": "const socket = io('http://localhost:3030?token=your-jwt-token')"
+			},
+			"Method_3_Authorization_Header": {
+				"description": "Pass token in Authorization header",
+				"code_example": "const socket = io('http://localhost:3030', { extraHeaders: { Authorization: 'Bearer your-jwt-token' } })"
+			},
+			"Token_Requirements": {
+				"secret": "newuserToken",
+				"must_contain": ["userId or user_id field"],
+				"user_status": "User must exist and have status: true"
+			}
+		},
+		"Connected_Response": {
+			"Payload": {
+				"success": true,
+				"message": "Connected to chat server",
+				"userId": 55,
+				"userName": "John Doe",
+				"socketId": "socket-id-123"
+			}
+		}
+	},
+	"send_message_Event": {
+		"Text_Only": {
+			"receiverId": 56,
+			"message": "Hello! How are you?"
+		},
+		"With_Emoji": {
+			"receiverId": 56,
+			"message": "Great job!",
+			"emozi": "👍"
+		},
+		"With_Image_URL": {
+			"receiverId": 56,
+			"message": "Check out this image",
+			"fileImage": "https://example.com/image.jpg",
+			"emozi": "📷"
+		},
+		"Image_Only": {
+			"receiverId": 56,
+			"fileImage": "https://example.com/image.jpg"
+		},
+		"Full_Payload": {
+			"receiverId": 56,
+			"message": "Hello, this is a test message with all fields",
+			"fileImage": "https://example.com/image.jpg",
+			"emozi": "😊"
+		},
+		"Long_Message": {
+			"receiverId": 56,
+			"message": "This is a longer message to test the 5000 character limit. You can include detailed information here."
+		},
+		"Fields_Description": {
+			"receiverId": {
+				"type": "number (integer, positive)",
+				"required": true,
+				"description": "ID of the user receiving the message"
+			},
+			"message": {
+				"type": "string",
+				"maxLength": 5000,
+				"required": true,
+				"description": "Text content of the message (required if fileImage not provided)"
+			},
+			"fileImage": {
+				"type": "string (URL)",
+				"maxLength": 500,
+				"required": false,
+				"description": "URL of the file/image attached to the message (required if message not provided)"
+			},
+			"emozi": {
+				"type": "string",
+				"maxLength": 10,
+				"required": false,
+				"description": "Emoji character(s) for the message"
+			}
+		}
+	},
+	"typing_Event": {
+		"Start_Typing": {
+			"receiverId": 56,
+			"isTyping": true
+		},
+		"Stop_Typing": {
+			"receiverId": 56,
+			"isTyping": false
+		},
+		"Fields_Description": {
+			"receiverId": {
+				"type": "number (integer, positive)",
+				"required": true,
+				"description": "ID of the user receiving the typing indicator"
+			},
+			"isTyping": {
+				"type": "boolean",
+				"required": true,
+				"description": "Typing status (true = typing, false = stopped typing)"
+			}
+		}
+	},
+	"get_chat_history_Event": {
+		"Default_Pagination": {
+			"otherUserId": 56
+		},
+		"Custom_Pagination": {
+			"otherUserId": 56,
+			"page": 1,
+			"limit": 50
+		},
+		"Large_Page": {
+			"otherUserId": 56,
+			"page": 2,
+			"limit": 100
+		},
+		"Small_Page": {
+			"otherUserId": 56,
+			"page": 1,
+			"limit": 10
+		},
+		"Fields_Description": {
+			"otherUserId": {
+				"type": "number (integer, positive)",
+				"required": true,
+				"description": "ID of the other user to get chat history with"
+			},
+			"page": {
+				"type": "number (integer, min: 1)",
+				"required": false,
+				"default": 1,
+				"description": "Page number for pagination"
+			},
+			"limit": {
+				"type": "number (integer, min: 1)",
+				"required": false,
+				"default": 50,
+				"description": "Number of messages per page"
+			}
+		}
+	},
+	"Server_Events_Response_Payloads": {
+		"receive_message": {
+			"Text_Message": {
+				"Chat_id": 1,
+				"UserName": "John Doe",
+				"User_id": 55,
+				"TextMessage": "Hello!",
+				"fileImage": null,
+				"emozi": null,
+				"created_at": "2025-01-19T12:00:00.000Z",
+				"timestamp": "2025-01-19T12:00:00.000Z"
+			},
+			"With_Emoji": {
+				"Chat_id": 2,
+				"UserName": "Jane Smith",
+				"User_id": 56,
+				"TextMessage": "Great job!",
+				"fileImage": null,
+				"emozi": "👍",
+				"created_at": "2025-01-19T12:05:00.000Z",
+				"timestamp": "2025-01-19T12:05:00.000Z"
+			},
+			"With_Image": {
+				"Chat_id": 3,
+				"UserName": "John Doe",
+				"User_id": 55,
+				"TextMessage": "Check out this image",
+				"fileImage": "https://example.com/image.jpg",
+				"emozi": "📷",
+				"created_at": "2025-01-19T12:10:00.000Z",
+				"timestamp": "2025-01-19T12:10:00.000Z"
+			}
+		},
+		"message_sent": {
+			"Payload": {
+				"success": true,
+				"message": "Message sent successfully",
+				"data": {
+					"Chat_id": 1,
+					"UserName": "John Doe",
+					"User_id": 55,
+					"TextMessage": "Hello!",
+					"fileImage": null,
+					"emozi": "😊",
+					"created_at": "2025-01-19T12:00:00.000Z",
+					"timestamp": "2025-01-19T12:00:00.000Z"
+				}
+			}
+		},
+		"user_typing": {
+			"Start_Typing": {
+				"userId": 55,
+				"userName": "John Doe",
+				"isTyping": true
+			},
+			"Stop_Typing": {
+				"userId": 55,
+				"userName": "John Doe",
+				"isTyping": false
+			}
+		},
+		"chat_history": {
+			"Payload": {
+				"success": true,
+				"data": [
+					{
+						"_id": "65f1234567890abcdef12345",
+						"Chat_id": 3,
+						"UserName": "John Doe",
+						"User_id": 55,
+						"TextMessage": "Latest message",
+						"fileImage": null,
+						"emozi": "😊",
+						"Status": true,
+						"created_by": 55,
+						"created_at": "2025-01-19T12:20:00.000Z",
+						"updated_by": null,
+						"updated_at": "2025-01-19T12:20:00.000Z"
+					},
+					{
+						"_id": "65f1234567890abcdef12344",
+						"Chat_id": 2,
+						"UserName": "Jane Smith",
+						"User_id": 56,
+						"TextMessage": "Previous message",
+						"fileImage": null,
+						"emozi": null,
+						"Status": true,
+						"created_by": 56,
+						"created_at": "2025-01-19T12:15:00.000Z",
+						"updated_by": null,
+						"updated_at": "2025-01-19T12:15:00.000Z"
+					}
+				],
+				"page": 1,
+				"limit": 50
+			}
+		},
+		"error": {
+			"Authentication_Error": {
+				"message": "Authentication token required"
+			},
+			"User_Not_Found": {
+				"message": "User not found or inactive"
+			},
+			"Invalid_Token": {
+				"message": "Invalid authentication token"
+			},
+			"Receiver_ID_Required": {
+				"message": "Receiver ID is required"
+			},
+			"Message_Required": {
+				"message": "Message or file image is required"
+			},
+			"Receiver_Not_Found": {
+				"message": "Receiver not found or inactive"
+			},
+			"Failed_To_Send": {
+				"message": "Failed to send message",
+				"error": "Detailed error message here"
+			},
+			"Other_User_ID_Required": {
+				"message": "Other user ID is required"
+			},
+			"Failed_To_Get_History": {
+				"message": "Failed to get chat history",
+				"error": "Detailed error message here"
+			}
+		}
+	},
+	"SocketChat_Model_Fields": {
+		"Chat_id": {
+			"type": "number",
+			"autoGenerated": true,
+			"description": "Auto-incrementing ID for the chat message (generated automatically)"
+		},
+		"UserName": {
+			"type": "string",
+			"maxLength": 200,
+			"required": false,
+			"description": "Name of the user sending the message"
+		},
+		"User_id": {
+			"type": "number (integer, positive)",
+			"required": true,
+			"description": "ID of the user sending the message"
+		},
+		"TextMessage": {
+			"type": "string",
+			"maxLength": 5000,
+			"required": false,
+			"description": "Text content of the message"
+		},
+		"fileImage": {
+			"type": "string (URL)",
+			"maxLength": 500,
+			"required": false,
+			"description": "URL of the file/image attached to the message"
+		},
+		"emozi": {
+			"type": "string",
+			"maxLength": 10,
+			"required": false,
+			"description": "Emoji character(s) for the message"
+		},
+		"Status": {
+			"type": "boolean",
+			"default": true,
+			"description": "Status of the chat message (true = active, false = deleted/inactive)"
+		},
+		"created_by": {
+			"type": "number",
+			"autoGenerated": true,
+			"description": "ID of the user who created the message (automatically set from auth token)"
+		},
+		"created_at": {
+			"type": "datetime",
+			"autoGenerated": true,
+			"description": "Timestamp when the message was created (automatically set)"
+		},
+		"updated_by": {
+			"type": "number",
+			"autoGenerated": true,
+			"description": "ID of the user who last updated the message"
+		},
+		"updated_at": {
+			"type": "datetime",
+			"autoGenerated": true,
+			"description": "Timestamp when the message was last updated"
+		}
+	},
+	"Usage_Notes": {
+		"important": [
+			"Socket.io requires a persistent WebSocket connection",
+			"All events require authentication via JWT token",
+			"Messages are stored in the database automatically when sent via Socket.io",
+			"Each user joins a personal room: user_${userId}",
+			"Chat history is sorted by created_at in descending order (newest first)",
+			"Typing indicators are real-time and don't persist",
+			"Offline users will receive messages when they reconnect"
+		],
+		"client_connection_example": {
+			"javascript": "const socket = io('http://localhost:3030', { auth: { token: 'your-jwt-token' } });",
+			"nodejs": "const io = require('socket.io-client'); const socket = io('http://localhost:3030', { auth: { token: 'your-jwt-token' } });"
+		}
+	}
+}
+

@@ -1,49 +1,28 @@
-const express = require('express');
-const router = express.Router();
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/User.model');
 const SocketChat = require('../../models/SocketChat.model');
 const logger = require('../../../utils/logger');
 
-// Import REST API controllers
-const {
-  createSocketChat,
-  getAllSocketChats,
-  getSocketChatById,
-  updateSocketChat,
-  deleteSocketChat,
-  getSocketChatsByAuth,
-  getSocketChatsByUserId
-} = require('../../controllers/SocketChat.controller');
-
-// Import middleware
-const { auth } = require('../../../middleware/auth');
-
-// ============================================
-// REST API Routes
-// ============================================
-
-
-router.post('/create', auth, createSocketChat);
-router.get('/getAll', getAllSocketChats);
-router.get('/getById/:id', getSocketChatById);
-router.put('/update/:id', auth, updateSocketChat);
-router.delete('/delete/:id', auth, deleteSocketChat);
-router.get('/getByAuth', auth, getSocketChatsByAuth);
-router.get('/getByUserId/:User_id', getSocketChatsByUserId);
-
 const activeUsers = new Map();
 // Store socket tokens: { socketId: { userId, token } }
 const socketTokens = new Map();
 
+let io = null;
+
 /**
- * Initialize Socket.io server
+ * Initialize Socket.io directly with server
  * @param {Object} server - HTTP server instance
  * @returns {Object} Socket.io instance
  */
-const initializeSocket = (server) => {
-  const io = socketIo(server, {
+const setupSocket = (server) => {
+  if (io) {
+    return io; // Return existing instance if already initialized
+  }
+
+  // Initialize Socket.io directly - connect at root path
+  io = socketIo(server, {
+    path: '/',
     cors: {
       origin: '*',
       methods: ['GET', 'POST'],
@@ -326,13 +305,20 @@ const getUserSocketId = (userId) => {
   return activeUsers.get(userId) || null;
 };
 
-// Export both REST API router and Socket.io functions
-// The router is the default export for Express route mounting
-// Socket.io functions are available as named exports
-const socketChatRoutes = router;
-socketChatRoutes.initializeSocket = initializeSocket;
-socketChatRoutes.getActiveUsersCount = getActiveUsersCount;
-socketChatRoutes.isUserOnline = isUserOnline;
-socketChatRoutes.getUserSocketId = getUserSocketId;
+/**
+ * Get Socket.io instance
+ * @returns {Object|null} Socket.io instance or null
+ */
+const getIO = () => {
+  return io;
+};
 
-module.exports = socketChatRoutes;
+// Export Socket.io functions and instance
+// Socket.io only - no REST API endpoints
+module.exports = {
+  setupSocket,
+  getIO,
+  getActiveUsersCount,
+  isUserOnline,
+  getUserSocketId
+};

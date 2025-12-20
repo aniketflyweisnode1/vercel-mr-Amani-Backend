@@ -1,6 +1,7 @@
 const Discounts = require('../models/Discounts.model');
 const Discounts_type = require('../models/Discounts_type.model');
 const Business_Branch = require('../models/business_Branch.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -87,11 +88,60 @@ const generateUniqueDiscountCode = async () => {
   return code;
 };
 
-const populateDiscounts = (query) => query
-  .populate('Discounts_type_id', 'Discounts_type_id name Description Status')
-  .populate('business_Branch_id', 'business_Branch_id name address')
-  .populate('created_by', 'firstName lastName phoneNo BusinessName')
-  .populate('updated_by', 'firstName lastName phoneNo BusinessName');
+// Manual population for numeric IDs
+const populateDiscounts = async (records) => {
+  const recordsArray = Array.isArray(records) ? records : [records];
+  const populatedRecords = await Promise.all(
+    recordsArray.map(async (record) => {
+      if (!record) return null;
+      const recordObj = record.toObject ? record.toObject() : record;
+      
+      // Populate Discounts_type_id
+      if (recordObj.Discounts_type_id) {
+        const typeId = typeof recordObj.Discounts_type_id === 'object' ? recordObj.Discounts_type_id.Discounts_type_id : recordObj.Discounts_type_id;
+        const discountType = await Discounts_type.findOne({ Discounts_type_id: typeId })
+          .select('Discounts_type_id name Description Status');
+        if (discountType) {
+          recordObj.Discounts_type_id = discountType.toObject ? discountType.toObject() : discountType;
+        }
+      }
+      
+      // Populate business_Branch_id
+      if (recordObj.business_Branch_id) {
+        const branchId = typeof recordObj.business_Branch_id === 'object' ? recordObj.business_Branch_id.business_Branch_id : recordObj.business_Branch_id;
+        const branch = await Business_Branch.findOne({ business_Branch_id: branchId })
+          .select('business_Branch_id name address');
+        if (branch) {
+          recordObj.business_Branch_id = branch.toObject ? branch.toObject() : branch;
+        }
+      }
+      
+      // Populate created_by
+      if (recordObj.created_by) {
+        const createdById = typeof recordObj.created_by === 'object' ? recordObj.created_by.user_id : recordObj.created_by;
+        const createdBy = await User.findOne({ user_id: createdById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (createdBy) {
+          recordObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+        }
+      }
+      
+      // Populate updated_by
+      if (recordObj.updated_by) {
+        const updatedById = typeof recordObj.updated_by === 'object' ? recordObj.updated_by.user_id : recordObj.updated_by;
+        const updatedBy = await User.findOne({ user_id: updatedById })
+          .select('user_id firstName lastName phoneNo BusinessName');
+        if (updatedBy) {
+          recordObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+        }
+      }
+      
+      return recordObj;
+    })
+  );
+  
+  return Array.isArray(records) ? populatedRecords : populatedRecords[0];
+};
 
 const createDiscount = asyncHandler(async (req, res) => {
   try {
@@ -125,7 +175,7 @@ const createDiscount = asyncHandler(async (req, res) => {
     const discount = await Discounts.create(payload);
     console.info('Discount created successfully', { id: discount._id, Discounts_id: discount.Discounts_id });
 
-    const populated = await populateDiscounts(Discounts.findById(discount._id));
+    const populated = await populateDiscounts(discount);
     sendSuccess(res, populated, 'Discount created successfully', 201);
   } catch (error) {
     console.error('Error creating discount', { error: error.message, stack: error.stack });
@@ -155,13 +205,15 @@ const getAllDiscounts = asyncHandler(async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const [discounts, total] = await Promise.all([
-      populateDiscounts(Discounts.find(filter))
+    const [discountsRaw, total] = await Promise.all([
+      Discounts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts.countDocuments(filter)
     ]);
+
+    const discounts = await populateDiscounts(discountsRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -184,23 +236,24 @@ const getAllDiscounts = asyncHandler(async (req, res) => {
 const getDiscountById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    let discount;
+    let discountRaw;
 
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      discount = await populateDiscounts(Discounts.findById(id));
+      discountRaw = await Discounts.findById(id);
     } else {
       const discountId = parseInt(id, 10);
       if (isNaN(discountId)) {
         return sendNotFound(res, 'Invalid discount ID format');
       }
-      discount = await populateDiscounts(Discounts.findOne({ Discounts_id: discountId }));
+      discountRaw = await Discounts.findOne({ Discounts_id: discountId });
     }
 
-    if (!discount) {
+    if (!discountRaw) {
       return sendNotFound(res, 'Discount not found');
     }
 
-    console.info('Discount retrieved successfully', { id: discount._id });
+    const discount = await populateDiscounts(discountRaw);
+    console.info('Discount retrieved successfully', { id: discountRaw._id });
     sendSuccess(res, discount, 'Discount retrieved successfully');
   } catch (error) {
     console.error('Error retrieving discount', { error: error.message, id: req.params.id });
@@ -258,7 +311,7 @@ const updateDiscount = asyncHandler(async (req, res) => {
       return sendNotFound(res, 'Discount not found');
     }
 
-    const populated = await populateDiscounts(Discounts.findById(discount._id));
+    const populated = await populateDiscounts(discount);
     console.info('Discount updated successfully', { id: discount._id });
     sendSuccess(res, populated, 'Discount updated successfully');
   } catch (error) {
@@ -333,13 +386,15 @@ const getDiscountsByTypeId = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [discounts, total] = await Promise.all([
-      populateDiscounts(Discounts.find(filter))
+    const [discountsRaw, total] = await Promise.all([
+      Discounts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts.countDocuments(filter)
     ]);
+
+    const discounts = await populateDiscounts(discountsRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -385,13 +440,15 @@ const getDiscountsByAuth = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [discounts, total] = await Promise.all([
-      populateDiscounts(Discounts.find(filter))
+    const [discountsRaw, total] = await Promise.all([
+      Discounts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts.countDocuments(filter)
     ]);
+
+    const discounts = await populateDiscounts(discountsRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {
@@ -446,13 +503,15 @@ const getDiscountsByBusinessBranchId = asyncHandler(async (req, res) => {
     const numericPage = Math.max(parseInt(page, 10) || 1, 1);
     const skip = (numericPage - 1) * numericLimit;
 
-    const [discounts, total] = await Promise.all([
-      populateDiscounts(Discounts.find(filter))
+    const [discountsRaw, total] = await Promise.all([
+      Discounts.find(filter)
         .sort(sort)
         .skip(skip)
         .limit(numericLimit),
       Discounts.countDocuments(filter)
     ]);
+
+    const discounts = await populateDiscounts(discountsRaw);
 
     const totalPages = Math.ceil(total / numericLimit) || 1;
     const pagination = {

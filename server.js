@@ -161,10 +161,10 @@ if (!isVercel) {
     logger.info(`Health Check: http://localhost:${PORT}/api/v2/health`);
   });
 
-  // Initialize Socket.io only in non-serverless environment
+  // Initialize Socket.io directly - Socket.io only (no REST API endpoints)
   try {
-    const { initializeSocket } = require('./src/routes/Chat/SocketChat.routes');
-    io = initializeSocket(server);
+    const { setupSocket } = require('./src/routes/Chat/SocketChat.routes');
+    io = setupSocket(server);
     logger.info('Socket.io initialized successfully');
   } catch (error) {
     logger.warn('Socket.io initialization skipped', { error: error.message });
