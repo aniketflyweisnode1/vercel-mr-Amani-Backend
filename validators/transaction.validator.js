@@ -287,11 +287,13 @@ const getTransactionsByAuthSchema = Joi.object({
     .optional()
     .default(10),
   status: Joi.string()
-    .valid('pending', 'completed', 'failed', 'requires_payment_method')
-    .optional(),
+    .valid('pending', 'completed', 'failed', 'requires_payment_method', 'processing')
+    .optional()
+    .allow(''),
   transactionType: Joi.string()
-    .valid('Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund')
-    .optional(),
+    .valid('Registration_fee', 'deposit', 'withdraw', 'Order_Now_Payment', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack', 'Payout')
+    .optional()
+    .allow(''),
   business_Branch_id: Joi.number()
     .integer()
     .positive()

@@ -234,8 +234,16 @@ const getTransactionsByAuth = asyncHandler(async (req, res) => {
     const skip = (numericPage - 1) * numericLimit;
     
     const filter = { user_id: req.userIdNumber };
-    if (status !== undefined) filter.status = status;
-    if (transactionType) filter.transactionType = transactionType;
+    
+    // Filter by status
+    if (status !== undefined && status !== null && status !== '') {
+      filter.status = status;
+    }
+    
+    // Filter by transactionType
+    if (transactionType !== undefined && transactionType !== null && transactionType !== '') {
+      filter.transactionType = transactionType;
+    }
     if (business_Branch_id) {
       const branchId = parseInt(business_Branch_id, 10);
       if (!Number.isNaN(branchId) && branchId > 0) {

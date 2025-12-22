@@ -523,7 +523,8 @@ const getRefundsDisputes = asyncHandler(async (req, res) => {
     const PastRefunds = currentMonthRefunds.map(r => ({
       ProductDetails: r.metadata || 'N/A',
       Refundedamount: r.amount || 0,
-      Status: r.status || 'completed'
+      Status: r.status || 'completed',
+      imagesScreenshot: r.imageScreenshot || r.imagesScreenshot || null // Add screenshot if available in transaction
     }));
 
     const OngoinDisputes = disputes
@@ -531,7 +532,8 @@ const getRefundsDisputes = asyncHandler(async (req, res) => {
       .map(d => ({
         ProductDetails: d.Description || 'N/A',
         Refundedamount: 0, // Would need to link to actual refund amount
-        Status: d.Status ? 'active' : 'resolved'
+        Status: d.Status ? 'active' : 'resolved',
+        imagesScreenshot: d.imageScreenshot || null // Add screenshot from dispute model
       }));
 
     sendSuccess(res, {
