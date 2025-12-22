@@ -123,20 +123,37 @@ const findByIdentifier = async (identifier) => {
 
 const createEffects = asyncHandler(async (req, res) => {
   try {
-    const { Effects_Categorys_id } = req.body;
-    if (!(await ensureCategoryExists(Effects_Categorys_id))) {
+    const { Effects_Categorys_id, image, video, name, Description, Status } = req.body;
+    
+    // Validate and convert Effects_Categorys_id to number
+    const categoryId = typeof Effects_Categorys_id === 'string' 
+      ? parseInt(Effects_Categorys_id, 10) 
+      : Effects_Categorys_id;
+    
+    if (Number.isNaN(categoryId) || categoryId <= 0) {
+      return sendError(res, 'Invalid Effects Category ID format', 400);
+    }
+    
+    if (!(await ensureCategoryExists(categoryId))) {
       return sendError(res, 'Effects category not found', 400);
     }
+    
     const payload = {
-      ...req.body,
+      Effects_Categorys_id: categoryId,
+      image: image || undefined,
+      video: video || undefined,
+      name: name?.trim(),
+      Description: Description?.trim() || undefined,
+      Status: Status !== undefined ? Status : true,
       created_by: req.userIdNumber || null
     };
+    
     const effect = await Effects.create(payload);
     const effectObj = effect.toObject ? effect.toObject() : effect;
     const populated = await populateEffectsData(effectObj);
     sendSuccess(res, populated, 'Effect created successfully', 201);
   } catch (error) {
-    console.error('Error creating effect', { error: error.message });
+    console.error('Error creating effect', { error: error.message, stack: error.stack });
     throw error;
   }
 });
@@ -191,15 +208,38 @@ const getEffectsById = asyncHandler(async (req, res) => {
 const updateEffects = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { Effects_Categorys_id } = req.body;
-    if (Effects_Categorys_id !== undefined && !(await ensureCategoryExists(Effects_Categorys_id))) {
-      return sendError(res, 'Effects category not found', 400);
-    }
+    const { Effects_Categorys_id, image, video, name, Description, Status } = req.body;
+    
+    // Build update payload with proper type conversion
     const updatePayload = {
-      ...req.body,
       updated_by: req.userIdNumber || null,
       updated_at: new Date()
     };
+    
+    // Convert and validate Effects_Categorys_id if provided
+    if (Effects_Categorys_id !== undefined) {
+      const categoryId = typeof Effects_Categorys_id === 'string' 
+        ? parseInt(Effects_Categorys_id, 10) 
+        : Effects_Categorys_id;
+      
+      if (Number.isNaN(categoryId) || categoryId <= 0) {
+        return sendError(res, 'Invalid Effects Category ID format', 400);
+      }
+      
+      if (!(await ensureCategoryExists(categoryId))) {
+        return sendError(res, 'Effects category not found', 400);
+      }
+      
+      updatePayload.Effects_Categorys_id = categoryId;
+    }
+    
+    // Add other fields if provided
+    if (image !== undefined) updatePayload.image = image || undefined;
+    if (video !== undefined) updatePayload.video = video || undefined;
+    if (name !== undefined) updatePayload.name = name?.trim();
+    if (Description !== undefined) updatePayload.Description = Description?.trim() || undefined;
+    if (Status !== undefined) updatePayload.Status = Status;
+    
     let effect;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       effect = await Effects.findByIdAndUpdate(id, updatePayload, { new: true, runValidators: true });
@@ -217,7 +257,7 @@ const updateEffects = asyncHandler(async (req, res) => {
     const populated = await populateEffectsData(effectObj);
     sendSuccess(res, populated, 'Effect updated successfully');
   } catch (error) {
-    console.error('Error updating effect', { error: error.message, id: req.params.id });
+    console.error('Error updating effect', { error: error.message, stack: error.stack, id: req.params.id });
     throw error;
   }
 });
