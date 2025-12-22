@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Import controllers
-const { createUser, getAllUsers, getUserById, updateUser, deleteUser, activeDeviceLocation, getbyAuthProfile, updateLanguage } = require('../../controllers/user.controller.js');
+const { createUser, getAllUsers, getUserById, updateUser, deleteUser, activeDeviceLocation, getbyAuthProfile, generateQRCode, generateQRCodeImage, updateLanguage } = require('../../controllers/user.controller.js');
 
 // Import middleware
 const { auth } = require('../../../middleware/auth.js');
@@ -19,6 +19,8 @@ router.put('/update/:id', auth, updateUser);
 router.delete('/delete/:id', auth, validateParams(getUserByIdSchema), deleteUser);
 router.put('/activeDeviceLocation', auth, activeDeviceLocation);
 router.get('/getbyAuthProfile', auth, getbyAuthProfile);
+router.get('/qrcode/:id', generateQRCode);
+router.get('/qrcode/:id/image', generateQRCodeImage);
 router.put('/updateLanguage', auth, validateBody(updateLanguageSchema), updateLanguage);
 
 module.exports = router;

@@ -13,6 +13,7 @@ const Influencer = require('../models/Influencer.model');
 const Reel_Follow = require('../models/Reel_Follow.model');
 const Reel = require('../models/Reel.model');
 const Reel_Like = require('../models/Reel_Like.model');
+const QRCode = require('qrcode');
 const { sendSuccess, sendError, sendNotFound, sendPaginated, sendUnauthorized } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -878,6 +879,133 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Generate QR Code for user profile
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const generateQRCode = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Parse user ID
+    let userId;
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      // MongoDB ObjectId - find user by _id and get user_id
+      const user = await User.findById(id).select('user_id');
+      if (!user) return sendNotFound(res, 'User not found');
+      userId = user.user_id;
+    } else {
+      userId = parseInt(id, 10);
+      if (isNaN(userId)) return sendError(res, 'Invalid user ID format', 400);
+    }
+    
+    // Verify user exists
+    const user = await User.findOne({ user_id: userId, status: true })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (!user) {
+      return sendNotFound(res, 'User not found');
+    }
+    
+    // Generate profile URL
+    const baseUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 'http://localhost:3000';
+    const profileUrl = `${baseUrl}/profile/${userId}`;
+    
+    // Generate QR code as data URL (base64)
+    const qrCodeDataUrl = await QRCode.toDataURL(profileUrl, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: 300
+    });
+    
+    // Extract base64 data from data URL
+    const base64Data = qrCodeDataUrl.split(',')[1];
+    
+    console.info('QR code generated successfully', { userId, profileUrl });
+    
+    // Return QR code as base64 image data
+    sendSuccess(res, {
+      qrCode: qrCodeDataUrl,
+      qrCodeBase64: base64Data,
+      profileUrl: profileUrl,
+      userId: userId,
+      user: {
+        user_id: user.user_id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        BusinessName: user.BusinessName
+      }
+    }, 'QR code generated successfully');
+  } catch (error) {
+    console.error('Error generating QR code', { error: error.message, userId: req.params.id });
+    throw error;
+  }
+});
+
+/**
+ * Generate QR Code Image (returns image directly)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const generateQRCodeImage = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Parse user ID
+    let userId;
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      // MongoDB ObjectId - find user by _id and get user_id
+      const user = await User.findById(id).select('user_id');
+      if (!user) return sendNotFound(res, 'User not found');
+      userId = user.user_id;
+    } else {
+      userId = parseInt(id, 10);
+      if (isNaN(userId)) return sendError(res, 'Invalid user ID format', 400);
+    }
+    
+    // Verify user exists
+    const user = await User.findOne({ user_id: userId, status: true })
+      .select('user_id');
+    if (!user) {
+      return sendNotFound(res, 'User not found');
+    }
+    
+    // Generate profile URL
+    const baseUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 'http://localhost:3000';
+    const profileUrl = `${baseUrl}/profile/${userId}`;
+    
+    // Generate QR code as buffer
+    const qrCodeBuffer = await QRCode.toBuffer(profileUrl, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: 300
+    });
+    
+    console.info('QR code image generated successfully', { userId, profileUrl });
+    
+    // Set headers and send image
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `inline; filename="qrcode-${userId}.png"`);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.send(qrCodeBuffer);
+  } catch (error) {
+    console.error('Error generating QR code image', { error: error.message, userId: req.params.id });
+    throw error;
+  }
+});
+
+/**
  * Update Language for authenticated user
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -960,5 +1088,7 @@ module.exports = {
   changePassword,
   activeDeviceLocation,
   getbyAuthProfile,
+  generateQRCode,
+  generateQRCodeImage,
   updateLanguage
 };

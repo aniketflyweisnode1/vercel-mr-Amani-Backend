@@ -48,7 +48,7 @@ const setupSocket = (server) => {
       const url = req.url || '';
       const headers = req.headers || {};
       const method = req.method || '';
-      
+
       // Explicitly reject REST API routes - they use HTTP/HTTPS transport
       if (url.startsWith('/api/')) {
         // REST API uses HTTP/HTTPS, not WebSocket
@@ -304,7 +304,7 @@ const setupSocket = (server) => {
      */
     socket.on('typing', (data) => {
       try {
-        const { receiverId, isTyping } = data;
+      const { receiverId, isTyping } = data;
         
         if (!receiverId) {
           socket.emit('error', { message: 'Receiver ID is required' });
