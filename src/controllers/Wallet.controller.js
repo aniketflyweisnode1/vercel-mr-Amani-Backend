@@ -1,6 +1,46 @@
 ﻿const Wallet = require('../models/Wallet.model');
+const User = require('../models/User.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
+
+// Helper function to populate wallet data with user information
+const populateWalletData = async (wallet) => {
+  if (!wallet) return null;
+  
+  const walletObj = wallet.toObject ? wallet.toObject() : wallet;
+  
+  // Populate user_id (wallet owner)
+  if (walletObj.user_id) {
+    const userId = typeof walletObj.user_id === 'object' ? walletObj.user_id : walletObj.user_id;
+    const user = await User.findOne({ user_id: userId })
+      .select('user_id firstName lastName phoneNo BusinessName Email user_image');
+    if (user) {
+      walletObj.user_id = user.toObject ? user.toObject() : user;
+    }
+  }
+  
+  // Populate created_by
+  if (walletObj.created_by) {
+    const createdById = typeof walletObj.created_by === 'object' ? walletObj.created_by : walletObj.created_by;
+    const createdBy = await User.findOne({ user_id: createdById })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (createdBy) {
+      walletObj.created_by = createdBy.toObject ? createdBy.toObject() : createdBy;
+    }
+  }
+  
+  // Populate updated_by
+  if (walletObj.updated_by) {
+    const updatedById = typeof walletObj.updated_by === 'object' ? walletObj.updated_by : walletObj.updated_by;
+    const updatedBy = await User.findOne({ user_id: updatedById })
+      .select('user_id firstName lastName phoneNo BusinessName Email');
+    if (updatedBy) {
+      walletObj.updated_by = updatedBy.toObject ? updatedBy.toObject() : updatedBy;
+    }
+  }
+  
+  return walletObj;
+};
 
 
 const createWallet = asyncHandler(async (req, res) => {
@@ -67,8 +107,12 @@ const getWalletById = asyncHandler(async (req, res) => {
       wallet = await Wallet.findOne({ wallet_id: walletId });
     }
     if (!wallet) return sendNotFound(res, 'Wallet not found');
-    console.info('Wallet retrieved successfully', { walletId: wallet._id });
-    sendSuccess(res, wallet, 'Wallet retrieved successfully');
+    
+    // Populate wallet data with user information
+    const populatedWallet = await populateWalletData(wallet);
+    
+    console.info('Wallet retrieved successfully', { walletId: wallet._id, wallet_id: wallet.wallet_id });
+    sendSuccess(res, populatedWallet, 'Wallet retrieved successfully');
   } catch (error) {
     console.error('Error retrieving wallet', { error: error.message, walletId: req.params.id });
     throw error;
