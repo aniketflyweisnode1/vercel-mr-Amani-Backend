@@ -408,10 +408,35 @@ const getRevenue = asyncHandler(async (req, res) => {
     const lastOrdersCount = lastMonthTransactions.length;
 
     // Unique customers (simplified - would need actual user tracking)
-    const currentCustomers = new Set(currentMonthTransactions.map(t => t.user_id?.toString())).size;
-    const lastCustomers = new Set(lastMonthTransactions.map(t => t.user_id?.toString())).size;
+    const currentCustomerIds = new Set(currentMonthTransactions.map(t => t.user_id?.toString()).filter(Boolean));
+    const lastCustomerIds = new Set(lastMonthTransactions.map(t => t.user_id?.toString()).filter(Boolean));
+    const currentCustomers = currentCustomerIds.size;
+    const lastCustomers = lastCustomerIds.size;
+
+    // Calculate customer retention (customers who returned from last month)
+    const retainedCustomers = new Set([...currentCustomerIds].filter(id => lastCustomerIds.has(id))).size;
+    const CustomerRetention = lastCustomers > 0 
+      ? parseFloat(((retainedCustomers / lastCustomers) * 100).toFixed(2))
+      : 0;
+
+    // Calculate new customers (customers who didn't order last month)
+    const newCustomers = currentCustomers - retainedCustomers;
 
     const AvgOrderRsCount = currentOrdersCount > 0 ? currentRevenue / currentOrdersCount : 0;
+    
+    // Calculate Revenue Growth
+    const RevenueGrowth = calculatePercentageGrowth(currentRevenue, lastRevenue);
+    
+    // Calculate Conversion Rate (orders per unique customer)
+    // This is a simplified conversion rate - actual would need visitor/session data
+    const ConversionRate = currentCustomers > 0 
+      ? parseFloat(((currentOrdersCount / currentCustomers) * 100).toFixed(2))
+      : 0;
+    
+    // Calculate Average Session (average orders per customer)
+    const AverageSession = currentCustomers > 0 
+      ? parseFloat((currentOrdersCount / currentCustomers).toFixed(2))
+      : 0;
 
     // Revenue trend chart (monthly for last 12 months)
     const chart = [];
@@ -453,6 +478,26 @@ const getRevenue = asyncHandler(async (req, res) => {
       OtherpercentageCount: 100
     };
 
+    // Calculate Monthly Goals (based on 10-15% growth target from last month)
+    const RevenueTargetcount = Math.round(lastRevenue * 1.15); // 15% growth target
+    const OrderTargetCount = Math.round(lastOrdersCount * 1.10); // 10% growth target
+    const NewCustomerscount = Math.round(lastCustomers * 0.20); // 20% new customer target
+
+    // Analytics Tab
+    const Analytics = {
+      PreformanceMetrics: {
+        RevenueGrowth: parseFloat(RevenueGrowth.toFixed(2)),
+        CustomerRetention: CustomerRetention,
+        ConversionRate: ConversionRate,
+        AverageSession: AverageSession
+      },
+      MonthlyGoals: {
+        RevenueTargetcount: RevenueTargetcount,
+        OrderTargetCount: OrderTargetCount,
+        NewCustomerscount: NewCustomerscount
+      }
+    };
+
     sendSuccess(res, {
       TotalRevenuecount: {
         count: currentRevenue,
@@ -475,7 +520,8 @@ const getRevenue = asyncHandler(async (req, res) => {
         percentageGorth: calculatePercentageGrowth(currentRevenue, lastRevenue),
         data: chart
       },
-      RevenueByCategory
+      RevenueByCategory,
+      Analytics
     }, 'Revenue data retrieved successfully');
   } catch (error) {
     console.error('Error retrieving revenue data', { error: error.message });

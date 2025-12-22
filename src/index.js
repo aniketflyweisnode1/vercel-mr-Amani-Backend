@@ -123,6 +123,7 @@ const RestaurantWebsiteOwnDomainRoutes = require('./routes/Restaurant/Restaurant
 const RestaurantWebsiteIntegrateRoutes = require('./routes/Restaurant/Restaurant_website_Integrate.routes');
 const RestaurantWebsiteSettingsRoutes = require('./routes/Restaurant/Restaurant_website_Settings.routes');
 const RestaurantWebsiteDashboardRoutes = require('./routes/Restaurant/Restaurant_website_Dashboard.routes');
+const BusinessDashboardRoutes = require('./routes/Restaurant/BusinessDashboard.routes');
 const RestaurantMobileAppRoutes = require('./routes/Restaurant/Restaurant_Mobile_app.routes');
 const RestaurantMobileReportsFilterRoutes = require('./routes/Restaurant/Restaurant_Mobile_Reports_filter.routes');
 const ReportsRoutes = require('./routes/Restaurant/Reports.routes');
@@ -332,6 +333,7 @@ router.use('/Restaurant_website_OwnDomain', RestaurantWebsiteOwnDomainRoutes);
 router.use('/Restaurant_website_Integrate', RestaurantWebsiteIntegrateRoutes);
 router.use('/Restaurant_website_Settings', RestaurantWebsiteSettingsRoutes);
 router.use('/Restaurant_website_Dashboard', RestaurantWebsiteDashboardRoutes);
+router.use('/businessDashboard', BusinessDashboardRoutes);
 router.use('/Restaurant_Mobile_app', RestaurantMobileAppRoutes);
 router.use('/Restaurant_Mobile_Reports_filter', RestaurantMobileReportsFilterRoutes);
 router.use('/Reports', ReportsRoutes);
