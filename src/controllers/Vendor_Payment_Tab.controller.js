@@ -118,7 +118,7 @@ const getTaxesTab = asyncHandler(async (req, res) => {
         count: currentTaxLiability,
         percentageGrowth: calculatePercentageGrowth(currentTaxLiability, lastTaxLiability)
       },
-      TaxRates,
+      TaxRates: taxRates,
       Reports: [] // Add detailed reports if needed
     }, 'Taxes tab data retrieved successfully');
   } catch (error) {
