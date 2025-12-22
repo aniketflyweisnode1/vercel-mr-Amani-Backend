@@ -11,6 +11,8 @@ const BusinessType = require('../models/businessType.model');
 const Subscription = require('../models/subscription.model');
 const Influencer = require('../models/Influencer.model');
 const Reel_Follow = require('../models/Reel_Follow.model');
+const Reel = require('../models/Reel.model');
+const Reel_Like = require('../models/Reel_Like.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated, sendUnauthorized } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -809,7 +811,7 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
     // Get followers and following counts
     // Followers: Count of users who follow this user (Reel_Follow where Real_Post_id is created by this user)
     // Following: Count of reels/posts this user follows
-    const [followersCount, followingCount] = await Promise.all([
+    const [followersCount, followingCount, postCount, likeCount] = await Promise.all([
       // Count followers - users who follow this user's reels/posts
       Reel_Follow.countDocuments({ 
         Real_Post_id: { $exists: true }, // This would need to be linked to user's reels
@@ -819,11 +821,34 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
       Reel_Follow.countDocuments({ 
         Follow_by: req.userIdNumber, 
         Status: true 
-      })
+      }),
+      // Count posts - reels/posts created by this user
+      Reel.countDocuments({ 
+        created_by: req.userIdNumber,
+        Status: true 
+      }),
+      // Count total likes on all posts created by this user
+      (async () => {
+        // Get all post IDs created by this user
+        const userPosts = await Reel.find({ 
+          created_by: req.userIdNumber,
+          Status: true 
+        }).select('Real_Post_id');
+        const postIds = userPosts.map(post => post.Real_Post_id);
+        
+        // Count total likes on these posts
+        if (postIds.length === 0) return 0;
+        return Reel_Like.countDocuments({ 
+          Real_Post_id: { $in: postIds },
+          Status: true 
+        });
+      })()
     ]);
 
     userProfile.followersCount = followersCount;
     userProfile.followingCount = followingCount;
+    userProfile.postCount = postCount;
+    userProfile.likeCount = likeCount;
 
     // Generate QR Code URL for profile
     // QR code will contain profile URL or user ID
@@ -840,7 +865,9 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
       hasBusinessDetails: !!userProfile.businessDetails,
       hasInfluencer: !!userProfile.influencer,
       followersCount: userProfile.followersCount,
-      followingCount: userProfile.followingCount
+      followingCount: userProfile.followingCount,
+      postCount: userProfile.postCount,
+      likeCount: userProfile.likeCount
     });
 
     sendSuccess(res, userProfile, 'User profile retrieved successfully');

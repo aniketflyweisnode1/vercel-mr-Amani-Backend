@@ -21,32 +21,8 @@
 const express = require('express');
 const router = express.Router();
 const { validateQuery, validateBody, validateParams } = require('../../../middleware/validation');
-const { 
-  searchStoresByLocation, 
-  createMealMeOrder,
-  searchProductsByQuery,
-  createMealMeCart,
-  addItemToMealMeCart,
-  updateMealMeCartItem,
-  createMealMeOrderV2,
-  getMealMePaymentIntent,
-  getMealMePaymentLink,
-  submitMealMeOrder
-} = require('../../controllers/MealMe.controller');
-const { 
-  searchStoresSchema, 
-  createOrderSchema,
-  searchProductsSchema,
-  createCartSchema,
-  addItemToCartSchema,
-  updateCartItemSchema,
-  createOrderV2Schema,
-  submitOrderSchema,
-  orderIdParamSchema,
-  cartIdParamSchema,
-  itemIdParamSchema,
-  cartItemParamsSchema
-} = require('../../../validators/MealMe.validator');
+const { searchStoresByLocation, createMealMeOrder, searchProductsByQuery, createMealMeCart, addItemToMealMeCart, updateMealMeCartItem, createMealMeOrderV2, getMealMePaymentIntent, getMealMePaymentLink, submitMealMeOrder } = require('../../controllers/MealMe.controller');
+const { searchStoresSchema, createOrderSchema, searchProductsSchema, createCartSchema, addItemToCartSchema, updateCartItemSchema, createOrderV2Schema, submitOrderSchema, orderIdParamSchema, cartIdParamSchema, itemIdParamSchema, cartItemParamsSchema } = require('../../../validators/MealMe.validator');
 
 /**
  * @route   GET /api/v2/mealme/search-stores
