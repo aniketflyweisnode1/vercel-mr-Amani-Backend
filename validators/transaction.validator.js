@@ -30,11 +30,11 @@ const createTransactionSchema = Joi.object({
       'any.required': 'Amount is required'
     }),
   status: Joi.string()
-    .valid('pending', 'completed', 'failed', 'requires_payment_method')
+    .valid('pending', 'completed', 'failed', 'requires_payment_method', 'processing')
     .optional()
     .default('pending')
     .messages({
-      'any.only': 'Status must be one of: pending, completed, failed, requires_payment_method'
+      'any.only': 'Status must be one of: pending, completed, failed, requires_payment_method, processing'
     }),
   payment_method_id: Joi.number()
     .integer()
@@ -47,10 +47,10 @@ const createTransactionSchema = Joi.object({
       'any.required': 'Payment method ID is required'
     }),
   transactionType: Joi.string()
-    .valid('Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund')
+    .valid('Registration_fee', 'deposit', 'withdraw', 'Order_Now_Payment', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack', 'Payout')
     .required()
     .messages({
-      'any.only': 'Transaction type must be one of: Registration_fee, deposit, withdraw, Plan_Buy, Recharge, refund',
+      'any.only': 'Transaction type must be one of: Registration_fee, deposit, withdraw, Order_Now_Payment, Plan_Buy, Recharge, refund, ChargeBack, Payout',
       'any.required': 'Transaction type is required'
     }),
   transaction_date: Joi.date()
@@ -150,14 +150,14 @@ const updateTransactionSchema = Joi.object({
     .min(0)
     .optional(),
   status: Joi.string()
-    .valid('pending', 'completed', 'failed', 'requires_payment_method')
+    .valid('pending', 'completed', 'failed', 'requires_payment_method', 'processing')
     .optional(),
   payment_method_id: Joi.number()
     .integer()
     .positive()
     .optional(),
   transactionType: Joi.string()
-    .valid('Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund')
+    .valid('Registration_fee', 'deposit', 'withdraw', 'Order_Now_Payment', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack', 'Payout')
     .optional(),
   transaction_date: Joi.date()
     .optional(),
@@ -248,10 +248,10 @@ const getAllTransactionsSchema = Joi.object({
     .optional()
     .allow(''),
   status: Joi.string()
-    .valid('pending', 'completed', 'failed', 'requires_payment_method')
+    .valid('pending', 'completed', 'failed', 'requires_payment_method', 'processing')
     .optional(),
   transactionType: Joi.string()
-    .valid('Registration_fee', 'deposit', 'withdraw', 'Plan_Buy', 'Recharge', 'refund')
+    .valid('Registration_fee', 'deposit', 'withdraw', 'Order_Now_Payment', 'Plan_Buy', 'Recharge', 'refund', 'ChargeBack', 'Payout')
     .optional(),
   user_id: Joi.number()
     .integer()
