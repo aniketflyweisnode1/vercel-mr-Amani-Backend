@@ -99,6 +99,8 @@ const getWalletById = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     let wallet;
+    
+    // First, try to find wallet by wallet_id or MongoDB ObjectId
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
       wallet = await Wallet.findById(id);
     } else {
@@ -106,12 +108,48 @@ const getWalletById = asyncHandler(async (req, res) => {
       if (isNaN(walletId)) return sendNotFound(res, 'Invalid wallet ID format');
       wallet = await Wallet.findOne({ wallet_id: walletId });
     }
-    if (!wallet) return sendNotFound(res, 'Wallet not found');
+    
+    // If wallet not found, try to treat ID as user_id and auto-create wallet
+    if (!wallet) {
+      const userId = parseInt(id, 10);
+      if (isNaN(userId)) {
+        return sendNotFound(res, 'Wallet not found');
+      }
+      
+      // Check if user exists
+      const user = await User.findOne({ user_id: userId, status: true });
+      if (!user) {
+        return sendNotFound(res, 'User not found. Cannot create wallet for non-existent user.');
+      }
+      
+      // Check if wallet already exists for this user (in case of race condition)
+      wallet = await Wallet.findOne({ user_id: userId });
+      
+      // If still no wallet, create one with 0 balance
+      if (!wallet) {
+        wallet = await Wallet.create({
+          user_id: userId,
+          Amount: 0,
+          HoldAmount: 0,
+          Status: true,
+          created_by: req.userIdNumber || userId
+        });
+        console.info('Wallet auto-created successfully', { 
+          walletId: wallet._id, 
+          wallet_id: wallet.wallet_id, 
+          user_id: userId 
+        });
+      }
+    }
     
     // Populate wallet data with user information
     const populatedWallet = await populateWalletData(wallet);
     
-    console.info('Wallet retrieved successfully', { walletId: wallet._id, wallet_id: wallet.wallet_id });
+    console.info('Wallet retrieved successfully', { 
+      walletId: wallet._id, 
+      wallet_id: wallet.wallet_id,
+      user_id: wallet.user_id 
+    });
     sendSuccess(res, populatedWallet, 'Wallet retrieved successfully');
   } catch (error) {
     console.error('Error retrieving wallet', { error: error.message, walletId: req.params.id });
