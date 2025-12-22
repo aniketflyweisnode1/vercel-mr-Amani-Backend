@@ -21,6 +21,8 @@ const setupSocket = (server) => {
   }
 
   // Initialize Socket.IO with root path
+  // Note: Socket.IO will only handle WebSocket connections
+  // REST API routes (/api/*) use HTTP/HTTPS transport and are handled by Express
   io = socketIo(server, {
     path: '/',
     cors: {
@@ -28,7 +30,7 @@ const setupSocket = (server) => {
       methods: ['GET', 'POST'],
       credentials: true
     },
-    transports: ['websocket', 'polling'],
+    transports: ['websocket', 'polling'], // Socket.IO transports (WebSocket only)
     allowEIO3: true, // Allow Socket.IO v3 clients
     upgradeTimeout: 10000,
     pingTimeout: 60000,
@@ -39,7 +41,40 @@ const setupSocket = (server) => {
       concurrencyLimit: 10,
       memLevel: 7
     },
-    maxHttpBufferSize: 1e6 // 1MB
+    maxHttpBufferSize: 1e6, // 1MB
+    // Only handle Socket.IO WebSocket handshake requests
+    // Reject all REST API requests (HTTP/HTTPS) - they should be handled by Express
+    allowRequest: (req, callback) => {
+      const url = req.url || '';
+      const headers = req.headers || {};
+      const method = req.method || '';
+      
+      // Explicitly reject REST API routes - they use HTTP/HTTPS transport
+      if (url.startsWith('/api/')) {
+        // REST API uses HTTP/HTTPS, not WebSocket
+        return callback(null, false); // Reject - let Express handle HTTP/HTTPS
+      }
+      
+      // Reject standard HTTP methods for REST API (GET, POST, PUT, DELETE, PATCH)
+      // These should use HTTP/HTTPS transport, not WebSocket
+      if (['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(method) && 
+          !url.includes('EIO=') && 
+          !url.includes('transport=') &&
+          headers.upgrade !== 'websocket') {
+        // This is a REST API HTTP/HTTPS request, not a WebSocket connection
+        return callback(null, false); // Reject - use HTTP/HTTPS transport
+      }
+      
+      // Only allow Socket.IO WebSocket handshake requests
+      const isSocketIORequest = 
+        url.includes('EIO=') || // Socket.IO handshake query parameter (e.g., ?EIO=4)
+        url.includes('transport=') || // Transport parameter
+        (headers.upgrade && headers.upgrade.toLowerCase() === 'websocket') || // WebSocket upgrade header
+        (headers.connection && headers.connection.toLowerCase().includes('upgrade')); // Connection upgrade
+      
+      // Allow only WebSocket connections, reject HTTP/HTTPS REST API requests
+      callback(null, isSocketIORequest);
+    }
   });
 
   // Socket.IO authentication middleware
@@ -104,14 +139,24 @@ const setupSocket = (server) => {
   // Handle connection errors - only log Socket.IO specific errors
   io.engine.on('connection_error', (err) => {
     const reqUrl = err.req?.url || '';
+    const headers = err.req?.headers || {};
     
-    // Ignore errors from regular HTTP API requests (not Socket.IO requests)
-    // Socket.IO requests typically have query params like ?EIO=4&transport=websocket
-    // or are WebSocket upgrade requests
-    if (reqUrl && !reqUrl.includes('EIO=') && !reqUrl.includes('transport=') && 
-        !err.req?.headers?.['upgrade'] && !err.req?.headers?.['connection']?.includes('Upgrade')) {
-      // This is a regular HTTP request, not a Socket.IO connection attempt
-      // Silently ignore it to avoid cluttering logs
+    // Ignore errors from REST API requests - they should be handled by Express
+    if (reqUrl.startsWith('/api/')) {
+      // This is a REST API request, not a Socket.IO connection attempt
+      // Silently ignore it - it should be handled by Express routes
+      return;
+    }
+    
+    // Check if this is actually a Socket.IO request
+    const isSocketIORequest = 
+      reqUrl.includes('EIO=') || 
+      reqUrl.includes('transport=') || 
+      headers.upgrade === 'websocket' || 
+      headers.connection?.toLowerCase().includes('upgrade');
+    
+    if (!isSocketIORequest) {
+      // This is not a Socket.IO request, ignore the error
       return;
     }
     
