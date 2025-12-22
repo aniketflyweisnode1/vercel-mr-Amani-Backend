@@ -26,7 +26,7 @@ router.get('/getAll', validateQuery(getAllEffectsSchema), getAllEffects);
 router.get('/getById/:id', auth, validateParams(getEffectsByIdSchema), getEffectsById);
 router.put('/update/:id', auth, validateParams(getEffectsByIdSchema), validateBody(updateEffectsSchema), updateEffects);
 router.delete('/delete/:id', auth, validateParams(getEffectsByIdSchema), deleteEffects);
-router.get('/getByCategoryId/:Effects_Categorys_id', validateParams(getEffectsByCategoryIdParamsSchema), validateQuery(getEffectsByCategoryIdQuerySchema), getEffectsByCategoryId);
+router.get('/getByCategoryId/:id', validateParams(getEffectsByCategoryIdParamsSchema), validateQuery(getEffectsByCategoryIdQuerySchema), getEffectsByCategoryId);
 router.get('/getByAuth', auth, validateQuery(getEffectsByAuthSchema), getEffectsByAuth);
 
 module.exports = router;

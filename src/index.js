@@ -22,6 +22,7 @@ const ProfilePageRoutes = require('./routes/SocialMedia/ProfilePage.routes');
 const InfluencerRoutes = require('./routes/SocialMedia/Influencer.routes');
 const EffectsCategorysRoutes = require('./routes/SocialMedia/Effects_Categorys.routes');
 const EffectsRoutes = require('./routes/SocialMedia/Effects.routes');
+const StoryRoutes = require('./routes/SocialMedia/Story.routes');
 // Import Master routes
 const RoleRoutes = require('./routes/Master/Role.routes');
 const ServicesRoutes = require('./routes/Master/Services.routes');
@@ -253,6 +254,7 @@ router.use('/ProfilePage', ProfilePageRoutes);
 router.use('/Influencer', InfluencerRoutes);
 router.use('/Effects_Categorys', EffectsCategorysRoutes);
 router.use('/Effects', EffectsRoutes);
+router.use('/Story', StoryRoutes);
 router.use('/Role', RoleRoutes);
 router.use('/Services', ServicesRoutes);
 router.use('/Category', CategoryRoutes);

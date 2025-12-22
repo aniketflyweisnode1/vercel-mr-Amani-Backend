@@ -198,7 +198,8 @@ const deleteEffects = asyncHandler(async (req, res) => {
 
 const getEffectsByCategoryId = asyncHandler(async (req, res) => {
   try {
-    const { Effects_Categorys_id } = req.params;
+    const { id } = req.params;
+    const Effects_Categorys_id = id;
     const {
       page = 1,
       limit = 10,

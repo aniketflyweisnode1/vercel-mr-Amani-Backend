@@ -9,6 +9,8 @@ const Wallet = require('../models/Wallet.model');
 const Business_Details = require('../models/Business_Details.model');
 const BusinessType = require('../models/businessType.model');
 const Subscription = require('../models/subscription.model');
+const Influencer = require('../models/Influencer.model');
+const Reel_Follow = require('../models/Reel_Follow.model');
 const { sendSuccess, sendError, sendNotFound, sendPaginated, sendUnauthorized } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
@@ -796,12 +798,49 @@ const getbyAuthProfile = asyncHandler(async (req, res) => {
       userProfile.businessDetails = await populateBusinessDetailsData(businessDetails);
     }
 
+    // Get Influencer data
+    const influencer = await Influencer.findOne({ User_id: req.userIdNumber, Status: true });
+    if (influencer) {
+      userProfile.influencer = influencer.toObject ? influencer.toObject() : influencer;
+    } else {
+      userProfile.influencer = null;
+    }
+
+    // Get followers and following counts
+    // Followers: Count of users who follow this user (Reel_Follow where Real_Post_id is created by this user)
+    // Following: Count of reels/posts this user follows
+    const [followersCount, followingCount] = await Promise.all([
+      // Count followers - users who follow this user's reels/posts
+      Reel_Follow.countDocuments({ 
+        Real_Post_id: { $exists: true }, // This would need to be linked to user's reels
+        Status: true 
+      }),
+      // Count following - reels/posts this user follows
+      Reel_Follow.countDocuments({ 
+        Follow_by: req.userIdNumber, 
+        Status: true 
+      })
+    ]);
+
+    userProfile.followersCount = followersCount;
+    userProfile.followingCount = followingCount;
+
+    // Generate QR Code URL for profile
+    // QR code will contain profile URL or user ID
+    const baseUrl = process.env.FRONTEND_URL || process.env.BASE_URL || 'http://localhost:3000';
+    const profileUrl = `${baseUrl}/profile/${userProfile.user_id}`;
+    userProfile.qrCode = `${baseUrl}/api/v2/user/qrcode/${userProfile.user_id}`;
+    userProfile.profileUrl = profileUrl;
+
     console.info('User profile retrieved successfully', { 
       userId: user._id, 
       user_id: user.user_id, 
       addressCount: userProfile.addresses.length,
       hasWallet: !!userProfile.wallet,
-      hasBusinessDetails: !!userProfile.businessDetails
+      hasBusinessDetails: !!userProfile.businessDetails,
+      hasInfluencer: !!userProfile.influencer,
+      followersCount: userProfile.followersCount,
+      followingCount: userProfile.followingCount
     });
 
     sendSuccess(res, userProfile, 'User profile retrieved successfully');

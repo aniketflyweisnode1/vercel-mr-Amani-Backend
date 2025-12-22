@@ -29,13 +29,33 @@ const setupSocket = (server) => {
       credentials: true
     },
     transports: ['websocket', 'polling'],
+    allowEIO3: true, // Allow Socket.IO v3 clients
+    upgradeTimeout: 10000,
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    connectTimeout: 45000,
+    perMessageDeflate: {
+      threshold: 1024,
+      concurrencyLimit: 10,
+      memLevel: 7
+    },
+    maxHttpBufferSize: 1e6 // 1MB
   });
 
   // Socket.IO authentication middleware
   io.use(async (socket, next) => {
     try {
+      // Verify this is actually a Socket.IO connection request
+      // Regular HTTP requests should not reach here
+      const isSocketIORequest = socket.handshake.query?.EIO || 
+                                 socket.handshake.query?.transport ||
+                                 socket.handshake.headers?.upgrade === 'websocket';
+      
+      if (!isSocketIORequest) {
+        // This shouldn't happen, but if it does, reject it
+        return next(new Error('Not a Socket.IO request'));
+      }
+
       // Get token from multiple sources (auth object, Authorization header, or query parameter)
       const token = socket.handshake.auth.token || 
                    socket.handshake.headers.authorization?.replace('Bearer ', '') ||
@@ -78,6 +98,38 @@ const setupSocket = (server) => {
     } catch (error) {
       logger.error('Socket middleware error', { error: error.message });
       next(new Error('Authentication failed'));
+    }
+  });
+
+  // Handle connection errors - only log Socket.IO specific errors
+  io.engine.on('connection_error', (err) => {
+    const reqUrl = err.req?.url || '';
+    
+    // Ignore errors from regular HTTP API requests (not Socket.IO requests)
+    // Socket.IO requests typically have query params like ?EIO=4&transport=websocket
+    // or are WebSocket upgrade requests
+    if (reqUrl && !reqUrl.includes('EIO=') && !reqUrl.includes('transport=') && 
+        !err.req?.headers?.['upgrade'] && !err.req?.headers?.['connection']?.includes('Upgrade')) {
+      // This is a regular HTTP request, not a Socket.IO connection attempt
+      // Silently ignore it to avoid cluttering logs
+      return;
+    }
+    
+    // Only log actual Socket.IO connection errors
+    logger.error('Socket.IO connection error', { 
+      error: err.message, 
+      code: err.code,
+      context: err.context,
+      req: reqUrl,
+      transport: err.context?.transport
+    });
+    
+    // Handle "Transport unknown" error specifically
+    if (err.message && err.message.includes('Transport unknown')) {
+      logger.warn('Transport unknown error - client may be using unsupported transport', {
+        url: reqUrl,
+        headers: err.req?.headers
+      });
     }
   });
 

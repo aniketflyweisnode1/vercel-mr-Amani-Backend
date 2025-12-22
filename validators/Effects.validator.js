@@ -47,7 +47,10 @@ const getEffectsByAuthSchema = Joi.object({
 });
 
 const getEffectsByCategoryIdParamsSchema = Joi.object({
-  Effects_Categorys_id: Joi.number().integer().positive().required()
+  id: Joi.alternatives().try(
+    Joi.string().pattern(/^\d+$/),
+    Joi.number().integer().positive()
+  ).required()
 });
 
 const getEffectsByCategoryIdQuerySchema = Joi.object({
