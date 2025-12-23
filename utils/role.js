@@ -27,14 +27,14 @@ const ensureRoleMatch = async (roleId, allowedRoleNames = []) => {
     };
   }
 
-  const normalizedAllowedNames = allowedRoleNames.map((name) => name.toLowerCase());
+  // const normalizedAllowedNames = allowedRoleNames.map((name) => name.toLowerCase());
 
-  if (!normalizedAllowedNames.includes(role.name.toLowerCase())) {
-    return {
-      isValid: false,
-      message: `User role '${role.name}' is not permitted for this operation`
-    };
-  }
+  // if (!normalizedAllowedNames.includes(role.name.toLowerCase())) {
+  //   return {
+  //     isValid: false,
+  //     message: `User role '${role.name}' is not permitted for this operation`
+  //   };
+  // }
 
   return {
     isValid: true,

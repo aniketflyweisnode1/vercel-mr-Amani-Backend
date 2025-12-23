@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^[0-9]{10,15}$/, 'Please enter a valid mobile number (10-15 digits)']
   },
+  
+  qrCodeImage: {
+    type: String,
+    trim: true
+  },
   dob: {
     type: Date,
     // required: [true, 'Date of birth is required']

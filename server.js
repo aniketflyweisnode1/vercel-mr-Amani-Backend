@@ -164,7 +164,7 @@ if (!isVercel) {
   // Initialize Socket.io only in non-serverless environment
   try {
     const { setupSocket } = require('./src/routes/Chat/SocketChat.routes');
-    io = setupSocket(server);
+    // io = setupSocket(server);
     logger.info('Socket.io initialized successfully');
   } catch (error) {
     logger.warn('Socket.io initialization skipped', { error: error.message });
