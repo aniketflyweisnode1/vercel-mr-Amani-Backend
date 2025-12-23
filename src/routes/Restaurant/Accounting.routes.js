@@ -25,4 +25,3 @@ router.get('/getByBranchId/:Branch_id', auth, validateParams(getAccountingByBran
 router.get('/getByAuth', auth, validateQuery(getAccountingByAuthSchema), getAccountingByAuth);
 
 module.exports = router;
-
