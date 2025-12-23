@@ -16,6 +16,7 @@ const Reel_Like = require('../models/Reel_Like.model');
 const QRCode = require('qrcode');
 const { sendSuccess, sendError, sendNotFound, sendPaginated, sendUnauthorized } = require('../../utils/response');
 const { asyncHandler } = require('../../middleware/errorHandler');
+const { generateToken } = require('../../utils/jwt');
 
 // Helper function to populate user location fields
 const populateUserLocation = async (userObj) => {
@@ -110,10 +111,42 @@ const createUser = asyncHandler(async (req, res) => {
       console.error('Error auto-creating wallet for user', { error: walletError.message, userId: user._id });
       // Don't fail user creation if wallet creation fails
     }
+
+    
+    // Generate JWT tokens
+    const accessTokenPayload = {
+      id: user._id,
+      user_id: user.user_id,
+      phoneNo: user.phoneNo,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      Email: user.Email,
+      role_id: user.role_id,
+      type: 'access'
+    };
+
+    const refreshTokenPayload = {
+      id: user._id,
+      user_id: user.user_id,
+      role_id: user.role_id,
+      type: 'refresh'
+    };
+
+    const tokens = {
+      accessToken: generateToken(accessTokenPayload, 'newuserToken', '7d'),
+      refreshToken: generateToken(refreshTokenPayload, 'newuserToken', '30d')
+    };
+
+    // Convert user to object and remove password
+    const userResponse = user.toObject();
+    delete userResponse.password;
     
     console.info('User created successfully', { userId: user._id, user_id: user.user_id });
 
-    sendSuccess(res, user, 'User created successfully', 201);
+    sendSuccess(res, {
+      user: userResponse,
+      ...tokens
+    }, 'User created successfully', 201);
   } catch (error) {
     console.error('Error creating user', { error: error.message, stack: error.stack });
     throw error;
