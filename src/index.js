@@ -98,6 +98,7 @@ const ScheduleMyAvailabilityRoutes = require('./routes/Restaurant/WorkForceManag
 const ExpensesRoutes = require('./routes/Restaurant/Expenses.routes');
 const BranchMapBankRoutes = require('./routes/Restaurant/Branch_map_Bank.routes');
 const FinanceRoutes = require('./routes/Restaurant/Finance.routes');
+const AccountingRoutes = require('./routes/Restaurant/Accounting.routes');
 const MarketingCouponCategoryRoutes = require('./routes/Restaurant/Marketing_Promotions_coupon_Category.routes');
 const MarketingCouponRoutes = require('./routes/Restaurant/Marketing_Promotions_coupon.routes');
 const CampaignAllneedaPostRoutes = require('./routes/Restaurant/CampaignAllneedaPost.routes');
@@ -308,6 +309,7 @@ router.use('/WorkForceManagement_Schedule_Myavailability', ScheduleMyAvailabilit
 router.use('/Expenses', ExpensesRoutes);
 router.use('/Branch_map_Bank', BranchMapBankRoutes);
 router.use('/Finance', FinanceRoutes);
+router.use('/Accounting', AccountingRoutes);
 router.use('/Marketing_Promotions_coupon_Category', MarketingCouponCategoryRoutes);
 router.use('/Marketing_Promotions_coupon', MarketingCouponRoutes);
 router.use('/Marketing_Promotions_EmailCampaign', MarketingEmailCampaignRoutes);
